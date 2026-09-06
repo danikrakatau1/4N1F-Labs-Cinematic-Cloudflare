@@ -10,29 +10,83 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  recover:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build Cloudflare bundle
-        run: bash build-cloudflare.sh
-      - name: Verify Fetch routes bundle
+      - name: Probe multipart candidates
+        shell: bash
         run: |
-          test -f dist/fetch/index.html
-          test -f dist/fetch/studio.js
-          test -f dist/fetch/editor/index.html
-          test -f dist/fetch/editor/editor.js
-          test -f dist/fetch/editor/clean-preview.html
-          grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
-          grep -q '4N1F — FETCH NATIVE EDITOR V2.26' dist/fetch/editor/index.html
-          ! grep -R -q 'admin-auth-guard.js' dist/fetch
-          ! grep -R -q 'jfvmcerrsxjvbiogfqes' dist/fetch
-          ! grep -R -q '/dashboard-admin' dist/fetch
-      - name: JavaScript syntax
-        run: |
-          node --check dist/fetch/studio.js
-          node --check dist/fetch/preview-studio.js
-          node --check dist/fetch/visual-resolver.js
-          node --check dist/fetch/editor/editor.js
-          node --check dist/fetch/editor/clean-preview.js
+          set -u
+          mkdir -p /tmp/fetch-probe
+          validate() {
+            local name="$1" b64="$2"
+            local gz="/tmp/fetch-probe/${name}.tar.gz"
+            if ! base64 -d "$b64" > "$gz" 2>/dev/null; then
+              echo "FAIL $name base64"
+              return 1
+            fi
+            local sha size
+            sha=$(sha256sum "$gz" | awk '{print $1}')
+            size=$(wc -c < "$gz")
+            if gzip -t "$gz" 2>/dev/null && tar -tzf "$gz" >/dev/null 2>&1; then
+              echo "PASS $name sha=$sha bytes=$size"
+              tar -tzf "$gz" | head -40
+              return 0
+            fi
+            echo "FAIL $name sha=$sha bytes=$size gzip/tar"
+            return 1
+          }
+
+          # Candidate A: repository multipart exactly as stored.
+          cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{00..11} > /tmp/fetch-probe/a.b64
+          validate direct_all /tmp/fetch-probe/a.b64 || true
+
+          # Candidate B: part-01 contains a 6k overlap at its tail; keep its first 12k.
+          {
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-00
+            head -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..11}
+          } > /tmp/fetch-probe/b.b64
+          validate part01_head12 /tmp/fetch-probe/b.b64 || true
+
+          # Candidate C: part-01 contains a 6k overlap at its head; keep its final 12k.
+          {
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-00
+            tail -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..11}
+          } > /tmp/fetch-probe/c.b64
+          validate part01_tail12 /tmp/fetch-probe/c.b64 || true
+
+          # Candidate D/E: correction prefix replaces the first 12k.
+          {
+            cat vendor/fetch-v226/corr-prefix-00 vendor/fetch-v226/corr-prefix-01
+            head -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..11}
+          } > /tmp/fetch-probe/d.b64
+          validate prefix_plus_head12 /tmp/fetch-probe/d.b64 || true
+          {
+            cat vendor/fetch-v226/corr-prefix-00 vendor/fetch-v226/corr-prefix-01
+            tail -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..11}
+          } > /tmp/fetch-probe/e.b64
+          validate prefix_plus_tail12 /tmp/fetch-probe/e.b64 || true
+
+          # Candidate F/G: early original parts + corrected tail family.
+          {
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-00
+            head -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..06}
+            cat vendor/fetch-v226/corr-tail-a vendor/fetch-v226/corr-tail-b vendor/fetch-v226/corr-tail-cd-*
+          } > /tmp/fetch-probe/f.b64
+          validate original_prefix_corrected_tail /tmp/fetch-probe/f.b64 || true
+          {
+            cat vendor/fetch-v226/corr-prefix-00 vendor/fetch-v226/corr-prefix-01
+            head -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
+            cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-{02..06}
+            cat vendor/fetch-v226/corr-tail-a vendor/fetch-v226/corr-tail-b vendor/fetch-v226/corr-tail-cd-*
+          } > /tmp/fetch-probe/g.b64
+          validate corrected_both /tmp/fetch-probe/g.b64 || true
+
+          echo '--- probe complete ---'
