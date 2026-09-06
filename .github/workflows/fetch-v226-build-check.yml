@@ -1,0 +1,38 @@
+name: Fetch V2.26 Build Check
+
+on:
+  push:
+    branches:
+      - fetch-v226-final-clean-20260906
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify Fetch routes bundle
+        run: |
+          test -f dist/fetch/index.html
+          test -f dist/fetch/studio.js
+          test -f dist/fetch/editor/index.html
+          test -f dist/fetch/editor/editor.js
+          test -f dist/fetch/editor/clean-preview.html
+          grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
+          grep -q '4N1F — FETCH NATIVE EDITOR V2.26' dist/fetch/editor/index.html
+          ! grep -R -q 'admin-auth-guard.js' dist/fetch
+          ! grep -R -q 'jfvmcerrsxjvbiogfqes' dist/fetch
+          ! grep -R -q '/dashboard-admin' dist/fetch
+      - name: JavaScript syntax
+        run: |
+          node --check dist/fetch/studio.js
+          node --check dist/fetch/preview-studio.js
+          node --check dist/fetch/visual-resolver.js
+          node --check dist/fetch/editor/editor.js
+          node --check dist/fetch/editor/clean-preview.js
