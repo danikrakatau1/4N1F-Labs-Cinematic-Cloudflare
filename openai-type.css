@@ -1,0 +1,52 @@
+/* 4N1F typography layer — OpenAI/ChatGPT-inspired.
+   Uses OpenAI Sans when it is legitimately available on the client/device.
+   No font binaries are bundled or redistributed. Falls back gracefully. */
+
+:root{
+  --openai-sans:"OpenAI Sans",Inter,"Geist",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --openai-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:var(--openai-sans);
+  --mono:var(--openai-mono);
+  --ui-sans:var(--openai-sans);
+  --ui-mono:var(--openai-mono);
+}
+
+html,body,button,input,textarea,select{
+  font-family:var(--openai-sans)!important;
+  font-optical-sizing:auto;
+  font-kerning:normal;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* Preserve technical identifiers/code in mono. */
+code,pre,
+.eyebrow,.label b,.label span,.engine,
+.brand,.loadbar input,.panel-title,.diag-title,.patch-head,.code-head,
+.devicebar span,.selected-meta code,.code-output,.patch-json-wrap summary,
+#previewIdInput,#sourceInput{
+  font-family:var(--openai-mono)!important;
+}
+
+/* ChatGPT/OpenAI-like text rhythm: calmer weights and less aggressive tracking. */
+h1{
+  font-family:var(--openai-sans)!important;
+  font-weight:600!important;
+  letter-spacing:-.052em!important;
+}
+.sub{
+  font-family:var(--openai-sans)!important;
+  font-weight:400!important;
+  letter-spacing:-.01em!important;
+}
+#generateBtn,
+.primary,button.primary{
+  font-family:var(--openai-sans)!important;
+  font-weight:600!important;
+  letter-spacing:-.012em!important;
+}
+
+@media(max-width:620px){
+  h1{letter-spacing:-.045em!important}
+}
