@@ -58,6 +58,14 @@ tar -tzf /tmp/4n1f-fetch-v226-pristine.tar.gz >/dev/null
 tar -xzf /tmp/4n1f-fetch-v226-pristine.tar.gz -C dist
 rm -f /tmp/4n1f-fetch-v226-pristine.b64 /tmp/4n1f-fetch-v226-pristine.tar.gz
 
+# Fetch Premium V1 is a UI-only full replacement. The pristine engine and JS
+# remain source-of-truth; only the Fetch Studio markup/styles are overlaid.
+FETCH_UI_OVERRIDE="overrides/fetch-premium-v1"
+test -s "$FETCH_UI_OVERRIDE/index.html" || { echo "[4N1F build] missing Fetch Premium V1 index override" >&2; exit 1; }
+test -s "$FETCH_UI_OVERRIDE/studio.css" || { echo "[4N1F build] missing Fetch Premium V1 CSS override" >&2; exit 1; }
+cp "$FETCH_UI_OVERRIDE/index.html" dist/fetch/index.html
+cp "$FETCH_UI_OVERRIDE/studio.css" dist/fetch/studio.css
+
 node <<'NODE'
 const fs = require('node:fs');
 function patch(file, replacements) {
@@ -100,6 +108,7 @@ test -f dist/preview.html
 test -f dist/hub-portals-v6.css
 test -f dist/hub-portals-v6.js
 test -f dist/fetch/index.html
+test -f dist/fetch/studio.css
 test -f dist/fetch/studio.js
 test -f dist/fetch/preview-studio.js
 test -f dist/fetch/visual-resolver.js
@@ -117,7 +126,14 @@ grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' dist/index.html
 grep -q '<strong>FETCH</strong>' dist/index.html
 ! grep -q 'Masukkan Package Key untuk membuat sesi Preview baru' dist/index.html
 grep -q 'hub-cosmic-v5.js' dist/index.html
+
 grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
+grep -q 'name="4n1f-fetch-ui" content="premium-v1"' dist/fetch/index.html
+grep -q 'Cinematic Operator Console' "$FETCH_UI_OVERRIDE/studio.css" || true
+for hook in sourceUrl fetchSourceBtn sourceInput uploadHtmlBtn clearBtn analyzeBtn sourceBadge analysisStatus parityScore editableScore dependencyScore unsupportedScore detectList mappingBadge mappingTree buildBtn previewBtn downloadBtn studioMessage htmlFileInput; do
+  grep -q "id=\"$hook\"" dist/fetch/index.html || { echo "[4N1F build] Fetch Premium V1 missing engine hook: $hook" >&2; exit 1; }
+done
+
 grep -q '4N1F — FETCH NATIVE EDITOR V2.26' dist/fetch/editor/index.html
 grep -q 'href="./clean-preview.html"' dist/fetch/editor/index.html
 grep -q "const adminSb=null" dist/fetch/editor/editor.js
@@ -132,4 +148,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare PRISTINE bundle PASS: Hub + Fetch V2.26 + Native Editor + Preview ID"
+echo "4N1F Cloudflare PREMIUM V1 bundle PASS: Hub + Fetch Premium V1 + Fetch V2.26 + Native Editor + Preview ID"
