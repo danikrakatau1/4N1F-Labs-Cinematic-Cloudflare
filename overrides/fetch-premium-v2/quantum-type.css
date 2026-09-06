@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;550;600;650;700;750&family=Geist+Mono:wght@400;500;550;600;650;700&display=swap');
+
+:root{
+  --quantum-sans:"Geist",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --quantum-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+html,body,button,input,textarea,select,a{
+  font-family:var(--quantum-sans)!important;
+  font-optical-sizing:auto;
+  font-kerning:normal;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1,"ss01" 1,"cv01" 1,"cv02" 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+.studio-topbar h1{
+  font-family:var(--quantum-sans)!important;
+  font-weight:620!important;
+  letter-spacing:-.062em!important;
+  line-height:.94!important;
+}
+
+.studio-topbar p{
+  font-weight:430!important;
+  letter-spacing:-.018em!important;
+}
+
+.studio-nav a,
+.btn,
+.card-head h2,
+.empty-state strong,
+.score strong{
+  font-family:var(--quantum-sans)!important;
+}
+
+.studio-nav a{font-weight:540!important;letter-spacing:-.012em!important}
+.card-head h2{font-weight:620!important;letter-spacing:-.035em!important}
+.btn{font-weight:620!important;letter-spacing:-.018em!important}
+.score strong{font-weight:590!important;letter-spacing:-.045em!important;font-variant-numeric:tabular-nums lining-nums}
+
+.studio-kicker,
+.card-eyebrow,
+.step,
+.badge,
+.field-note,
+.editor-toolbar,
+.editor-mode,
+.panel-subhead b,
+.pipeline-node small,
+.pipeline-node b,
+.security-note code,
+code,.mono,
+.source-input{
+  font-family:var(--quantum-mono)!important;
+  font-optical-sizing:auto;
+  font-feature-settings:"liga" 1,"calt" 1,"zero" 1;
+}
+
+.studio-kicker{font-weight:650!important;letter-spacing:.17em!important}
+.card-eyebrow{font-weight:600!important;letter-spacing:.105em!important}
+.step{font-weight:650!important;letter-spacing:-.02em!important}
+.badge{font-weight:500!important;letter-spacing:-.012em!important}
+.field-note,.panel-subhead b{font-weight:520!important;letter-spacing:.055em!important}
+.source-input{font-weight:430!important;letter-spacing:-.01em!important}
+
+.studio-capabilities span{
+  font-family:var(--quantum-sans)!important;
+  font-weight:520!important;
+  letter-spacing:-.012em!important;
+}
+
+.studio-label,
+.score span,
+.score small,
+.panel-subhead span,
+.empty-state small,
+.security-note,
+.studio-message{
+  letter-spacing:-.012em!important;
+}
+
+@media(max-width:720px){
+  .studio-topbar h1{letter-spacing:-.054em!important}
+}
