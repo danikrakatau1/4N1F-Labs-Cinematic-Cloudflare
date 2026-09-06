@@ -6,6 +6,7 @@ on:
       - main
       - fetch-v226-pristine-recovery
       - fetch-premium-v1
+      - fetch-premium-v2
   workflow_dispatch:
 
 permissions:
@@ -79,10 +80,14 @@ jobs:
           set -euo pipefail
           test -f dist/fetch/index.html
           test -f dist/fetch/studio.css
+          test -f dist/fetch/quantum.js
           test -f dist/fetch/preview.html
           test -f dist/fetch/editor/index.html
           grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
-          grep -q 'name="4n1f-fetch-ui" content="premium-v1"' dist/fetch/index.html
-          grep -q 'studio-capabilities' dist/fetch/index.html
-          grep -q 'editor-shell' dist/fetch/index.html
-          echo 'Cloudflare Fetch Premium V1 bundle verified.'
+          grep -q 'name="4n1f-fetch-ui" content="premium-v2-quantum"' dist/fetch/index.html
+          grep -q 'QUANTUM CONSOLE' dist/fetch/index.html
+          grep -q 'pipeline-strip' dist/fetch/index.html
+          grep -q 'dormant-graph' dist/fetch/index.html
+          grep -q 'quantum.js' dist/fetch/index.html
+          node --check dist/fetch/quantum.js
+          echo 'Cloudflare Fetch Premium V2 Quantum Console bundle verified.'
