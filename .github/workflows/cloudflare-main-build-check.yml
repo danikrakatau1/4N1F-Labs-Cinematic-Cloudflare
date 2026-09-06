@@ -1,9 +1,10 @@
-name: Cloudflare Main Build Check
+name: Cloudflare Recovery Build Check
 
 on:
   push:
     branches:
       - main
+      - fetch-v226-pristine-recovery
   workflow_dispatch:
 
 permissions:
@@ -16,37 +17,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Probe exact current Fetch assembly
+      - name: Locate missing pristine part-10 character
         shell: bash
         run: |
-          set -u
-          FETCH_VENDOR="vendor/fetch-v226"
-          {
-            cat "$FETCH_VENDOR/corr-prefix-00"
-            cat "$FETCH_VENDOR/corr-prefix-01"
-            head -c 12000 "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-01"
-            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-02"
-            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-03"
-            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-04"
-            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-05"
-            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-06"
-            cat "$FETCH_VENDOR/corr-tail-a"
-            cat "$FETCH_VENDOR/corr-tail-b"
-            cat "$FETCH_VENDOR/corr-tail-cd-00"
-            cat "$FETCH_VENDOR/corr-tail-cd-01"
-            cat "$FETCH_VENDOR/corr-tail-cd-02"
-            cat "$FETCH_VENDOR/corr-tail-cd-03"
-            cat "$FETCH_VENDOR/corr-tail-cd-04"
-            cat "$FETCH_VENDOR/corr-tail-cd-05"
-            cat "$FETCH_VENDOR/corr-tail-cd-06"
-            cat "$FETCH_VENDOR/corr-tail-cd-07"
-          } > /tmp/current-fetch.b64
-          base64 -d /tmp/current-fetch.b64 > /tmp/current-fetch.tar.gz
-          echo "ACTUAL_SHA=$(sha256sum /tmp/current-fetch.tar.gz | awk '{print $1}')"
-          echo "ACTUAL_BYTES=$(wc -c < /tmp/current-fetch.tar.gz)"
-          gzip -t /tmp/current-fetch.tar.gz
-          tar -tzf /tmp/current-fetch.tar.gz | head -60
-          echo "CURRENT_ASSEMBLY_PASS=1"
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path('vendor/fetch-v226-pristine/part-10.b64')
+          data = p.read_bytes()
+          target = 'a570cdd50b3194bad5ec52185bd3120232cd81790a0dfc7923c97f69cd589d5b'
+          print('PART10_BYTES=', len(data))
+          print('PART10_SHA=', hashlib.sha256(data).hexdigest())
+          if len(data) == 12000 and hashlib.sha256(data).hexdigest() == target:
+              print('PART10_ALREADY_EXACT=1')
+              raise SystemExit(0)
+          alphabet = b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+          for pos in range(len(data) + 1):
+              prefix = data[:pos]
+              suffix = data[pos:]
+              for ch in alphabet:
+                  candidate = prefix + bytes([ch]) + suffix
+                  if hashlib.sha256(candidate).hexdigest() == target:
+                      print(f'MISSING_POS={pos}')
+                      print(f'MISSING_CHAR={chr(ch)}')
+                      print('PART10_RECOVERY_FOUND=1')
+                      raise SystemExit(0)
+          raise SystemExit('No one-character insertion matches expected pristine part-10 SHA')
+          PY
+
+      - name: Scan pristine Fetch chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(vendor/fetch-v226-pristine/part-{00..10}.b64 vendor/fetch-v226-pristine/tail-{00..05}.b64)
+          total=0
+          for f in "${files[@]}"; do
+            bytes=$(wc -c < "$f")
+            bad=$(LC_ALL=C tr -d 'A-Za-z0-9+/=\r\n' < "$f" | wc -c)
+            printf '%s bytes=%s badchars=%s\n' "$f" "$bytes" "$bad"
+            total=$((total + bytes))
+          done
+          echo "TOTAL_CHARS=$total"
 
       - name: Build Cloudflare bundle
         shell: bash
@@ -68,4 +80,4 @@ jobs:
           test -f dist/fetch/preview.html
           test -f dist/fetch/editor/index.html
           grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
-          echo 'Cloudflare main bundle verified.'
+          echo 'Cloudflare recovery bundle verified.'
