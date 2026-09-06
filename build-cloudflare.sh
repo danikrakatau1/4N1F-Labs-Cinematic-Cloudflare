@@ -105,6 +105,10 @@ patch('dist/fetch/preview.html', [
 ]);
 NODE
 
+# Restore the original V2.26 Preview -> Native Editor handoff contract after
+# Cloudflare UI transplant, while keeping Quantum UI as a presentation overlay.
+node scripts/fetch-preview-editor-handoff-fix-v1.js
+
 sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <link rel="stylesheet" href="/status-motion-v1.css">\n  <script src="/hub-portals-v6.js" defer></script>\n  <script src="/status-motion-v1.js" defer></script>\n</head>#' dist/index.html
 sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-cosmic-v5.js"></script>#' dist/index.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
@@ -124,8 +128,10 @@ test -f dist/fetch/studio.js
 test -f dist/fetch/preview-studio.js
 test -f dist/fetch/visual-resolver.js
 test -f dist/fetch/preview.html
+test -f dist/fetch/preview-shell.css
 test -f dist/fetch/editor/index.html
 test -f dist/fetch/editor/editor.js
+test -f dist/fetch/editor/invitation.html
 test -f dist/fetch/editor/clean-preview.html
 test -f dist/fetch/editor/clean-preview.js
 test -f dist/editor/index.html
@@ -154,6 +160,19 @@ grep -q 'fetchSourceBtn' dist/status-motion-v1.js
 grep -q 'analyzeBtn' dist/status-motion-v1.js
 grep -q 'buildBtn' dist/status-motion-v1.js
 grep -q 'previewBtn' dist/status-motion-v1.js
+
+# Preview must fill the viewport; browser-default 300x150 iframe is forbidden.
+grep -q 'preview-shell.css' dist/fetch/preview.html
+grep -q '#rebuildPreviewFrame,.preview-canvas iframe' dist/fetch/preview-shell.css
+grep -q 'width:100%;height:100%' dist/fetch/preview-shell.css
+
+# Fetch -> Native Editor must retain the exact snapshot handoff and editable schema.
+grep -q "sessionStorage.getItem('diniAnifRebuildSnapshot')" dist/fetch/editor/editor.js
+grep -q 'FETCH SNAPSHOT LOADED' dist/fetch/editor/editor.js
+grep -q 'renderNativeEditor();renderPreview(true);renderInspector()' dist/fetch/editor/editor.js
+grep -q 'source-native structural guard' dist/fetch/editor/editor.js
+! grep -q "frame.src='about:blank'" dist/fetch/editor/editor.js
+
 for hook in sourceUrl fetchSourceBtn sourceInput uploadHtmlBtn clearBtn analyzeBtn sourceBadge analysisStatus parityScore editableScore dependencyScore unsupportedScore detectList mappingBadge mappingTree buildBtn previewBtn downloadBtn studioMessage htmlFileInput; do
   grep -q "id=\"$hook\"" dist/fetch/index.html || { echo "[4N1F build] Fetch Premium V2 missing engine hook: $hook" >&2; exit 1; }
 done
@@ -174,4 +193,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare STATUS MOTION V1 PASS: Hub Generate Preview + Fetch actions + Quantum V2 + Fetch V2.26 + Native Editor + Preview ID"
+echo "4N1F Cloudflare HANDOFF FIX V1 PASS: full viewport Preview + source-native Native Editor + all editable mapping + Status Motion + Quantum V2"
