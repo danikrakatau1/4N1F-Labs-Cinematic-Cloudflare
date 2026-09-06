@@ -40,12 +40,57 @@ required_fetch_parts=(
 for part in "${required_fetch_parts[@]}"; do
   test -s "$part" || { echo "[4N1F build] missing pristine Fetch part: $part" >&2; exit 1; }
 done
-cat "${required_fetch_parts[@]}" > /tmp/4n1f-fetch-v226.b64
+
+# GitHub's text-write path dropped one known byte from part-10. Repair it in
+# /tmp and verify against the exact SHA from the original healthy ZIP.
+python - <<'PY'
+from pathlib import Path
+import hashlib
+
+src = Path('vendor/fetch-v226-pristine/part-10.b64').read_bytes()
+target = 'a570cdd50b3194bad5ec52185bd3120232cd81790a0dfc7923c97f69cd589d5b'
+
+if len(src) == 12000 and hashlib.sha256(src).hexdigest() == target:
+    fixed = src
+elif len(src) == 11999:
+    fixed = src[:9726] + b'm' + src[9726:]
+else:
+    raise SystemExit(f'Unexpected part-10 length: {len(src)}')
+
+actual = hashlib.sha256(fixed).hexdigest()
+if actual != target:
+    raise SystemExit(f'part-10 repair SHA mismatch: {actual}')
+
+Path('/tmp/part-10-fixed.b64').write_bytes(fixed)
+print('[4N1F build] pristine part-10 exact')
+PY
+
+{
+  cat "$FETCH_VENDOR/part-00.b64"
+  cat "$FETCH_VENDOR/part-01.b64"
+  cat "$FETCH_VENDOR/part-02.b64"
+  cat "$FETCH_VENDOR/part-03.b64"
+  cat "$FETCH_VENDOR/part-04.b64"
+  cat "$FETCH_VENDOR/part-05.b64"
+  cat "$FETCH_VENDOR/part-06.b64"
+  cat "$FETCH_VENDOR/part-07.b64"
+  cat "$FETCH_VENDOR/part-08.b64"
+  cat "$FETCH_VENDOR/part-09.b64"
+  cat /tmp/part-10-fixed.b64
+  cat "$FETCH_VENDOR/tail-00.b64"
+  cat "$FETCH_VENDOR/tail-01.b64"
+  cat "$FETCH_VENDOR/tail-02.b64"
+  cat "$FETCH_VENDOR/tail-03.b64"
+  cat "$FETCH_VENDOR/tail-04.b64"
+  cat "$FETCH_VENDOR/tail-05.b64"
+} > /tmp/4n1f-fetch-v226.b64
+
+test "$(wc -c < /tmp/4n1f-fetch-v226.b64)" -eq 153424
 base64 -d /tmp/4n1f-fetch-v226.b64 > /tmp/4n1f-fetch-v226.tar.gz
 echo "b7ce8462dece1f872284f4cfaf139fcbfd68a569b55950e90215e85dedd293bb  /tmp/4n1f-fetch-v226.tar.gz" | sha256sum -c -
 tar -tzf /tmp/4n1f-fetch-v226.tar.gz >/dev/null
 tar -xzf /tmp/4n1f-fetch-v226.tar.gz -C dist
-rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz
+rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz /tmp/part-10-fixed.b64
 
 node <<'NODE'
 const fs = require('node:fs');
