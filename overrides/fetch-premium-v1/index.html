@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <base href="/fetch/">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#05070d">
+  <meta name="4n1f-fetch-ui" content="premium-v1">
+  <title>4N1F Labs — Fetch Studio V2.26</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body class="studio-body">
+  <div class="studio-ambient" aria-hidden="true">
+    <span class="ambient-orb orb-a"></span>
+    <span class="ambient-orb orb-b"></span>
+    <span class="ambient-grid"></span>
+  </div>
+
+  <div class="studio-shell">
+    <header class="studio-topbar">
+      <div class="studio-header-copy">
+        <div class="studio-kicker"><span class="kicker-dot"></span>4N1F LABS · FETCH ENGINE V2.26</div>
+        <h1>Fetch &amp; Rebuild Studio</h1>
+        <p>URL → Source Graph V3 → Native Rebuild → Preview → Editor</p>
+        <div class="studio-capabilities" aria-label="Fetch capabilities">
+          <span>Source Graph V3</span>
+          <span>Native Rebuild</span>
+          <span>Preview Ready</span>
+          <span>Editor V2.26</span>
+        </div>
+      </div>
+      <nav class="studio-nav" aria-label="Fetch navigation">
+        <a href="/">Home</a>
+        <a class="active" href="./" aria-current="page">Fetch</a>
+        <a id="previewNavBtn" href="./preview.html">Preview</a>
+        <a href="./editor/">Native Editor</a>
+      </nav>
+    </header>
+
+    <main class="studio-grid">
+      <section class="studio-card source-card" aria-labelledby="source-title">
+        <div class="card-accent" aria-hidden="true"></div>
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step">01</span>
+            <div>
+              <span class="card-eyebrow">INPUT LAYER</span>
+              <h2 id="source-title">Source Input</h2>
+            </div>
+          </div>
+          <span id="sourceBadge" class="badge neutral">Belum ada source</span>
+        </div>
+
+        <div class="field-block">
+          <div class="field-heading">
+            <label class="studio-label" for="sourceUrl">URL website</label>
+            <span class="field-note">Remote source</span>
+          </div>
+          <div class="url-fetch-row">
+            <div class="input-shell">
+              <span class="input-icon" aria-hidden="true">↗</span>
+              <input id="sourceUrl" class="url-input" type="url" inputmode="url" autocomplete="url" placeholder="https://website-sumber.com/undangan/">
+            </div>
+            <button id="fetchSourceBtn" class="btn secondary fetch-cta" type="button"><span>Fetch Source</span><b aria-hidden="true">→</b></button>
+          </div>
+          <div id="fetchMeta" class="fetch-meta" aria-live="polite"></div>
+        </div>
+
+        <div class="source-divider"><span>atau paste source langsung</span></div>
+
+        <div class="field-block source-editor-block">
+          <div class="field-heading">
+            <label class="studio-label" for="sourceInput">Source HTML</label>
+            <span class="field-note mono">VIEW SOURCE / HTML</span>
+          </div>
+          <div class="editor-shell">
+            <div class="editor-toolbar" aria-hidden="true">
+              <span class="editor-lights"><i></i><i></i><i></i></span>
+              <span class="editor-file">source.html</span>
+              <span class="editor-mode">HTML</span>
+            </div>
+            <textarea id="sourceInput" class="source-input" placeholder="Paste View Source / HTML di sini…"></textarea>
+          </div>
+        </div>
+
+        <div class="source-actions action-rail">
+          <button id="uploadHtmlBtn" class="btn secondary">Upload HTML</button>
+          <button id="clearBtn" class="btn ghost">Clear</button>
+          <button id="analyzeBtn" class="btn primary">Analyze Source <span aria-hidden="true">→</span></button>
+        </div>
+        <input id="htmlFileInput" type="file" accept=".html,.htm,.txt,text/html,text/plain" hidden>
+
+        <div class="security-note">
+          <span class="security-icon" aria-hidden="true">◇</span>
+          <p>Fetch URL memakai Cloudflare Worker bridge <code>/api/fetch-source</code>. Localhost/private network diblok dan response HTML dibatasi untuk menjaga proxy tetap aman.</p>
+        </div>
+      </section>
+
+      <section class="studio-card report-card" aria-labelledby="analysis-title">
+        <div class="card-accent analysis-accent" aria-hidden="true"></div>
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step">02</span>
+            <div>
+              <span class="card-eyebrow">DIAGNOSTICS</span>
+              <h2 id="analysis-title">Analysis</h2>
+            </div>
+          </div>
+          <span id="analysisStatus" class="badge neutral">Menunggu</span>
+        </div>
+
+        <div class="score-grid">
+          <div class="score score-parity"><span>Parity Score</span><strong id="parityScore">—</strong><small>Visual fidelity</small><i></i></div>
+          <div class="score score-editable"><span>Editable Coverage</span><strong id="editableScore">—</strong><small>Mapped content</small><i></i></div>
+          <div class="score score-dependency"><span>External Dependency</span><strong id="dependencyScore">—</strong><small>Remote assets</small><i></i></div>
+          <div class="score score-unsupported"><span>Unsupported</span><strong id="unsupportedScore">—</strong><small>Manual review</small><i></i></div>
+        </div>
+
+        <div class="panel-subhead"><span>Detection report</span><b>LIVE DIAGNOSTICS</b></div>
+        <div id="detectList" class="detect-list empty">
+          <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">⌁</span>
+            <strong>Belum ada hasil analisis</strong>
+            <small>Fetch atau paste source untuk memulai diagnostics.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="studio-card map-card" aria-labelledby="mapping-title">
+        <div class="card-accent map-accent" aria-hidden="true"></div>
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step">03</span>
+            <div>
+              <span class="card-eyebrow">OUTPUT LAYER</span>
+              <h2 id="mapping-title">Editable Mapping</h2>
+            </div>
+          </div>
+          <span id="mappingBadge" class="badge neutral">Belum generate</span>
+        </div>
+
+        <div class="panel-subhead"><span>Source-native structure</span><b>MAPPING TREE</b></div>
+        <div id="mappingTree" class="mapping-tree empty">
+          <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">⌘</span>
+            <strong>Mapping belum tersedia</strong>
+            <small>Hasil editable mapping akan tampil setelah source dianalisis.</small>
+          </div>
+        </div>
+
+        <div class="build-actions action-rail map-actions">
+          <button id="buildBtn" class="btn primary" disabled>Generate Rebuild <span aria-hidden="true">→</span></button>
+          <a id="previewBtn" class="btn secondary disabled" href="./preview.html">Open Preview</a>
+          <button id="downloadBtn" class="btn success" disabled>Download Rebuild ZIP</button>
+        </div>
+        <p id="studioMessage" class="studio-message"></p>
+      </section>
+    </main>
+  </div>
+
+  <script src="./visual-resolver.js"></script>
+  <script src="./defaults.js"></script>
+  <script src="./zip-builder.js"></script>
+  <script src="./studio.js"></script>
+</body>
+</html>
