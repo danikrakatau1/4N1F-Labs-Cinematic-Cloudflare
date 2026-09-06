@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#efe7d7">
+<meta name="robots" content="noindex,nofollow">
+<title>4N1F WebGL Preview — Jawa Coklat Motion Lab</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eee5d4}
+body{touch-action:manipulation}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#eee5d4}
+#badge{position:fixed;z-index:3;top:max(10px,env(safe-area-inset-top));right:10px;padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.32);background:rgba(45,35,25,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:rgba(255,255,255,.92);font:650 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;transition:opacity .45s ease;pointer-events:none}
+#hint{position:fixed;z-index:3;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.24);background:rgba(45,35,25,.30);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:rgba(255,255,255,.86);font:550 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;opacity:0;transition:opacity .3s ease;pointer-events:none;white-space:nowrap}
+body:active #hint,body:hover #hint{opacity:1}
+#fail{position:fixed;inset:0;display:none;place-items:center;padding:28px;text-align:center;background:#eee5d4;color:#5e5142;font:650 13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="WebGL cinematic artwork"></canvas>
+<div id="badge">WEBGL · IMAGE→IMAGE · NO VIDEO</div>
+<div id="hint">tap untuk replay</div>
+<div id="fail">WebGL tidak tersedia di browser ini.</div>
+<script src="/editor/webgl-lab/webgl.js"></script>
+</body>
+</html>
