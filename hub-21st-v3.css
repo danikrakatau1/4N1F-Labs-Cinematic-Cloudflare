@@ -1,0 +1,306 @@
+/* 4N1F Preview Hub — 21st-inspired premium command deck.
+   Visual-only override. No routing, KV, Generate Preview, or editor logic changes. */
+
+:root{
+  --deck-ink:#05070d;
+  --deck-panel:rgba(7,9,17,.78);
+  --deck-panel-2:rgba(10,13,23,.68);
+  --deck-line:rgba(255,255,255,.10);
+  --deck-line-hi:rgba(255,255,255,.18);
+  --deck-text:#f5f8fb;
+  --deck-muted:#8d9bab;
+  --deck-mint:#9bf3c8;
+  --deck-cyan:#8fe3ff;
+  --deck-violet:#b89cff;
+  --deck-ease:cubic-bezier(.2,.8,.2,1);
+}
+
+/* Command deck shell — liquid-glass depth, not a flat form card. */
+.hub{
+  border-radius:24px!important;
+  border:1px solid rgba(255,255,255,.095)!important;
+  background:
+    radial-gradient(90% 120% at 0% 0%,rgba(105,184,255,.10),transparent 52%),
+    radial-gradient(80% 130% at 100% 0%,rgba(181,128,255,.095),transparent 54%),
+    linear-gradient(145deg,rgba(11,14,25,.82),rgba(5,7,13,.78))!important;
+  box-shadow:
+    0 42px 120px rgba(0,0,0,.46),
+    0 12px 38px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -1px 0 rgba(255,255,255,.025)!important;
+  backdrop-filter:blur(32px) saturate(138%)!important;
+  -webkit-backdrop-filter:blur(32px) saturate(138%)!important;
+}
+.hub::before{
+  background:
+    linear-gradient(116deg,rgba(255,255,255,.075),transparent 20%,transparent 72%,rgba(255,255,255,.025)),
+    radial-gradient(60% 44% at 50% -8%,rgba(255,255,255,.075),transparent 70%)!important;
+  opacity:.92;
+}
+.hub::after{
+  opacity:.72;
+  filter:drop-shadow(0 0 9px rgba(142,227,255,.16));
+  animation-duration:14s!important;
+}
+
+.hub-body{
+  padding:19px!important;
+}
+
+/* Header becomes a micro control strip. */
+.label{
+  min-height:31px;
+  margin:0 0 11px!important;
+  padding:0 3px!important;
+  align-items:center!important;
+}
+.label b{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font:650 9.5px/1 var(--mono)!important;
+  letter-spacing:.135em!important;
+  color:rgba(231,238,246,.82)!important;
+}
+.label b::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--deck-cyan);
+  box-shadow:0 0 0 4px rgba(143,227,255,.055),0 0 14px rgba(143,227,255,.34);
+}
+.label span{
+  display:inline-flex;
+  align-items:center;
+  min-height:25px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.065);
+  border-radius:999px;
+  background:rgba(255,255,255,.025);
+  color:#718091!important;
+  font:520 8.5px/1 var(--mono)!important;
+  letter-spacing:.035em!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025);
+}
+
+/* Input + CTA are one premium command rail. */
+.row{
+  position:relative;
+  grid-template-columns:minmax(0,1fr) 180px!important;
+  gap:8px!important;
+  padding:7px;
+  border:1px solid rgba(255,255,255,.085);
+  border-radius:17px;
+  background:
+    linear-gradient(180deg,rgba(2,5,12,.72),rgba(3,6,13,.58));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.028),
+    inset 0 8px 30px rgba(0,0,0,.15),
+    0 10px 36px rgba(0,0,0,.14);
+}
+.row::before{
+  content:"KEY";
+  position:absolute;
+  z-index:4;
+  left:17px;
+  top:50%;
+  transform:translateY(-50%);
+  height:23px;
+  display:flex;
+  align-items:center;
+  padding:0 7px;
+  border:1px solid rgba(143,227,255,.11);
+  border-radius:7px;
+  background:rgba(143,227,255,.045);
+  color:#7899aa;
+  font:650 8px/1 var(--mono);
+  letter-spacing:.08em;
+  pointer-events:none;
+}
+
+input#sourceInput{
+  height:50px!important;
+  padding:0 15px 0 58px!important;
+  border:1px solid rgba(255,255,255,.055)!important;
+  border-radius:11px!important;
+  background:
+    linear-gradient(180deg,rgba(0,2,8,.68),rgba(1,4,9,.54))!important;
+  color:#eef6fb!important;
+  font:510 11.5px/1 var(--mono)!important;
+  letter-spacing:-.018em!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    inset 0 8px 22px rgba(0,0,0,.14)!important;
+}
+input#sourceInput::placeholder{color:#536171!important;font-weight:470!important}
+input#sourceInput:focus{
+  border-color:rgba(143,227,255,.20)!important;
+  box-shadow:
+    0 0 0 3px rgba(143,227,255,.045),
+    0 0 32px rgba(85,182,235,.055),
+    inset 0 1px 0 rgba(255,255,255,.024)!important;
+}
+
+/* 21st-inspired dark shimmer CTA: premium edge, restrained center. */
+#generateBtn{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  min-width:0!important;
+  height:50px!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  border-radius:11px!important;
+  padding:0 16px!important;
+  background:
+    radial-gradient(90% 150% at 50% -35%,rgba(255,255,255,.14),transparent 50%),
+    linear-gradient(180deg,#121923 0%,#0a0f17 100%)!important;
+  color:#f4f8fb!important;
+  font-size:11px!important;
+  font-weight:650!important;
+  letter-spacing:-.012em!important;
+  text-shadow:0 1px rgba(0,0,0,.4);
+  box-shadow:
+    0 9px 25px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(255,255,255,.02)!important;
+}
+#generateBtn::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:-2!important;
+  inset:-1px!important;
+  border-radius:inherit!important;
+  padding:1px!important;
+  background:conic-gradient(from var(--cta-angle,0deg),
+    rgba(255,255,255,.10) 0deg,
+    rgba(143,227,255,.78) 46deg,
+    rgba(155,243,200,.90) 86deg,
+    rgba(184,156,255,.58) 132deg,
+    rgba(255,255,255,.08) 178deg,
+    rgba(255,255,255,.08) 360deg)!important;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0)!important;
+  -webkit-mask-composite:xor!important;
+  mask-composite:exclude!important;
+  box-shadow:none!important;
+  animation:deckCtaRing 7.5s linear infinite!important;
+}
+#generateBtn::after{
+  content:""!important;
+  position:absolute!important;
+  z-index:-1!important;
+  inset:1px!important;
+  width:auto!important;
+  top:1px!important;
+  bottom:1px!important;
+  left:1px!important;
+  border-radius:10px!important;
+  background:
+    radial-gradient(75% 110% at 32% 0%,rgba(143,227,255,.085),transparent 54%),
+    radial-gradient(70% 110% at 82% 110%,rgba(155,243,200,.07),transparent 52%),
+    linear-gradient(180deg,rgba(15,20,30,.98),rgba(7,11,17,.98))!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+}
+#generateBtn:hover{
+  transform:translateY(-1px)!important;
+  color:#fff!important;
+  border-color:rgba(255,255,255,.18)!important;
+  box-shadow:
+    0 15px 34px rgba(0,0,0,.32),
+    0 0 32px rgba(143,227,255,.07),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+#generateBtn:active{transform:translateY(0) scale(.985)!important}
+#generateBtn:focus-visible{
+  outline:none!important;
+  box-shadow:0 0 0 4px rgba(143,227,255,.07),0 13px 32px rgba(0,0,0,.3)!important;
+}
+
+/* Result sits inside its own mini liquid-glass module. */
+.result{
+  margin-top:10px!important;
+  border-color:rgba(255,255,255,.07)!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.014))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.024)!important;
+}
+.result code{color:#dbe8f0!important}
+.result-actions button{
+  border-radius:8px!important;
+  background:rgba(255,255,255,.035)!important;
+  border-color:rgba(255,255,255,.08)!important;
+}
+.result-actions button:hover{
+  background:rgba(143,227,255,.065)!important;
+  border-color:rgba(143,227,255,.14)!important;
+}
+
+/* Bottom telemetry becomes a floating status module rather than a footer bar. */
+.statusbar{
+  margin:0 10px 10px!important;
+  min-height:42px!important;
+  padding:8px 10px 8px 12px!important;
+  border:1px solid rgba(255,255,255,.065)!important;
+  border-radius:12px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.012))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.022),0 8px 26px rgba(0,0,0,.10)!important;
+}
+.state{
+  color:#8996a5!important;
+  font-size:10.5px!important;
+}
+.state i{
+  width:6px!important;
+  height:6px!important;
+  background:#71808f!important;
+}
+.state.ok i{background:var(--deck-mint)!important}
+.engine{
+  display:inline-flex!important;
+  align-items:center;
+  min-height:25px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.055);
+  border-radius:999px;
+  background:rgba(255,255,255,.022);
+  color:#667586!important;
+  font-size:8.5px!important;
+  letter-spacing:.055em!important;
+}
+
+/* Flow hint = discreet navigation capsule. */
+.hint{
+  width:max-content;
+  max-width:100%;
+  margin:13px auto 0!important;
+  padding:7px 11px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:999px;
+  background:rgba(5,8,14,.22);
+  color:#657383!important;
+  font-size:9.5px!important;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.hint b{color:#8797a8!important;font-weight:520!important}
+
+@property --cta-angle{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes deckCtaRing{to{--cta-angle:360deg}}
+
+@media(max-width:620px){
+  .hub-body{padding:14px!important}
+  .row{grid-template-columns:1fr!important;padding:6px!important}
+  .row::before{top:31px!important;transform:translateY(-50%)!important}
+  #generateBtn{width:100%!important}
+  .statusbar{margin:0 8px 8px!important}
+  .engine{white-space:normal!important;height:auto!important;padding-top:6px;padding-bottom:6px}
+  .hint{width:100%;text-align:center;border-radius:12px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #generateBtn::before{animation:none!important}
+}
