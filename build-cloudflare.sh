@@ -16,43 +16,36 @@ cp hub-portals-v6.css dist/hub-portals-v6.css
 cp hub-portals-v6.js dist/hub-portals-v6.js
 cp -R editor/. dist/editor/
 
-# Recovery path: reconstruct the historical V2.26 payload, then salvage the
-# uncompressed tar stream. The old gzip footer is known-bad, so integrity is
-# enforced on the extracted files below with strict guardrails + JS syntax.
-FETCH_VENDOR="vendor/fetch-v226"
-{
-  cat "$FETCH_VENDOR/corr-prefix-00"
-  cat "$FETCH_VENDOR/corr-prefix-01"
-  head -c 12000 "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-01"
-  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-02"
-  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-03"
-  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-04"
-  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-05"
-  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-06"
-  cat "$FETCH_VENDOR/corr-tail-a"
-  cat "$FETCH_VENDOR/corr-tail-b"
-  cat "$FETCH_VENDOR/corr-tail-cd-00"
-  cat "$FETCH_VENDOR/corr-tail-cd-01"
-  cat "$FETCH_VENDOR/corr-tail-cd-02"
-  cat "$FETCH_VENDOR/corr-tail-cd-03"
-  cat "$FETCH_VENDOR/corr-tail-cd-04"
-  cat "$FETCH_VENDOR/corr-tail-cd-05"
-  cat "$FETCH_VENDOR/corr-tail-cd-06"
-  cat "$FETCH_VENDOR/corr-tail-cd-07"
-} > /tmp/4n1f-fetch-v226.b64
-
+# PRISTINE Fetch V2.26 recovered directly from the original healthy V2.26 ZIP.
+FETCH_VENDOR="vendor/fetch-v226-pristine"
+required_fetch_parts=(
+  "$FETCH_VENDOR/part-00.b64"
+  "$FETCH_VENDOR/part-01.b64"
+  "$FETCH_VENDOR/part-02.b64"
+  "$FETCH_VENDOR/part-03.b64"
+  "$FETCH_VENDOR/part-04.b64"
+  "$FETCH_VENDOR/part-05.b64"
+  "$FETCH_VENDOR/part-06.b64"
+  "$FETCH_VENDOR/part-07.b64"
+  "$FETCH_VENDOR/part-08.b64"
+  "$FETCH_VENDOR/part-09.b64"
+  "$FETCH_VENDOR/part-10.b64"
+  "$FETCH_VENDOR/tail-00.b64"
+  "$FETCH_VENDOR/tail-01.b64"
+  "$FETCH_VENDOR/tail-02.b64"
+  "$FETCH_VENDOR/tail-03.b64"
+  "$FETCH_VENDOR/tail-04.b64"
+  "$FETCH_VENDOR/tail-05.b64"
+)
+for part in "${required_fetch_parts[@]}"; do
+  test -s "$part" || { echo "[4N1F build] missing pristine Fetch part: $part" >&2; exit 1; }
+done
+cat "${required_fetch_parts[@]}" > /tmp/4n1f-fetch-v226.b64
 base64 -d /tmp/4n1f-fetch-v226.b64 > /tmp/4n1f-fetch-v226.tar.gz
-set +e
-gzip -dc /tmp/4n1f-fetch-v226.tar.gz > /tmp/4n1f-fetch-v226.tar
-GZIP_RC=$?
-set -e
-if [ "$GZIP_RC" -ne 0 ]; then
-  echo "[4N1F recovery] legacy gzip footer failed CRC; validating salvaged tar contents instead."
-fi
-
-tar -tf /tmp/4n1f-fetch-v226.tar >/dev/null
-tar -xf /tmp/4n1f-fetch-v226.tar -C dist
-rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz /tmp/4n1f-fetch-v226.tar
+echo "b7ce8462dece1f872284f4cfaf139fcbfd68a569b55950e90215e85dedd293bb  /tmp/4n1f-fetch-v226.tar.gz" | sha256sum -c -
+tar -tzf /tmp/4n1f-fetch-v226.tar.gz >/dev/null
+tar -xzf /tmp/4n1f-fetch-v226.tar.gz -C dist
+rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz
 
 node <<'NODE'
 const fs = require('node:fs');
@@ -91,9 +84,10 @@ sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/editor/index.html
 
-# Strict recovery guardrails.
 test -f dist/index.html
 test -f dist/preview.html
+test -f dist/hub-portals-v6.css
+test -f dist/hub-portals-v6.js
 test -f dist/fetch/index.html
 test -f dist/fetch/studio.js
 test -f dist/fetch/preview-studio.js
@@ -111,6 +105,7 @@ test -f dist/editor/addons/v1.3.3-editor-route-nav.js
 grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' dist/index.html
 grep -q '<strong>FETCH</strong>' dist/index.html
 ! grep -q 'Masukkan Package Key untuk membuat sesi Preview baru' dist/index.html
+grep -q 'hub-cosmic-v5.js' dist/index.html
 grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
 grep -q '4N1F — FETCH NATIVE EDITOR V2.26' dist/fetch/editor/index.html
 grep -q 'href="./clean-preview.html"' dist/fetch/editor/index.html
@@ -126,4 +121,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare recovery bundle PASS: Hub + Fetch V2.26 + Native Editor + Preview ID"
+echo "4N1F Cloudflare PRISTINE bundle PASS: Hub + Fetch V2.26 + Native Editor + Preview ID"
