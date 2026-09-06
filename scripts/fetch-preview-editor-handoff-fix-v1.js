@@ -5,6 +5,8 @@ const fs = require('node:fs');
 
 const editorPath = 'dist/fetch/editor/editor.js';
 const previewPath = 'dist/fetch/preview.html';
+const previewShellSource = 'overrides/fetch-premium-v2/preview-shell.css';
+const previewShellDist = 'dist/fetch/preview-shell.css';
 
 function fail(message) {
   console.error('[4N1F handoff fix]', message);
@@ -13,10 +15,12 @@ function fail(message) {
 
 if (!fs.existsSync(editorPath)) fail(`missing ${editorPath}`);
 if (!fs.existsSync(previewPath)) fail(`missing ${previewPath}`);
+if (!fs.existsSync(previewShellSource)) fail(`missing ${previewShellSource}`);
 
 // 1) Preview page: Quantum studio.css intentionally replaced the old V2.26
 // studio stylesheet. Restore the preview-only full viewport contract separately
 // so the source-native iframe is not left at the browser default 300x150.
+fs.copyFileSync(previewShellSource, previewShellDist);
 let preview = fs.readFileSync(previewPath, 'utf8');
 if (!preview.includes('./preview-shell.css')) {
   if (!preview.includes('</head>')) fail('preview.html has no </head> marker');
@@ -72,5 +76,6 @@ if (editor.includes("frame.src='about:blank'")) fail('about:blank editor fallbac
 if (!editor.includes("sessionStorage.getItem('diniAnifRebuildSnapshot')")) fail('Fetch snapshot handoff key missing');
 if (!editor.includes('FETCH SNAPSHOT LOADED')) fail('Fetch snapshot load marker missing');
 if (!editor.includes('renderNativeEditor();renderPreview(true);renderInspector()')) fail('native editor hydration sequence missing');
+if (!fs.existsSync(previewShellDist)) fail('preview shell was not copied to dist');
 
 console.log('[4N1F handoff fix] preview shell + source-native editor handoff hardened');
