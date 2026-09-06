@@ -7,6 +7,7 @@ on:
       - fetch-v226-pristine-recovery
       - fetch-premium-v1
       - fetch-premium-v2
+      - status-motion-v1
   workflow_dispatch:
 
 permissions:
@@ -73,11 +74,15 @@ jobs:
           grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' dist/index.html
           grep -q '<strong>FETCH</strong>' dist/index.html
           ! grep -q 'Masukkan Package Key untuk membuat sesi Preview baru' dist/index.html
+          grep -q 'status-motion-v1.css' dist/index.html
+          grep -q 'status-motion-v1.js' dist/index.html
 
       - name: Verify Fetch V2.26 output
         shell: bash
         run: |
           set -euo pipefail
+          test -f dist/status-motion-v1.css
+          test -f dist/status-motion-v1.js
           test -f dist/fetch/index.html
           test -f dist/fetch/studio.css
           test -f dist/fetch/quantum.js
@@ -89,5 +94,13 @@ jobs:
           grep -q 'pipeline-strip' dist/fetch/index.html
           grep -q 'dormant-graph' dist/fetch/index.html
           grep -q 'quantum.js' dist/fetch/index.html
+          grep -q 'status-motion-v1.css' dist/fetch/index.html
+          grep -q 'status-motion-v1.js' dist/fetch/index.html
+          grep -q "'home-preview'" dist/status-motion-v1.js
+          grep -q 'fetchSourceBtn' dist/status-motion-v1.js
+          grep -q 'analyzeBtn' dist/status-motion-v1.js
+          grep -q 'buildBtn' dist/status-motion-v1.js
+          grep -q 'previewBtn' dist/status-motion-v1.js
+          node --check dist/status-motion-v1.js
           node --check dist/fetch/quantum.js
-          echo 'Cloudflare Fetch Premium V2 Quantum Console bundle verified.'
+          echo 'Cloudflare Global Status Motion V1 + Fetch Premium V2 bundle verified.'
