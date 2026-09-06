@@ -10,6 +10,7 @@ on:
       - status-motion-v1
       - fetch-preview-editor-handoff-fix-v1
       - fix-reveal-protection-v1
+      - fix-current-state-export-v1
   workflow_dispatch:
 
 permissions:
@@ -93,6 +94,7 @@ jobs:
           test -f dist/fetch/editor/index.html
           test -f dist/fetch/editor/editor.js
           test -f dist/fetch/editor/invitation.html
+          test -f dist/fetch/editor/clean-preview.js
 
           grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
           grep -q 'name="4n1f-fetch-ui" content="premium-v2-quantum"' dist/fetch/index.html
@@ -122,6 +124,15 @@ jobs:
           grep -q 'motionText' dist/fetch/studio.js
           grep -q 'data-native-animation-delay' dist/fetch/studio.js
 
+          # Current-state contract: edited media/data must survive APPLY -> Clean -> ZIP.
+          grep -q 'function currentAppliedValues' dist/fetch/editor/editor.js
+          grep -q 'data-4n1f-current-state-lock' dist/fetch/editor/editor.js
+          grep -q 'CURRENT STATE SEALED' dist/fetch/editor/editor.js
+          grep -q 'state_sealed:true' dist/fetch/editor/editor.js
+          grep -q 'frame.dataset.stateSealed' dist/fetch/editor/clean-preview.js
+          grep -Fq "JSON.stringify({values:snap.values,transforms:snap.transforms||{}},null,2)" dist/fetch/editor/editor.js
+          grep -Fq "JSON.stringify({values:snap.values||{},transforms:snap.transforms||{}},null,2)" dist/fetch/editor/clean-preview.js
+
           grep -q "'home-preview'" dist/status-motion-v1.js
           grep -q 'fetchSourceBtn' dist/status-motion-v1.js
           grep -q 'analyzeBtn' dist/status-motion-v1.js
@@ -132,4 +143,5 @@ jobs:
           node --check dist/fetch/studio.js
           node --check dist/fetch/visual-resolver.js
           node --check dist/fetch/editor/editor.js
-          echo 'Cloudflare Preview handoff + reveal parity + protection sanitation verified.'
+          node --check dist/fetch/editor/clean-preview.js
+          echo 'Cloudflare Preview handoff + reveal/protection + CURRENT state integrity verified.'
