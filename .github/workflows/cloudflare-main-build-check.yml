@@ -16,49 +16,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Probe clean Fetch payloads
+      - name: Probe exact current Fetch assembly
         shell: bash
         run: |
           set -u
-          mkdir -p /tmp/fetch-probe
-
-          inspect_gz() {
-            local name="$1" gz="$2"
-            echo "--- ${name} ---"
-            local sha size
-            sha=$(sha256sum "$gz" | awk '{print $1}')
-            size=$(wc -c < "$gz")
-            echo "sha=${sha} bytes=${size}"
-            if gzip -t "$gz" 2>/dev/null && tar -tzf "$gz" >/dev/null 2>&1; then
-              echo "PASS ${name}"
-              tar -tzf "$gz" | head -30
-            else
-              echo "FAIL ${name}: gzip/tar"
-            fi
-          }
-
+          FETCH_VENDOR="vendor/fetch-v226"
           {
-            base64 -d vendor/fetch-v226-clean/part-00.b64
-            base64 -d vendor/fetch-v226-clean/part-01.b64
-            base64 -d vendor/fetch-v226-clean/part-02.b64
-          } > /tmp/fetch-probe/clean-parts.tar.gz || true
-          inspect_gz clean_parts_binary_join /tmp/fetch-probe/clean-parts.tar.gz
-
-          {
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-00
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-01
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-02
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03a
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03b
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03c
-            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03d
-          } > /tmp/fetch-probe/clean-source.tar.gz || true
-          inspect_gz clean_source_binary_join /tmp/fetch-probe/clean-source.tar.gz
-
-          if [ -s vendor/fetch-v226-final/part-00 ]; then
-            base64 -d vendor/fetch-v226-final/part-00 > /tmp/fetch-probe/final-current.tar.gz || true
-            inspect_gz final_current /tmp/fetch-probe/final-current.tar.gz
-          fi
+            cat "$FETCH_VENDOR/corr-prefix-00"
+            cat "$FETCH_VENDOR/corr-prefix-01"
+            head -c 12000 "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-01"
+            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-02"
+            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-03"
+            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-04"
+            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-05"
+            cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-06"
+            cat "$FETCH_VENDOR/corr-tail-a"
+            cat "$FETCH_VENDOR/corr-tail-b"
+            cat "$FETCH_VENDOR/corr-tail-cd-00"
+            cat "$FETCH_VENDOR/corr-tail-cd-01"
+            cat "$FETCH_VENDOR/corr-tail-cd-02"
+            cat "$FETCH_VENDOR/corr-tail-cd-03"
+            cat "$FETCH_VENDOR/corr-tail-cd-04"
+            cat "$FETCH_VENDOR/corr-tail-cd-05"
+            cat "$FETCH_VENDOR/corr-tail-cd-06"
+            cat "$FETCH_VENDOR/corr-tail-cd-07"
+          } > /tmp/current-fetch.b64
+          base64 -d /tmp/current-fetch.b64 > /tmp/current-fetch.tar.gz
+          echo "ACTUAL_SHA=$(sha256sum /tmp/current-fetch.tar.gz | awk '{print $1}')"
+          echo "ACTUAL_BYTES=$(wc -c < /tmp/current-fetch.tar.gz)"
+          gzip -t /tmp/current-fetch.tar.gz
+          tar -tzf /tmp/current-fetch.tar.gz | head -60
+          echo "CURRENT_ASSEMBLY_PASS=1"
 
       - name: Build Cloudflare bundle
         shell: bash
