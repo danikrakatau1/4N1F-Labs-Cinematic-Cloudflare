@@ -14,6 +14,8 @@ cp hub-ambient-v4.css dist/hub-ambient-v4.css
 cp hub-cosmic-v5.js dist/hub-cosmic-v5.js
 cp hub-portals-v6.css dist/hub-portals-v6.css
 cp hub-portals-v6.js dist/hub-portals-v6.js
+cp status-motion-v1.css dist/status-motion-v1.css
+cp status-motion-v1.js dist/status-motion-v1.js
 cp -R editor/. dist/editor/
 
 # Pristine Fetch V2.26 package rebuilt directly from the original healthy ZIP.
@@ -69,7 +71,7 @@ cp "$FETCH_UI_OVERRIDE/index.html" dist/fetch/index.html
 cp "$FETCH_UI_OVERRIDE/studio.css" dist/fetch/studio.css
 cp "$FETCH_UI_OVERRIDE/quantum.js" dist/fetch/quantum.js
 cp "$FETCH_UI_OVERRIDE/quantum-type.css" dist/fetch/quantum-type.css
-sed -i 's#</head>#  <link rel="stylesheet" href="./quantum-type.css">\n</head>#' dist/fetch/index.html
+sed -i 's#</head>#  <link rel="stylesheet" href="./quantum-type.css">\n  <link rel="stylesheet" href="/status-motion-v1.css">\n  <script src="/status-motion-v1.js" defer></script>\n</head>#' dist/fetch/index.html
 
 node <<'NODE'
 const fs = require('node:fs');
@@ -103,13 +105,15 @@ patch('dist/fetch/preview.html', [
 ]);
 NODE
 
-sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <script src="/hub-portals-v6.js" defer></script>\n</head>#' dist/index.html
+sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <link rel="stylesheet" href="/status-motion-v1.css">\n  <script src="/hub-portals-v6.js" defer></script>\n  <script src="/status-motion-v1.js" defer></script>\n</head>#' dist/index.html
 sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-cosmic-v5.js"></script>#' dist/index.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/editor/index.html
 
 test -f dist/index.html
 test -f dist/preview.html
+test -f dist/status-motion-v1.css
+test -f dist/status-motion-v1.js
 test -f dist/hub-portals-v6.css
 test -f dist/hub-portals-v6.js
 test -f dist/fetch/index.html
@@ -133,6 +137,8 @@ grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' dist/index.html
 grep -q '<strong>FETCH</strong>' dist/index.html
 ! grep -q 'Masukkan Package Key untuk membuat sesi Preview baru' dist/index.html
 grep -q 'hub-cosmic-v5.js' dist/index.html
+grep -q 'status-motion-v1.css' dist/index.html
+grep -q 'status-motion-v1.js' dist/index.html
 
 grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
 grep -q 'name="4n1f-fetch-ui" content="premium-v2-quantum"' dist/fetch/index.html
@@ -140,7 +146,14 @@ grep -q 'QUANTUM CONSOLE' dist/fetch/index.html
 grep -q 'dormant-graph' dist/fetch/index.html
 grep -q 'quantum.js' dist/fetch/index.html
 grep -q 'quantum-type.css' dist/fetch/index.html
+grep -q 'status-motion-v1.css' dist/fetch/index.html
+grep -q 'status-motion-v1.js' dist/fetch/index.html
 grep -q 'Geist Mono' dist/fetch/quantum-type.css
+grep -q "'home-preview'" dist/status-motion-v1.js
+grep -q 'fetchSourceBtn' dist/status-motion-v1.js
+grep -q 'analyzeBtn' dist/status-motion-v1.js
+grep -q 'buildBtn' dist/status-motion-v1.js
+grep -q 'previewBtn' dist/status-motion-v1.js
 for hook in sourceUrl fetchSourceBtn sourceInput uploadHtmlBtn clearBtn analyzeBtn sourceBadge analysisStatus parityScore editableScore dependencyScore unsupportedScore detectList mappingBadge mappingTree buildBtn previewBtn downloadBtn studioMessage htmlFileInput; do
   grep -q "id=\"$hook\"" dist/fetch/index.html || { echo "[4N1F build] Fetch Premium V2 missing engine hook: $hook" >&2; exit 1; }
 done
@@ -153,6 +166,7 @@ grep -q "title='4N1F Fetch — Template'" dist/fetch/visual-resolver.js
 ! grep -q 'invitation.html?clean=1' dist/fetch/editor/index.html
 ! grep -q 'Dini Anif —' dist/fetch/studio.js
 
+node --check dist/status-motion-v1.js
 node --check dist/fetch/studio.js
 node --check dist/fetch/quantum.js
 node --check dist/fetch/preview-studio.js
@@ -160,4 +174,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare QUANTUM V2 + TYPE V1 bundle PASS: Hub + Fetch Premium V2 + Geist Typography + Fetch V2.26 + Native Editor + Preview ID"
+echo "4N1F Cloudflare STATUS MOTION V1 PASS: Hub Generate Preview + Fetch actions + Quantum V2 + Fetch V2.26 + Native Editor + Preview ID"
