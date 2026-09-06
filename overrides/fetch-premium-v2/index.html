@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <base href="/fetch/">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#03050a">
+  <meta name="4n1f-fetch-ui" content="premium-v2-quantum">
+  <title>4N1F Labs — Quantum Fetch Console V2.26</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body class="studio-body">
+  <div class="quantum-space" aria-hidden="true">
+    <div class="quantum-grid"></div>
+    <div class="quantum-rays"></div>
+    <div class="quantum-noise"></div>
+    <span class="quantum-orb orb-one"></span>
+    <span class="quantum-orb orb-two"></span>
+    <span class="quantum-orb orb-three"></span>
+    <div class="particle-field">
+      <i style="--x:8%;--y:18%;--d:7s"></i><i style="--x:16%;--y:72%;--d:11s"></i><i style="--x:28%;--y:34%;--d:9s"></i>
+      <i style="--x:41%;--y:12%;--d:13s"></i><i style="--x:54%;--y:82%;--d:8s"></i><i style="--x:63%;--y:30%;--d:12s"></i>
+      <i style="--x:72%;--y:67%;--d:10s"></i><i style="--x:86%;--y:20%;--d:14s"></i><i style="--x:93%;--y:76%;--d:9s"></i>
+    </div>
+  </div>
+
+  <div class="studio-shell">
+    <header class="studio-topbar quantum-panel" data-spotlight-card>
+      <div class="topbar-beam" aria-hidden="true"></div>
+      <div class="studio-header-copy">
+        <div class="studio-kicker"><span class="kicker-core"></span>4N1F LABS · FETCH ENGINE V2.26 <em>QUANTUM CONSOLE</em></div>
+        <h1><span>Fetch</span> &amp; Rebuild Studio</h1>
+        <p>Source-native reconstruction workspace for deep fetch, diagnostics, mapping and rebuild.</p>
+        <div class="studio-capabilities" aria-label="Fetch capabilities">
+          <span><i></i>Source Graph V3</span>
+          <span><i></i>Native Rebuild</span>
+          <span><i></i>Preview Ready</span>
+          <span><i></i>Editor V2.26</span>
+        </div>
+      </div>
+      <nav class="studio-nav" aria-label="Fetch navigation">
+        <span class="nav-limelight" aria-hidden="true"></span>
+        <a href="/">Home</a>
+        <a class="active" href="./" aria-current="page">Fetch</a>
+        <a id="previewNavBtn" href="./preview.html">Preview</a>
+        <a href="./editor/">Native Editor</a>
+      </nav>
+    </header>
+
+    <div class="pipeline-strip quantum-panel" aria-label="Fetch pipeline">
+      <div class="pipeline-node active"><span>01</span><div><b>SOURCE</b><small>Acquire HTML</small></div></div>
+      <div class="pipeline-beam"><i></i></div>
+      <div class="pipeline-node"><span>02</span><div><b>ANALYZE</b><small>Diagnose graph</small></div></div>
+      <div class="pipeline-beam"><i></i></div>
+      <div class="pipeline-node"><span>03</span><div><b>REBUILD</b><small>Native output</small></div></div>
+      <div class="pipeline-state"><span class="state-pulse"></span>ENGINE ONLINE</div>
+    </div>
+
+    <main class="studio-grid">
+      <section class="studio-card source-card quantum-panel featured-panel" aria-labelledby="source-title" data-spotlight-card>
+        <div class="quantum-border" aria-hidden="true"><i></i></div>
+        <div class="panel-glow cyan-glow" aria-hidden="true"></div>
+        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step step-source"><b>01</b><i></i></span>
+            <div>
+              <span class="card-eyebrow">INPUT / ACQUISITION LAYER</span>
+              <h2 id="source-title">Source Input</h2>
+            </div>
+          </div>
+          <span id="sourceBadge" class="badge neutral">Belum ada source</span>
+        </div>
+
+        <div class="source-hero-line">
+          <span class="source-signal"><i></i>REMOTE BRIDGE</span>
+          <span>URL → Cloudflare Fetch Bridge → Source Graph</span>
+        </div>
+
+        <div class="field-block">
+          <div class="field-heading">
+            <label class="studio-label" for="sourceUrl">URL website</label>
+            <span class="field-note">REMOTE SOURCE</span>
+          </div>
+          <div class="url-fetch-row">
+            <div class="input-shell quantum-input">
+              <span class="input-icon" aria-hidden="true">↗</span>
+              <input id="sourceUrl" class="url-input" type="url" inputmode="url" autocomplete="url" placeholder="https://website-sumber.com/undangan/">
+              <span class="input-scan" aria-hidden="true"></span>
+            </div>
+            <button id="fetchSourceBtn" class="btn quantum-btn fetch-cta" type="button"><span>Fetch Source</span><b aria-hidden="true">→</b><i class="btn-beam"></i></button>
+          </div>
+          <div id="fetchMeta" class="fetch-meta" aria-live="polite"></div>
+        </div>
+
+        <div class="source-divider"><span>ATAU PASTE SOURCE LANGSUNG</span></div>
+
+        <div class="field-block source-editor-block">
+          <div class="field-heading">
+            <label class="studio-label" for="sourceInput">Source HTML</label>
+            <span class="field-note mono">VIEW SOURCE / HTML</span>
+          </div>
+          <div class="editor-shell">
+            <div class="editor-toolbar">
+              <span class="editor-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="editor-file">source.html</span>
+              <span class="editor-telemetry"><i></i>READY</span>
+              <span class="editor-mode">HTML</span>
+            </div>
+            <div class="editor-gutter" aria-hidden="true"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span><span>06</span><span>07</span><span>08</span></div>
+            <textarea id="sourceInput" class="source-input" placeholder="Paste View Source / HTML di sini…"></textarea>
+            <div class="editor-horizon" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="source-actions action-rail">
+          <button id="uploadHtmlBtn" class="btn secondary">Upload HTML</button>
+          <button id="clearBtn" class="btn ghost">Clear</button>
+          <button id="analyzeBtn" class="btn primary analyze-cta">Analyze Source <span aria-hidden="true">→</span><i></i></button>
+        </div>
+        <input id="htmlFileInput" type="file" accept=".html,.htm,.txt,text/html,text/plain" hidden>
+
+        <div class="security-note">
+          <span class="security-icon" aria-hidden="true">◇</span>
+          <div><b>SECURE FETCH BRIDGE</b><p>Fetch URL memakai Cloudflare Worker bridge <code>/api/fetch-source</code>. Localhost/private network diblok dan response HTML dibatasi untuk menjaga proxy tetap aman.</p></div>
+          <span class="security-status">GUARDED</span>
+        </div>
+      </section>
+
+      <section class="studio-card report-card quantum-panel" aria-labelledby="analysis-title" data-spotlight-card>
+        <div class="panel-glow violet-glow" aria-hidden="true"></div>
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step step-analysis"><b>02</b><i></i></span>
+            <div>
+              <span class="card-eyebrow">LIVE DIAGNOSTICS</span>
+              <h2 id="analysis-title">Analysis</h2>
+            </div>
+          </div>
+          <span id="analysisStatus" class="badge neutral">Menunggu</span>
+        </div>
+
+        <div class="score-grid">
+          <div class="score score-parity"><div class="score-ring"></div><span>Parity Score</span><strong id="parityScore">—</strong><small>VISUAL FIDELITY</small><i class="metric-bar"></i></div>
+          <div class="score score-editable"><div class="score-ring"></div><span>Editable Coverage</span><strong id="editableScore">—</strong><small>MAPPED CONTENT</small><i class="metric-bar"></i></div>
+          <div class="score score-dependency"><div class="score-ring"></div><span>External Dependency</span><strong id="dependencyScore">—</strong><small>REMOTE ASSETS</small><i class="metric-bar"></i></div>
+          <div class="score score-unsupported"><div class="score-ring"></div><span>Unsupported</span><strong id="unsupportedScore">—</strong><small>MANUAL REVIEW</small><i class="metric-bar"></i></div>
+        </div>
+
+        <div class="panel-subhead"><span>Detection report</span><b><i></i> LIVE DIAGNOSTICS</b></div>
+        <div id="detectList" class="detect-list empty">
+          <div class="empty-state radar-state">
+            <div class="radar" aria-hidden="true"><i></i><i></i><i></i><span></span><b></b></div>
+            <strong>Diagnostics dormant</strong>
+            <small>Fetch atau paste source untuk mengaktifkan telemetry.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="studio-card map-card quantum-panel" aria-labelledby="mapping-title" data-spotlight-card>
+        <div class="panel-glow amber-glow" aria-hidden="true"></div>
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="step step-map"><b>03</b><i></i></span>
+            <div>
+              <span class="card-eyebrow">SOURCE GRAPH OUTPUT</span>
+              <h2 id="mapping-title">Editable Mapping</h2>
+            </div>
+          </div>
+          <span id="mappingBadge" class="badge neutral">Belum generate</span>
+        </div>
+
+        <div class="panel-subhead"><span>Source-native structure</span><b><i></i> MAPPING TREE</b></div>
+        <div id="mappingTree" class="mapping-tree empty">
+          <div class="empty-state graph-state">
+            <svg class="dormant-graph" viewBox="0 0 560 230" aria-hidden="true">
+              <defs>
+                <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6ee7ff" stop-opacity="0"/><stop offset=".5" stop-color="#9d8cff"/><stop offset="1" stop-color="#f0bf67" stop-opacity="0"/></linearGradient>
+              </defs>
+              <path d="M70 115 C150 115 135 48 220 48 S315 114 386 114"/><path d="M220 48 C250 48 255 180 330 180 S410 114 490 114"/><path class="beam-path" d="M70 115 C150 115 135 48 220 48 S315 114 386 114"/>
+              <circle cx="70" cy="115" r="14"/><circle cx="220" cy="48" r="12"/><circle cx="330" cy="180" r="11"/><circle cx="386" cy="114" r="13"/><circle cx="490" cy="114" r="14"/>
+              <g class="node-pulse"><circle cx="70" cy="115" r="5"/><circle cx="220" cy="48" r="5"/><circle cx="330" cy="180" r="5"/><circle cx="386" cy="114" r="5"/><circle cx="490" cy="114" r="5"/></g>
+            </svg>
+            <strong>Source Graph dormant</strong>
+            <small>Editable nodes akan terhubung setelah source selesai dianalisis.</small>
+          </div>
+        </div>
+
+        <div class="build-actions action-rail command-dock">
+          <button id="buildBtn" class="btn primary build-cta" disabled>Generate Rebuild <span aria-hidden="true">→</span><i></i></button>
+          <a id="previewBtn" class="btn secondary disabled" href="./preview.html">Open Preview</a>
+          <button id="downloadBtn" class="btn success" disabled>Download Rebuild ZIP</button>
+        </div>
+        <p id="studioMessage" class="studio-message"></p>
+      </section>
+    </main>
+
+    <footer class="quantum-footer">
+      <span><i></i>4N1F SOURCE-NATIVE PIPELINE</span>
+      <b>FETCH V2.26 / SOURCE GRAPH V3 / QUANTUM UI V2</b>
+    </footer>
+  </div>
+
+  <script src="./visual-resolver.js"></script>
+  <script src="./defaults.js"></script>
+  <script src="./zip-builder.js"></script>
+  <script src="./studio.js"></script>
+  <script src="./quantum.js"></script>
+</body>
+</html>
