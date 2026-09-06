@@ -11,6 +11,7 @@ on:
       - fetch-preview-editor-handoff-fix-v1
       - fix-reveal-protection-v1
       - fix-current-state-export-v1
+      - webgl-preview-key-v1
   workflow_dispatch:
 
 permissions:
@@ -133,6 +134,16 @@ jobs:
           grep -Fq "JSON.stringify({values:snap.values,transforms:snap.transforms||{}},null,2)" dist/fetch/editor/editor.js
           grep -Fq "JSON.stringify({values:snap.values||{},transforms:snap.transforms||{}},null,2)" dist/fetch/editor/clean-preview.js
 
+          # WebGL Preview Key V1: dedicated Preview ID -> image-only WebGL lab.
+          test -f dist/editor/webgl-lab/index.html
+          test -f dist/editor/webgl-lab/webgl.js
+          grep -q 'p_8c5360de7ef242a08cfd0adb37421d68' dist/preview.html
+          grep -q 'WEBGL · IMAGE→IMAGE · NO VIDEO' dist/editor/webgl-lab/index.html
+          grep -q 'JAWA-COKLAT-3-1.jpg' dist/editor/webgl-lab/webgl.js
+          grep -q 'JAWA-COKLAT-3-3-1.jpg' dist/editor/webgl-lab/webgl.js
+          ! grep -q '\.mp4' dist/editor/webgl-lab/webgl.js
+          node --check dist/editor/webgl-lab/webgl.js
+
           grep -q "'home-preview'" dist/status-motion-v1.js
           grep -q 'fetchSourceBtn' dist/status-motion-v1.js
           grep -q 'analyzeBtn' dist/status-motion-v1.js
@@ -144,4 +155,4 @@ jobs:
           node --check dist/fetch/visual-resolver.js
           node --check dist/fetch/editor/editor.js
           node --check dist/fetch/editor/clean-preview.js
-          echo 'Cloudflare Preview handoff + reveal/protection + CURRENT state integrity verified.'
+          echo 'Cloudflare Preview handoff + reveal/protection + CURRENT state + WebGL Preview Key verified.'
