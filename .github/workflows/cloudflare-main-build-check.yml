@@ -25,7 +25,7 @@ jobs:
             local name="$1" b64="$2"
             local gz="/tmp/fetch-probe/${name}.tar.gz"
             echo "--- ${name} ---"
-            if ! base64 -d "$b64" > "$gz" 2>/dev/null; then
+            if ! base64 -di "$b64" > "$gz" 2>/dev/null; then
               echo "FAIL ${name}: base64 decode"
               return 0
             fi
