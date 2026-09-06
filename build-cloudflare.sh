@@ -59,15 +59,17 @@ tar -xzf /tmp/4n1f-fetch-v226-pristine.tar.gz -C dist
 rm -f /tmp/4n1f-fetch-v226-pristine.b64 /tmp/4n1f-fetch-v226-pristine.tar.gz
 
 # Fetch Premium V2 is a UI-only Quantum Console replacement. The pristine
-# Fetch engine and runtime JS remain source-of-truth; only presentation and
-# the non-invasive reactive motion layer are overlaid.
+# Fetch engine and runtime JS remain source-of-truth; only presentation,
+# typography, and the non-invasive reactive motion layer are overlaid.
 FETCH_UI_OVERRIDE="overrides/fetch-premium-v2"
-for f in index.html studio.css quantum.js; do
+for f in index.html studio.css quantum.js quantum-type.css; do
   test -s "$FETCH_UI_OVERRIDE/$f" || { echo "[4N1F build] missing Fetch Premium V2 override: $f" >&2; exit 1; }
 done
 cp "$FETCH_UI_OVERRIDE/index.html" dist/fetch/index.html
 cp "$FETCH_UI_OVERRIDE/studio.css" dist/fetch/studio.css
 cp "$FETCH_UI_OVERRIDE/quantum.js" dist/fetch/quantum.js
+cp "$FETCH_UI_OVERRIDE/quantum-type.css" dist/fetch/quantum-type.css
+sed -i 's#</head>#  <link rel="stylesheet" href="./quantum-type.css">\n</head>#' dist/fetch/index.html
 
 node <<'NODE'
 const fs = require('node:fs');
@@ -113,6 +115,7 @@ test -f dist/hub-portals-v6.js
 test -f dist/fetch/index.html
 test -f dist/fetch/studio.css
 test -f dist/fetch/quantum.js
+test -f dist/fetch/quantum-type.css
 test -f dist/fetch/studio.js
 test -f dist/fetch/preview-studio.js
 test -f dist/fetch/visual-resolver.js
@@ -136,6 +139,8 @@ grep -q 'name="4n1f-fetch-ui" content="premium-v2-quantum"' dist/fetch/index.htm
 grep -q 'QUANTUM CONSOLE' dist/fetch/index.html
 grep -q 'dormant-graph' dist/fetch/index.html
 grep -q 'quantum.js' dist/fetch/index.html
+grep -q 'quantum-type.css' dist/fetch/index.html
+grep -q 'Geist Mono' dist/fetch/quantum-type.css
 for hook in sourceUrl fetchSourceBtn sourceInput uploadHtmlBtn clearBtn analyzeBtn sourceBadge analysisStatus parityScore editableScore dependencyScore unsupportedScore detectList mappingBadge mappingTree buildBtn previewBtn downloadBtn studioMessage htmlFileInput; do
   grep -q "id=\"$hook\"" dist/fetch/index.html || { echo "[4N1F build] Fetch Premium V2 missing engine hook: $hook" >&2; exit 1; }
 done
@@ -155,4 +160,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare QUANTUM V2 bundle PASS: Hub + Fetch Premium V2 + Fetch V2.26 + Native Editor + Preview ID"
+echo "4N1F Cloudflare QUANTUM V2 + TYPE V1 bundle PASS: Hub + Fetch Premium V2 + Geist Typography + Fetch V2.26 + Native Editor + Preview ID"
