@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#04050c">
-  <meta name="4n1f-checkpoint" content="V0.3.1-premium-preview-hub">
+  <meta name="4n1f-checkpoint" content="V0.3.2-fetch-home-gate">
   <title>4N1F Labs — Universal Preview Hub</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
@@ -123,6 +123,16 @@
       <p class="sub">Masukkan Package Key untuk membuat sesi Preview baru. Hasil preview dibuka sebagai halaman bersih, lalu dari sana Live Editor dapat dibuka dengan Preview ID yang sama.</p>
       <section class="hub" aria-label="4N1F Preview Hub">
         <div class="hub-body">
+          <div class="hub-gates" aria-label="4N1F tool entry points">
+            <a class="hub-gate hub-gate-fetch" href="/fetch/">
+              <span class="hub-gate-copy"><strong>FETCH</strong><small>URL → Source Graph V3 → Native Editor V2.26</small></span>
+              <span class="hub-gate-icon" aria-hidden="true">↗</span>
+            </a>
+            <button class="hub-gate hub-gate-package active" type="button" aria-current="page" onclick="document.getElementById('sourceInput')?.focus()">
+              <span class="hub-gate-copy"><strong>PACKAGE KEY / PREVIEW ID</strong><small>Open package or resume an existing Preview session</small></span>
+              <span class="hub-gate-icon" aria-hidden="true">KV</span>
+            </button>
+          </div>
           <div class="label"><b>PACKAGE KEY / PREVIEW ID</b><span>KV → legacy fallback</span></div>
           <div class="row"><input id="sourceInput" autocomplete="off" spellcheck="false" placeholder="4N1F_XXXXXXXXXXXX atau p_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><button id="generateBtn" type="button">Generate Preview ↗</button></div>
           <div class="result" id="resultBox"><code id="resultId">—</code><div class="result-actions"><button id="copyBtn" type="button">Copy ID</button><button id="openBtn" type="button">Open Preview ↗</button></div></div>
@@ -144,7 +154,7 @@
       function showResult(previewId){currentPreviewId=previewId.toLowerCase();resultId.textContent=currentPreviewId;resultBox.classList.add('show')}
       function openPreview(previewId,popup){const url=`/${encodeURIComponent(previewId)}`;if(popup&&!popup.closed)popup.location.replace(url);else window.open(url,'_blank','noopener')}
       async function generate(packageKey,popup){const response=await fetch('/api/kv-session',{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:JSON.stringify({package_key:packageKey.toUpperCase()})});const data=await response.json().catch(()=>null);if(!response.ok||!data?.success||!data?.preview_id)throw new Error(data?.message||`Generate Preview gagal (${response.status}).`);showResult(data.preview_id);input.value=data.preview_id;setState(`Preview session dibuat · ${data.preview_id}`,'ok');openPreview(data.preview_id,popup)}
-      generateBtn.addEventListener('click',async()=>{const value=String(input.value||'').trim();if(validPreview(value)){const id=value.toLowerCase();showResult(id);setState(`Membuka ${id}`,'ok');openPreview(id);return}if(!validPackage(value)){setState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.','error');input.focus();return}const popup=window.open('about:blank','_blank');generateBtn.disabled=true;const old=generateBtn.textContent;generateBtn.textContent='Generating…';setState('Membuat Preview ID dari Package Key…');try{await generate(value,popup)}catch(error){try{popup?.close()}catch{}setState(error?.message||'Generate Preview gagal.','error')}finally{generateBtn.disabled=false;generateBtn.textContent=old}});
+      generateBtn.addEventListener('click',async()=>{const value=String(input.value||'').trim();if(validPreview(value)){const id=value.toLowerCase();showResult(id);setState(`Membuka ${id}`,'ok');openPreview(id);return}if(!validPackage(value)){setState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.','error');input.focus();return}const popup=window.open('about:blank','_blank');generateBtn.disabled=true;const old=generateBtn.textContent;generateBtn.textContent='Generating…';setState('Membuat Preview ID dari Package Key…');try{await generate(value,popup)}catch(error){try{popup?.close()}catch{}setState(error?.message||'Generate Preview gagal.','error')}finally{generateBtn.disabled=false;generateBtn.textContent=old)}});
       input.addEventListener('keydown',event=>{if(event.key==='Enter')generateBtn.click()});
       copyBtn.addEventListener('click',async()=>{if(!currentPreviewId)return;try{await navigator.clipboard.writeText(currentPreviewId);setState('Preview ID disalin.','ok')}catch{setState('Browser tidak mengizinkan clipboard.','error')}});
       openBtn.addEventListener('click',()=>{if(currentPreviewId)openPreview(currentPreviewId)});
