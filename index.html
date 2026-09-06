@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#04050c">
-  <meta name="4n1f-checkpoint" content="V0.3.2-fetch-home-gate">
+  <meta name="4n1f-checkpoint" content="V0.3.3-fetch-gate-clean-hub">
   <title>4N1F Labs — Universal Preview Hub</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
@@ -44,9 +44,8 @@
     .eyebrow span{color:transparent;background:linear-gradient(96deg,#8793a5 0%,#aeb9c8 35%,#f6fbff 49%,#b3c7d8 58%,#8793a5 100%);background-size:240% 100%;background-position:120% 50%;-webkit-background-clip:text;background-clip:text;animation:eyebrowShine 6.5s ease-in-out infinite}
 
     h1{margin:0;text-align:center;font-size:clamp(46px,7.3vw,80px);line-height:.91;letter-spacing:-.058em;font-weight:590;text-wrap:balance;color:#f8f9fc;background:linear-gradient(180deg,#fff 8%,#eef2f8 68%,#cfd8e5 112%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 16px 45px rgba(0,0,0,.15)}
-    .sub{width:min(680px,100%);margin:20px auto 30px;text-align:center;color:rgba(221,228,239,.68);font-size:14px;line-height:1.72;font-weight:410;letter-spacing:-.012em;text-wrap:balance}
 
-    .hub{position:relative;isolation:isolate;border:1px solid rgba(255,255,255,.115);border-radius:22px;background:linear-gradient(145deg,rgba(15,18,31,.78),rgba(6,8,16,.70));box-shadow:0 34px 105px rgba(0,0,0,.40),0 10px 34px rgba(2,4,10,.24),inset 0 1px rgba(255,255,255,.055);backdrop-filter:blur(28px) saturate(1.20);-webkit-backdrop-filter:blur(28px) saturate(1.20);overflow:hidden}
+    .hub{position:relative;isolation:isolate;margin-top:30px;border:1px solid rgba(255,255,255,.115);border-radius:22px;background:linear-gradient(145deg,rgba(15,18,31,.78),rgba(6,8,16,.70));box-shadow:0 34px 105px rgba(0,0,0,.40),0 10px 34px rgba(2,4,10,.24),inset 0 1px rgba(255,255,255,.055);backdrop-filter:blur(28px) saturate(1.20);-webkit-backdrop-filter:blur(28px) saturate(1.20);overflow:hidden}
     .hub::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.055),transparent 24%,transparent 70%,rgba(109,204,255,.03)),radial-gradient(110% 90% at 16% -20%,rgba(117,184,255,.07),transparent 48%),radial-gradient(80% 100% at 100% 60%,rgba(172,93,255,.055),transparent 52%)}
     .hub::after{content:"";position:absolute;inset:-1px;z-index:4;border-radius:inherit;padding:1px;pointer-events:none;background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 248deg,rgba(141,234,255,.12) 276deg,rgba(198,151,255,.54) 302deg,rgba(174,247,209,.64) 324deg,rgba(255,255,255,.30) 341deg,transparent 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderBeam 9s linear infinite}
     .hub-body{position:relative;z-index:2;padding:24px 24px 22px}
@@ -97,8 +96,7 @@
       .page{align-items:center;padding-left:14px;padding-right:14px}
       .wrap{transform:none}
       h1{font-size:clamp(43px,14vw,62px);line-height:.94}
-      .sub{font-size:13px;margin-top:16px;margin-bottom:24px}
-      .hub{border-radius:19px}
+      .hub{margin-top:24px;border-radius:19px}
       .hub-body{padding:18px}
       .label{align-items:flex-end}
       .row{grid-template-columns:1fr}
@@ -120,7 +118,6 @@
     <div class="wrap">
       <div class="eyebrow"><i></i><span>4N1F Labs · Cinematic System</span></div>
       <h1>Universal Preview Hub</h1>
-      <p class="sub">Masukkan Package Key untuk membuat sesi Preview baru. Hasil preview dibuka sebagai halaman bersih, lalu dari sana Live Editor dapat dibuka dengan Preview ID yang sama.</p>
       <section class="hub" aria-label="4N1F Preview Hub">
         <div class="hub-body">
           <div class="hub-gates" aria-label="4N1F tool entry points">
