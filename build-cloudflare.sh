@@ -16,41 +16,72 @@ cp hub-portals-v6.css dist/hub-portals-v6.css
 cp hub-portals-v6.js dist/hub-portals-v6.js
 cp -R editor/. dist/editor/
 
-# Reconstruct the user-supplied V2.26 Fetch + Native Editor archive.
-# The original multipart upload had one overlapping segment; correction
-# fragments restore the packed source before checksum verification.
+# FINAL Fetch V2.26 package path.
+# The original user ZIP arrived as multipart source. The correction fragments
+# below are now complete and are assembled in a fixed, explicit order.
+FETCH_VENDOR="vendor/fetch-v226"
+
+required_fetch_parts=(
+  "$FETCH_VENDOR/corr-prefix-00"
+  "$FETCH_VENDOR/corr-prefix-01"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-01"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-02"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-03"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-04"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-05"
+  "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-06"
+  "$FETCH_VENDOR/corr-tail-a"
+  "$FETCH_VENDOR/corr-tail-b"
+  "$FETCH_VENDOR/corr-tail-cd-00"
+  "$FETCH_VENDOR/corr-tail-cd-01"
+  "$FETCH_VENDOR/corr-tail-cd-02"
+  "$FETCH_VENDOR/corr-tail-cd-03"
+  "$FETCH_VENDOR/corr-tail-cd-04"
+  "$FETCH_VENDOR/corr-tail-cd-05"
+  "$FETCH_VENDOR/corr-tail-cd-06"
+  "$FETCH_VENDOR/corr-tail-cd-07"
+)
+
+for part in "${required_fetch_parts[@]}"; do
+  test -s "$part" || { echo "[4N1F build] missing Fetch V2.26 part: $part" >&2; exit 1; }
+done
+
 {
-  cat vendor/fetch-v226/corr-prefix-00
-  cat vendor/fetch-v226/corr-prefix-01
-  head -c 12000 vendor/fetch-v226/fetch-v226.tar.gz.b64.part-01
-  cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-02
-  cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-03
-  cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-04
-  cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-05
-  cat vendor/fetch-v226/fetch-v226.tar.gz.b64.part-06
-  cat vendor/fetch-v226/corr-tail-a
-  cat vendor/fetch-v226/corr-tail-b
-  cat vendor/fetch-v226/corr-tail-cd-*
+  cat "$FETCH_VENDOR/corr-prefix-00"
+  cat "$FETCH_VENDOR/corr-prefix-01"
+  head -c 12000 "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-01"
+  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-02"
+  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-03"
+  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-04"
+  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-05"
+  cat "$FETCH_VENDOR/fetch-v226.tar.gz.b64.part-06"
+  cat "$FETCH_VENDOR/corr-tail-a"
+  cat "$FETCH_VENDOR/corr-tail-b"
+  cat "$FETCH_VENDOR/corr-tail-cd-00"
+  cat "$FETCH_VENDOR/corr-tail-cd-01"
+  cat "$FETCH_VENDOR/corr-tail-cd-02"
+  cat "$FETCH_VENDOR/corr-tail-cd-03"
+  cat "$FETCH_VENDOR/corr-tail-cd-04"
+  cat "$FETCH_VENDOR/corr-tail-cd-05"
+  cat "$FETCH_VENDOR/corr-tail-cd-06"
+  cat "$FETCH_VENDOR/corr-tail-cd-07"
 } > /tmp/4n1f-fetch-v226.b64
 
 base64 -d /tmp/4n1f-fetch-v226.b64 > /tmp/4n1f-fetch-v226.tar.gz
 echo "c22efd3c4a12b46a12ba092f4dd74a07fa3da3e23d2d69679e5f13349c2486cf  /tmp/4n1f-fetch-v226.tar.gz" | sha256sum -c -
+tar -tzf /tmp/4n1f-fetch-v226.tar.gz >/dev/null
 tar -xzf /tmp/4n1f-fetch-v226.tar.gz -C dist
 rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz
 
-# Keep the V2.26 engine intact while removing remaining project-specific
-# surface strings/routes. Historical DiniVisualResolver namespace stays
-# because Source Graph V3 calls it internally.
+# Keep V2.26 engine behavior intact while removing old project surface strings.
+# Historical DiniVisualResolver stays because Source Graph V3 calls it internally.
 node <<'NODE'
 const fs = require('node:fs');
 
 function patch(file, replacements) {
   let text = fs.readFileSync(file, 'utf8');
   for (const [from, to] of replacements) {
-    if (!text.includes(from)) {
-      console.warn(`[4N1F build] optional patch marker not found in ${file}: ${from.slice(0, 80)}`);
-      continue;
-    }
+    if (!text.includes(from)) continue;
     text = text.split(from).join(to);
   }
   fs.writeFileSync(file, text);
@@ -85,7 +116,7 @@ patch('dist/fetch/preview.html', [
 ]);
 NODE
 
-# Homepage visual stack + two locked entry points.
+# Homepage visual stack + the two locked entry points.
 sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <script src="/hub-portals-v6.js" defer></script>\n</head>#' dist/index.html
 
 # Homepage only: 11-world cosmic renderer. Preview + Live Editor keep background-fluid.js.
@@ -95,7 +126,7 @@ sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/editor/index.html
 
-# Guardrails: both independent tool paths must survive the build.
+# FINAL guardrails: both independent tool paths must survive the build.
 test -f dist/index.html
 test -f dist/preview.html
 test -f dist/hub-portals-v6.css
@@ -127,7 +158,8 @@ grep -q "title='4N1F Fetch — Template'" dist/fetch/visual-resolver.js
 
 node --check dist/fetch/studio.js
 node --check dist/fetch/preview-studio.js
+node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare bundle ready: Hub + Fetch V2.26 Native Editor + Package/Preview Live Editor"
+echo "4N1F Cloudflare FINAL bundle ready: Hub + Fetch V2.26 Native Editor + Package/Preview Live Editor"
