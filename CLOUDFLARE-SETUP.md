@@ -24,11 +24,11 @@ Recommended settings:
 
 - Production branch: `main`
 - Framework preset: None
-- Build command: leave empty
-- Build output directory: `/`
-- Root directory: `/`
+- Build command: `bash build-cloudflare.sh`
+- Build output directory: `dist`
+- Root directory: leave blank (repository root)
 
-Pages Functions are automatically detected from the `functions/` directory.
+The build script publishes only the active static frontend into `dist/`. Pages Functions remain at the repository root under `functions/` and are automatically routed by Cloudflare.
 
 ## Storage
 
@@ -41,3 +41,7 @@ Existing KV remains the package/preview backend. Browser code never receives a p
 ## Deliberately excluded
 
 The Cloudflare edition does not copy inactive Vercel/R2 server files such as `api/r2-*`, `server/r2-*`, `docs/R2-DUAL-STORAGE-SETUP.md`, `vercel.json`, or the old R2 editor bridge.
+
+## Safety rule
+
+Future Cloudflare-specific UI and routing work belongs in this repository only. The frozen Vercel repository stays untouched unless explicitly requested.
