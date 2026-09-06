@@ -1,0 +1,39 @@
+name: Cloudflare Main Build Check
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Cloudflare bundle
+        shell: bash
+        run: bash build-cloudflare.sh
+
+      - name: Verify homepage Fetch gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' dist/index.html
+          grep -q '<strong>FETCH</strong>' dist/index.html
+          ! grep -q 'Masukkan Package Key untuk membuat sesi Preview baru' dist/index.html
+
+      - name: Verify Fetch V2.26 output
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/fetch/index.html
+          test -f dist/fetch/preview.html
+          test -f dist/fetch/editor/index.html
+          grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
+          echo 'Cloudflare main bundle verified.'
