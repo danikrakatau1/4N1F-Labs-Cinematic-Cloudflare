@@ -21,14 +21,10 @@ jobs:
         run: |
           set -u
           mkdir -p /tmp/fetch-probe
-          probe() {
-            local name="$1" b64="$2"
-            local gz="/tmp/fetch-probe/${name}.tar.gz"
+
+          inspect_gz() {
+            local name="$1" gz="$2"
             echo "--- ${name} ---"
-            if ! base64 -di "$b64" > "$gz" 2>/dev/null; then
-              echo "FAIL ${name}: base64 decode"
-              return 0
-            fi
             local sha size
             sha=$(sha256sum "$gz" | awk '{print $1}')
             size=$(wc -c < "$gz")
@@ -41,25 +37,27 @@ jobs:
             fi
           }
 
-          cat vendor/fetch-v226-clean/part-00.b64 \
-              vendor/fetch-v226-clean/part-01.b64 \
-              vendor/fetch-v226-clean/part-02.b64 \
-            > /tmp/fetch-probe/clean-parts.b64
-          probe clean_parts /tmp/fetch-probe/clean-parts.b64
+          {
+            base64 -d vendor/fetch-v226-clean/part-00.b64
+            base64 -d vendor/fetch-v226-clean/part-01.b64
+            base64 -d vendor/fetch-v226-clean/part-02.b64
+          } > /tmp/fetch-probe/clean-parts.tar.gz || true
+          inspect_gz clean_parts_binary_join /tmp/fetch-probe/clean-parts.tar.gz
 
-          cat vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-00 \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-01 \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-02 \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03a \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03b \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03c \
-              vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03d \
-            > /tmp/fetch-probe/clean-source.b64
-          probe clean_source /tmp/fetch-probe/clean-source.b64
+          {
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-00
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-01
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-02
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03a
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03b
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03c
+            base64 -d vendor/fetch-v226-clean/fetch-v226-clean-source.b64.part-03d
+          } > /tmp/fetch-probe/clean-source.tar.gz || true
+          inspect_gz clean_source_binary_join /tmp/fetch-probe/clean-source.tar.gz
 
           if [ -s vendor/fetch-v226-final/part-00 ]; then
-            cp vendor/fetch-v226-final/part-00 /tmp/fetch-probe/final-current.b64
-            probe final_current /tmp/fetch-probe/final-current.b64
+            base64 -d vendor/fetch-v226-final/part-00 > /tmp/fetch-probe/final-current.tar.gz || true
+            inspect_gz final_current /tmp/fetch-probe/final-current.tar.gz
           fi
 
       - name: Build Cloudflare bundle
