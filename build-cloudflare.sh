@@ -109,6 +109,10 @@ NODE
 # Cloudflare UI transplant, while keeping Quantum UI as a presentation overlay.
 node scripts/fetch-preview-editor-handoff-fix-v1.js
 
+# Seal the exact Native Editor CURRENT state into APPLY, Clean Preview, B2, and
+# Download ZIP. Edited/generated media must never fall back to source originals.
+node scripts/fetch-current-state-export-fix-v1.js
+
 sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <link rel="stylesheet" href="/status-motion-v1.css">\n  <script src="/hub-portals-v6.js" defer></script>\n  <script src="/status-motion-v1.js" defer></script>\n</head>#' dist/index.html
 sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-cosmic-v5.js"></script>#' dist/index.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
@@ -173,6 +177,15 @@ grep -q 'renderNativeEditor();renderPreview(true);renderInspector()' dist/fetch/
 grep -q 'source-native structural guard' dist/fetch/editor/editor.js
 ! grep -q "frame.src='about:blank'" dist/fetch/editor/editor.js
 
+# Current-state integrity: Editor CURRENT must equal APPLY, Clean Preview and ZIP.
+grep -q 'function currentAppliedValues' dist/fetch/editor/editor.js
+grep -q 'data-4n1f-current-state-lock' dist/fetch/editor/editor.js
+grep -q 'CURRENT STATE SEALED' dist/fetch/editor/editor.js
+grep -q 'state_sealed:true' dist/fetch/editor/editor.js
+grep -q 'frame.dataset.stateSealed' dist/fetch/editor/clean-preview.js
+grep -Fq "JSON.stringify({values:snap.values,transforms:snap.transforms||{}},null,2)" dist/fetch/editor/editor.js
+grep -Fq "JSON.stringify({values:snap.values||{},transforms:snap.transforms||{}},null,2)" dist/fetch/editor/clean-preview.js
+
 for hook in sourceUrl fetchSourceBtn sourceInput uploadHtmlBtn clearBtn analyzeBtn sourceBadge analysisStatus parityScore editableScore dependencyScore unsupportedScore detectList mappingBadge mappingTree buildBtn previewBtn downloadBtn studioMessage htmlFileInput; do
   grep -q "id=\"$hook\"" dist/fetch/index.html || { echo "[4N1F build] Fetch Premium V2 missing engine hook: $hook" >&2; exit 1; }
 done
@@ -193,4 +206,4 @@ node --check dist/fetch/visual-resolver.js
 node --check dist/fetch/editor/editor.js
 node --check dist/fetch/editor/clean-preview.js
 
-echo "4N1F Cloudflare HANDOFF FIX V1 PASS: full viewport Preview + source-native Native Editor + all editable mapping + Status Motion + Quantum V2"
+echo "4N1F Cloudflare CURRENT STATE FIX V1 PASS: Editor = APPLY = Clean Preview = Download ZIP + prior handoff/reveal/protection guards"
