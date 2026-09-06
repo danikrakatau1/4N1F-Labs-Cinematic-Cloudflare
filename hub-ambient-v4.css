@@ -14,9 +14,13 @@
   background:#04050c!important;
 }
 
+/* Background Visibility V1
+   Reveal more of the WebGL scene while keeping the Hub readable. */
 .cinematic-bg .fluid-canvas{
-  transition:filter 8s cubic-bezier(.2,.65,.2,1),opacity 8s ease;
-  will-change:filter;
+  transition:filter 8s cubic-bezier(.2,.65,.2,1),opacity 8s ease,transform 8s cubic-bezier(.2,.65,.2,1);
+  will-change:filter,transform;
+  transform:scale(1.01);
+  filter:saturate(1.28) contrast(1.10) brightness(1.18);
 }
 
 .ambient-film{
@@ -32,10 +36,18 @@
   will-change:opacity,transform;
 }
 .ambient-film.is-active{
-  opacity:.52;
+  opacity:.56;
   transform:scale(1.01);
 }
-.fluid-scrim{z-index:2!important}
+
+.fluid-scrim{
+  z-index:2!important;
+  background:radial-gradient(115% 95% at 50% 46%,
+    rgba(4,5,12,.42) 0%,
+    rgba(4,5,12,.40) 24%,
+    rgba(4,5,12,.22) 54%,
+    rgba(4,5,12,.045) 100%)!important;
+}
 
 /* Hero choreography */
 .eyebrow{
@@ -135,8 +147,18 @@ h1{
 }
 
 @media(max-width:620px){
+  .cinematic-bg .fluid-canvas{
+    filter:saturate(1.24) contrast(1.08) brightness(1.15);
+  }
+  .fluid-scrim{
+    background:radial-gradient(120% 100% at 50% 46%,
+      rgba(4,5,12,.45) 0%,
+      rgba(4,5,12,.42) 26%,
+      rgba(4,5,12,.24) 56%,
+      rgba(4,5,12,.06) 100%)!important;
+  }
   .ambient-film{inset:-14%;filter:blur(14px) saturate(115%)}
-  .ambient-film.is-active{opacity:.44}
+  .ambient-film.is-active{opacity:.48}
   .wrap::before{height:180px;top:20%}
 }
 
