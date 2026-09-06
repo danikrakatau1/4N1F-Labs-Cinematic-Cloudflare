@@ -9,6 +9,7 @@ on:
       - fetch-premium-v2
       - status-motion-v1
       - fetch-preview-editor-handoff-fix-v1
+      - fix-reveal-protection-v1
   workflow_dispatch:
 
 permissions:
@@ -114,6 +115,13 @@ jobs:
           grep -q 'source-native structural guard' dist/fetch/editor/editor.js
           ! grep -q "frame.src='about:blank'" dist/fetch/editor/editor.js
 
+          # Regression guards from the real downloaded package audit.
+          grep -q '#wpcp-error-message' dist/fetch/visual-resolver.js
+          grep -q '#wpcp-error-message' dist/fetch/editor/editor.js
+          grep -q 'revealNow(n,true)' dist/fetch/studio.js
+          grep -q 'motionText' dist/fetch/studio.js
+          grep -q 'data-native-animation-delay' dist/fetch/studio.js
+
           grep -q "'home-preview'" dist/status-motion-v1.js
           grep -q 'fetchSourceBtn' dist/status-motion-v1.js
           grep -q 'analyzeBtn' dist/status-motion-v1.js
@@ -121,5 +129,7 @@ jobs:
           grep -q 'previewBtn' dist/status-motion-v1.js
           node --check dist/status-motion-v1.js
           node --check dist/fetch/quantum.js
+          node --check dist/fetch/studio.js
+          node --check dist/fetch/visual-resolver.js
           node --check dist/fetch/editor/editor.js
-          echo 'Cloudflare Preview full viewport + Fetch source-native Native Editor handoff verified.'
+          echo 'Cloudflare Preview handoff + reveal parity + protection sanitation verified.'
