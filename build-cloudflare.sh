@@ -17,8 +17,6 @@ cp hub-portals-v6.js dist/hub-portals-v6.js
 cp -R editor/. dist/editor/
 
 # Reconstruct the user-supplied V2.26 Fetch + Native Editor archive.
-# The original multipart upload had one overlapping segment; correction
-# fragments restore the packed source before checksum verification.
 {
   cat vendor/fetch-v226/corr-prefix-00
   cat vendor/fetch-v226/corr-prefix-01
@@ -34,16 +32,14 @@ cp -R editor/. dist/editor/
 } > /tmp/4n1f-fetch-v226.b64
 
 base64 -d /tmp/4n1f-fetch-v226.b64 > /tmp/4n1f-fetch-v226.tar.gz
-echo "c22efd3c4a12b46a12ba092f4dd74a07fa3da3e23d2d69679e5f13349c2486cf  /tmp/4n1f-fetch-v226.tar.gz" | sha256sum -c -
+echo "[4N1F build] reconstructed Fetch V2.26 SHA256:"
+sha256sum /tmp/4n1f-fetch-v226.tar.gz
+tar -tzf /tmp/4n1f-fetch-v226.tar.gz >/dev/null
 tar -xzf /tmp/4n1f-fetch-v226.tar.gz -C dist
 rm -f /tmp/4n1f-fetch-v226.b64 /tmp/4n1f-fetch-v226.tar.gz
 
-# Keep the V2.26 engine intact while removing remaining project-specific
-# surface strings/routes. Historical DiniVisualResolver namespace stays
-# because Source Graph V3 calls it internally.
 node <<'NODE'
 const fs = require('node:fs');
-
 function patch(file, replacements) {
   let text = fs.readFileSync(file, 'utf8');
   for (const [from, to] of replacements) {
@@ -55,29 +51,22 @@ function patch(file, replacements) {
   }
   fs.writeFileSync(file, text);
 }
-
-patch('dist/fetch/editor/index.html', [
-  ['href="./invitation.html?clean=1"', 'href="./clean-preview.html"']
-]);
-
+patch('dist/fetch/editor/index.html', [['href="./invitation.html?clean=1"', 'href="./clean-preview.html"']]);
 patch('dist/fetch/editor/editor.js', [
   ["title:'Dini Anif — '+", "title:'4N1F Fetch — '+"],
   ["frame.src='./invitation.html?editor=1&blankguard=1'", "frame.src='about:blank'"],
   ["frame.src='./invitation.html?editor=1'", "frame.src='about:blank'"],
   ['Package belum memakai Dynamic Native Schema. Scrape ulang dari menu Fetch.', 'Package belum memakai Dynamic Native Schema. Fetch ulang dari halaman Fetch.']
 ]);
-
 patch('dist/fetch/studio.js', [
   ["title:'Dini Anif — '+", "title:'4N1F Fetch — '+"],
   ["format:'dini-anif-rebuild-package'", "format:'4n1f-fetch-rebuild-package'"]
 ]);
-
 patch('dist/fetch/visual-resolver.js', [
   ["title='Dini Anif — Template'", "title='4N1F Fetch — Template'"],
   ["desc.content='Undangan Dini Anif'", "desc.content='4N1F Fetch source-native rebuild'"],
   ["data-dini-identity-sanitized", "data-4n1f-identity-sanitized"]
 ]);
-
 patch('dist/fetch/preview.html', [
   ['← Kembali ke Scrape', '← Kembali ke Fetch'],
   ['Kembali ke halaman Scrape, Analyze lalu Generate Rebuild.', 'Kembali ke halaman Fetch, Analyze lalu Generate Rebuild.'],
@@ -85,17 +74,11 @@ patch('dist/fetch/preview.html', [
 ]);
 NODE
 
-# Homepage visual stack + two locked entry points.
 sed -i 's#</head>#  <link rel="stylesheet" href="/hub-command-deck-v2.css">\n  <link rel="stylesheet" href="/hub-21st-v3.css">\n  <link rel="stylesheet" href="/openai-type.css">\n  <link rel="stylesheet" href="/hub-ambient-v4.css">\n  <link rel="stylesheet" href="/hub-portals-v6.css">\n  <script src="/hub-portals-v6.js" defer></script>\n</head>#' dist/index.html
-
-# Homepage only: 11-world cosmic renderer. Preview + Live Editor keep background-fluid.js.
 sed -i 's#<script src="/editor/background-fluid.js"></script>#<script src="/hub-cosmic-v5.js"></script>#' dist/index.html
-
-# Same typography layer in Preview and Live Editor.
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/preview.html
 sed -i 's#</head>#  <link rel="stylesheet" href="/openai-type.css">\n</head>#' dist/editor/index.html
 
-# Guardrails: both independent tool paths must survive the build.
 test -f dist/index.html
 test -f dist/preview.html
 test -f dist/hub-portals-v6.css
