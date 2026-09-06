@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#04050c">
+  <meta name="4n1f-checkpoint" content="V0.3.1-premium-preview-hub">
+  <title>4N1F Labs — Universal Preview Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+
+    *{box-sizing:border-box}
+    :root{
+      --bg:#04050c;
+      --text:#f5f7fb;
+      --muted:#9ca8b8;
+      --line:rgba(255,255,255,.12);
+      --line-strong:rgba(255,255,255,.18);
+      --glass:rgba(8,10,18,.68);
+      --glass-deep:rgba(2,5,11,.76);
+      --accent:#aef7d1;
+      --accent2:#7ce8b1;
+      --accent3:#9beeff;
+      --violet:#a77cff;
+      --danger:#ff9cab;
+      --ease:cubic-bezier(.2,0,0,1);
+      --sans:"Geist",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    }
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-feature-settings:"ss01" 1,"cv01" 1,"cv02" 1;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+    body{min-height:100vh;overflow:hidden}
+    button,input{font:inherit}
+
+    .cinematic-bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#04050c;pointer-events:none}
+    .fluid-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+    .fluid-scrim{position:absolute;inset:0;background:radial-gradient(115% 95% at 50% 46%,rgba(4,5,12,.68) 0%,rgba(4,5,12,.68) 24%,rgba(4,5,12,.46) 52%,rgba(4,5,12,.12) 100%)}
+
+    .page{position:relative;z-index:2;min-height:100vh;display:grid;place-items:center;padding:max(28px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom))}
+    .wrap{width:min(860px,100%);transform:translateY(-1.5vh)}
+
+    .eyebrow{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;font:720 10px/1 var(--mono);letter-spacing:.19em;text-transform:uppercase}
+    .eyebrow i{width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:#8cf0bd;box-shadow:0 0 0 5px rgba(124,232,177,.065),0 0 22px rgba(124,232,177,.44);animation:dotBreathe 3.8s ease-in-out infinite}
+    .eyebrow span{color:transparent;background:linear-gradient(96deg,#8793a5 0%,#aeb9c8 35%,#f6fbff 49%,#b3c7d8 58%,#8793a5 100%);background-size:240% 100%;background-position:120% 50%;-webkit-background-clip:text;background-clip:text;animation:eyebrowShine 6.5s ease-in-out infinite}
+
+    h1{margin:0;text-align:center;font-size:clamp(46px,7.3vw,80px);line-height:.91;letter-spacing:-.058em;font-weight:590;text-wrap:balance;color:#f8f9fc;background:linear-gradient(180deg,#fff 8%,#eef2f8 68%,#cfd8e5 112%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 16px 45px rgba(0,0,0,.15)}
+    .sub{width:min(680px,100%);margin:20px auto 30px;text-align:center;color:rgba(221,228,239,.68);font-size:14px;line-height:1.72;font-weight:410;letter-spacing:-.012em;text-wrap:balance}
+
+    .hub{position:relative;isolation:isolate;border:1px solid rgba(255,255,255,.115);border-radius:22px;background:linear-gradient(145deg,rgba(15,18,31,.78),rgba(6,8,16,.70));box-shadow:0 34px 105px rgba(0,0,0,.40),0 10px 34px rgba(2,4,10,.24),inset 0 1px rgba(255,255,255,.055);backdrop-filter:blur(28px) saturate(1.20);-webkit-backdrop-filter:blur(28px) saturate(1.20);overflow:hidden}
+    .hub::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.055),transparent 24%,transparent 70%,rgba(109,204,255,.03)),radial-gradient(110% 90% at 16% -20%,rgba(117,184,255,.07),transparent 48%),radial-gradient(80% 100% at 100% 60%,rgba(172,93,255,.055),transparent 52%)}
+    .hub::after{content:"";position:absolute;inset:-1px;z-index:4;border-radius:inherit;padding:1px;pointer-events:none;background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 248deg,rgba(141,234,255,.12) 276deg,rgba(198,151,255,.54) 302deg,rgba(174,247,209,.64) 324deg,rgba(255,255,255,.30) 341deg,transparent 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderBeam 9s linear infinite}
+    .hub-body{position:relative;z-index:2;padding:24px 24px 22px}
+
+    .label{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:11px}
+    .label b{font:720 10px/1 var(--mono);letter-spacing:.135em;color:rgba(240,245,251,.91)}
+    .label span{font:540 9.5px/1 var(--mono);letter-spacing:.015em;color:#778597;white-space:nowrap}
+
+    .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+    input{min-width:0;height:58px;border:1px solid rgba(196,216,232,.15);border-radius:13px;background:linear-gradient(180deg,rgba(1,4,10,.76),rgba(2,5,12,.69));color:#f3f8fb;padding:0 16px;outline:none;font:560 12.5px/1 var(--mono);letter-spacing:-.015em;caret-color:#aef7d1;box-shadow:inset 0 1px 0 rgba(255,255,255,.022),inset 0 7px 22px rgba(0,0,0,.20),0 1px 0 rgba(255,255,255,.025);transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+    input::placeholder{color:#596678;font-weight:490}
+    input:focus{border-color:rgba(146,225,255,.40);background:linear-gradient(180deg,rgba(2,6,14,.82),rgba(2,5,12,.76));box-shadow:0 0 0 3px rgba(93,190,227,.075),0 0 28px rgba(92,164,255,.07),inset 0 1px 0 rgba(255,255,255,.035),inset 0 8px 22px rgba(0,0,0,.18)}
+
+    button{border:0;cursor:pointer;transition:transform .18s var(--ease),box-shadow .22s ease,border-color .22s ease,background .22s ease,opacity .18s ease}
+    #generateBtn{position:relative;isolation:isolate;overflow:hidden;min-width:174px;height:58px;border:1px solid rgba(226,255,242,.50);border-radius:13px;padding:0 19px;background:linear-gradient(145deg,#effff7 0%,#c1f9dd 36%,#83eab8 100%);color:#06110d;font-size:12px;font-weight:760;letter-spacing:-.018em;box-shadow:0 12px 28px rgba(51,205,137,.14),0 3px 9px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.78),inset 0 -1px 0 rgba(13,102,66,.12)}
+    #generateBtn::before{content:"";position:absolute;inset:1px;z-index:-1;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);pointer-events:none}
+    #generateBtn::after{content:"";position:absolute;top:-90%;bottom:-90%;left:-52%;width:34%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.74),transparent);filter:blur(1px);transform:rotate(18deg) translateX(-290%);animation:buttonShimmer 5.2s cubic-bezier(.4,0,.2,1) infinite}
+    #generateBtn:hover{transform:translateY(-1px);box-shadow:0 17px 38px rgba(59,223,153,.21),0 5px 13px rgba(0,0,0,.17),inset 0 1px 0 rgba(255,255,255,.82)}
+    #generateBtn:active{transform:translateY(0) scale(.986)}
+    #generateBtn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(174,247,209,.12),0 17px 38px rgba(59,223,153,.20),inset 0 1px 0 rgba(255,255,255,.82)}
+    #generateBtn:disabled{opacity:.48;cursor:not-allowed;transform:none}
+
+    .result{display:none;position:relative;margin-top:14px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(2,6,12,.48);padding:12px 13px;box-shadow:inset 0 1px rgba(255,255,255,.025)}
+    .result.show{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .result code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dfeaf1;font:570 11px/1.3 var(--mono)}
+    .result-actions{display:flex;gap:7px}
+    .result-actions button{height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.11);border-radius:9px;background:linear-gradient(180deg,rgba(31,42,53,.86),rgba(17,26,34,.83));color:#dfeaf0;font-size:10px;font-weight:650;box-shadow:inset 0 1px rgba(255,255,255,.04)}
+    .result-actions button:hover{transform:translateY(-1px);border-color:rgba(174,247,209,.22);background:linear-gradient(180deg,rgba(38,52,64,.93),rgba(20,31,40,.90))}
+
+    .statusbar{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;padding:12px 19px;border-top:1px solid rgba(255,255,255,.075);background:linear-gradient(180deg,rgba(3,7,13,.46),rgba(2,5,11,.58));box-shadow:inset 0 1px rgba(0,0,0,.12)}
+    .state{display:flex;align-items:center;gap:9px;min-width:0;color:#95a2b1;font-size:11px;font-weight:480;letter-spacing:-.008em}
+    .state i{width:6px;height:6px;flex:0 0 auto;border-radius:50%;background:#71808f;box-shadow:0 0 0 4px rgba(113,128,143,.075)}
+    .state.ok{color:#c6e6d3}.state.ok i{background:var(--accent2);box-shadow:0 0 0 4px rgba(124,232,177,.075),0 0 16px rgba(124,232,177,.34)}
+    .state.error{color:#ffc0c8}.state.error i{background:var(--danger)}
+    .engine{font:520 9.5px/1.2 var(--mono);letter-spacing:.065em;color:#697788;white-space:nowrap}
+
+    .hint{text-align:center;margin-top:17px;color:#74808f;font-size:10.5px;line-height:1.55;font-weight:430}
+    .hint b{color:#9eacbb;font-weight:560}
+
+    @property --beam-angle{syntax:"<angle>";inherits:false;initial-value:0deg}
+    @keyframes borderBeam{to{--beam-angle:360deg}}
+    @keyframes buttonShimmer{0%,63%{transform:rotate(18deg) translateX(-310%);opacity:0}70%{opacity:.9}88%{opacity:.78}100%{transform:rotate(18deg) translateX(660%);opacity:0}}
+    @keyframes eyebrowShine{0%,24%{background-position:120% 50%}58%,100%{background-position:-120% 50%}}
+    @keyframes dotBreathe{0%,100%{transform:scale(1);opacity:.86}50%{transform:scale(1.12);opacity:1}}
+
+    @media(max-width:620px){
+      body{overflow:auto}
+      .page{align-items:center;padding-left:14px;padding-right:14px}
+      .wrap{transform:none}
+      h1{font-size:clamp(43px,14vw,62px);line-height:.94}
+      .sub{font-size:13px;margin-top:16px;margin-bottom:24px}
+      .hub{border-radius:19px}
+      .hub-body{padding:18px}
+      .label{align-items:flex-end}
+      .row{grid-template-columns:1fr}
+      #generateBtn{width:100%;min-width:0}
+      .statusbar{align-items:flex-start;flex-direction:column;gap:8px;padding:12px 17px}
+      .engine{white-space:normal}
+      .result.show{align-items:flex-start;flex-direction:column}
+      .result-actions{width:100%}.result-actions button{flex:1}
+    }
+    @media(prefers-reduced-motion:reduce){
+      #generateBtn,.eyebrow i,.eyebrow span,.hub::after{animation:none}
+      button,input{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="cinematic-bg" aria-hidden="true"><canvas class="fluid-canvas"></canvas><div class="fluid-scrim"></div></div>
+  <main class="page">
+    <div class="wrap">
+      <div class="eyebrow"><i></i><span>4N1F Labs · Cinematic System</span></div>
+      <h1>Universal Preview Hub</h1>
+      <p class="sub">Masukkan Package Key untuk membuat sesi Preview baru. Hasil preview dibuka sebagai halaman bersih, lalu dari sana Live Editor dapat dibuka dengan Preview ID yang sama.</p>
+      <section class="hub" aria-label="4N1F Preview Hub">
+        <div class="hub-body">
+          <div class="label"><b>PACKAGE KEY / PREVIEW ID</b><span>KV → legacy fallback</span></div>
+          <div class="row"><input id="sourceInput" autocomplete="off" spellcheck="false" placeholder="4N1F_XXXXXXXXXXXX atau p_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><button id="generateBtn" type="button">Generate Preview ↗</button></div>
+          <div class="result" id="resultBox"><code id="resultId">—</code><div class="result-actions"><button id="copyBtn" type="button">Copy ID</button><button id="openBtn" type="button">Open Preview ↗</button></div></div>
+        </div>
+        <div class="statusbar"><div class="state" id="state"><i></i><span id="stateText">Ready untuk Package Key atau Preview ID.</span></div><div class="engine">IMMUTABLE PACKAGE · TEMPORARY PREVIEW SESSION</div></div>
+      </section>
+      <div class="hint">Flow resmi: <b>Package Key → Generate → Preview → Open Live Editor → Revision → Key baru</b></div>
+    </div>
+  </main>
+  <script src="/editor/background-fluid.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const input=document.getElementById('sourceInput'),generateBtn=document.getElementById('generateBtn'),state=document.getElementById('state'),stateText=document.getElementById('stateText'),resultBox=document.getElementById('resultBox'),resultId=document.getElementById('resultId'),copyBtn=document.getElementById('copyBtn'),openBtn=document.getElementById('openBtn');
+      let currentPreviewId='';
+      const validPackage=value=>/^4N1F_[A-F0-9]{12}$/i.test(String(value||'').trim());
+      const validPreview=value=>/^p_[a-f0-9]{32}$/i.test(String(value||'').trim());
+      function setState(message,kind=''){state.className=`state${kind?` ${kind}`:''}`;stateText.textContent=message}
+      function showResult(previewId){currentPreviewId=previewId.toLowerCase();resultId.textContent=currentPreviewId;resultBox.classList.add('show')}
+      function openPreview(previewId,popup){const url=`/${encodeURIComponent(previewId)}`;if(popup&&!popup.closed)popup.location.replace(url);else window.open(url,'_blank','noopener')}
+      async function generate(packageKey,popup){const response=await fetch('/api/kv-session',{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:JSON.stringify({package_key:packageKey.toUpperCase()})});const data=await response.json().catch(()=>null);if(!response.ok||!data?.success||!data?.preview_id)throw new Error(data?.message||`Generate Preview gagal (${response.status}).`);showResult(data.preview_id);input.value=data.preview_id;setState(`Preview session dibuat · ${data.preview_id}`,'ok');openPreview(data.preview_id,popup)}
+      generateBtn.addEventListener('click',async()=>{const value=String(input.value||'').trim();if(validPreview(value)){const id=value.toLowerCase();showResult(id);setState(`Membuka ${id}`,'ok');openPreview(id);return}if(!validPackage(value)){setState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.','error');input.focus();return}const popup=window.open('about:blank','_blank');generateBtn.disabled=true;const old=generateBtn.textContent;generateBtn.textContent='Generating…';setState('Membuat Preview ID dari Package Key…');try{await generate(value,popup)}catch(error){try{popup?.close()}catch{}setState(error?.message||'Generate Preview gagal.','error')}finally{generateBtn.disabled=false;generateBtn.textContent=old}});
+      input.addEventListener('keydown',event=>{if(event.key==='Enter')generateBtn.click()});
+      copyBtn.addEventListener('click',async()=>{if(!currentPreviewId)return;try{await navigator.clipboard.writeText(currentPreviewId);setState('Preview ID disalin.','ok')}catch{setState('Browser tidak mengizinkan clipboard.','error')}});
+      openBtn.addEventListener('click',()=>{if(currentPreviewId)openPreview(currentPreviewId)});
+    })();
+  </script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 # 4N1F Labs Cinematic — Cloudflare
 
-Standalone Cloudflare edition of 4N1F Labs Cinematic.
+Independent Cloudflare edition of 4N1F Labs Cinematic.
 
-This repository is intentionally separate from the frozen Vercel edition. It reuses the existing 4N1F editor/preview architecture and Cloudflare KV backend while allowing Cloudflare-specific routing and deployment work to evolve independently.
+The Vercel edition is treated as frozen. This repository reuses the proven editor/preview engine from a pinned source snapshot while Cloudflare-specific hosting, routing, Functions, and future UI work evolve here independently.
 
 ## Locked navigation
 
@@ -10,10 +10,12 @@ This repository is intentionally separate from the frozen Vercel edition. It reu
 - `/p_<preview-id>` → Clean Live Preview
 - `/editor/p_<preview-id>` → Live Editor
 
-## Storage
+## Backend
 
-Cloudflare KV remains the active package/preview storage path. Legacy Supabase preview fallback may remain available for historical Preview IDs.
+Cloudflare Pages Functions proxy the same-origin `/api/kv-session` and `/api/kv-preview` routes to the existing `4n1f-kv-api` Worker and KV storage.
 
 ## Safety
 
-Do not expose publisher tokens, service-role keys, or other server secrets in browser code or commits.
+No publisher token, Supabase service-role key, or other server secret belongs in browser code or commits.
+
+See `CLOUDFLARE-SETUP.md` for deployment settings.

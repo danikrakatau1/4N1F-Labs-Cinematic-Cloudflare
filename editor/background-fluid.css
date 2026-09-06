@@ -1,0 +1,163 @@
+/* 4N1F Labs Cinematic — background-only WebGL layer.
+   Keeps editor structure intact; only exposes the animated atmosphere behind it. */
+
+html,
+body {
+  background: #04050c !important;
+}
+
+.cinematic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 70% at 18% 15%, rgba(30, 72, 140, .24), transparent 65%),
+    radial-gradient(80% 70% at 82% 20%, rgba(92, 28, 150, .22), transparent 68%),
+    radial-gradient(70% 70% at 50% 90%, rgba(10, 88, 82, .18), transparent 70%),
+    #04050c;
+}
+
+.fluid-canvas {
+  position: absolute;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  display: block;
+  opacity: .96;
+  transform: translateZ(0);
+}
+
+.fluid-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(105% 92% at 50% 46%, rgba(4,5,12,.14) 0%, rgba(4,5,12,.30) 52%, rgba(4,5,12,.64) 100%),
+    linear-gradient(180deg, rgba(3,5,12,.20), rgba(3,5,12,.42));
+}
+
+.cinematic-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .17;
+  mix-blend-mode: soft-light;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, rgba(255,255,255,.045) 0 1px, transparent 1px 3px);
+  background-size: 4px 4px;
+}
+
+.cinematic-bg.fluid-fallback-only .fluid-canvas {
+  display: none;
+}
+
+.lab-editor {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+.topbar {
+  background: rgba(5, 7, 14, .76) !important;
+  border-bottom-color: rgba(255,255,255,.09) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(132%);
+  backdrop-filter: blur(20px) saturate(132%);
+}
+
+.leftpanel,
+.inspector {
+  background: rgba(6, 8, 15, .74) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+.leftpanel {
+  border-right-color: rgba(255,255,255,.08) !important;
+}
+
+.inspector {
+  border-left-color: rgba(255,255,255,.08) !important;
+}
+
+.stage-wrap {
+  background: rgba(7, 9, 17, .56) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.devicebar {
+  background: rgba(6, 8, 15, .52);
+  border-bottom-color: rgba(255,255,255,.08) !important;
+}
+
+.stage {
+  background-color: rgba(5, 7, 14, .46) !important;
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,.025) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,.025) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,.025) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.025) 75%) !important;
+  background-size: 20px 20px !important;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0 !important;
+}
+
+.loadbar input,
+.field input,
+.field textarea,
+.field select,
+.selected-meta,
+.asset-item,
+.patch-item,
+.code-output {
+  background-color: rgba(6, 8, 14, .72) !important;
+  border-color: rgba(255,255,255,.10) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+button {
+  background-color: rgba(14, 17, 27, .76);
+  border-color: rgba(255,255,255,.11);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+button:hover {
+  background-color: rgba(28, 32, 45, .82);
+}
+
+button.primary,
+.primary {
+  background: rgba(255,255,255,.95) !important;
+  color: #05070d !important;
+  border-color: rgba(255,255,255,.92) !important;
+}
+
+#previewFrame {
+  border-color: rgba(255,255,255,.14) !important;
+  box-shadow: 0 24px 90px rgba(0,0,0,.52), 0 0 0 1px rgba(255,255,255,.025) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fluid-canvas {
+    opacity: .72;
+  }
+}
+
+@media (max-width: 760px) {
+  .cinematic-bg {
+    position: fixed;
+  }
+
+  .fluid-canvas {
+    opacity: .84;
+  }
+
+  .topbar,
+  .leftpanel,
+  .inspector {
+    -webkit-backdrop-filter: blur(15px) saturate(115%);
+    backdrop-filter: blur(15px) saturate(115%);
+  }
+}

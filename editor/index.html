@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#04050c">
+  <title>4N1F Labs Cinematic — Live Editor</title>
+  <link rel="stylesheet" href="/editor/editor.css">
+  <link rel="stylesheet" href="/editor/background-fluid.css">
+  <style>
+    #backPreviewBtn{border-color:rgba(125,255,178,.28);color:#dfffea;background:rgba(13,27,21,.64)}
+    #backPreviewBtn:hover{background:rgba(22,44,34,.84);border-color:rgba(125,255,178,.5)}
+  </style>
+</head>
+<body>
+<div class="cinematic-bg" aria-hidden="true">
+  <canvas class="fluid-canvas"></canvas>
+  <div class="fluid-scrim"></div>
+</div>
+<div class="lab-editor" id="labEditor">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span><strong>4N1F LABS CINEMATIC</strong><span>LIVE EDITOR</span></div>
+    <div class="loadbar"><input id="previewIdInput" placeholder="PREVIEW ID — p_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off"><button id="loadPreviewBtn" class="primary">Load Target</button></div>
+    <div class="tools"><button id="backPreviewBtn" type="button">← Preview</button><button id="selectBtn" class="active">Select</button><button id="undoBtn" disabled>Undo</button><button id="redoBtn" disabled>Redo</button><button id="exportBtn">Export</button></div>
+  </header>
+  <main class="workspace">
+    <aside class="leftpanel">
+      <div class="panel-title">LAYERS</div>
+      <div class="empty" style="margin-bottom:10px">Studio Build ≠ Target Preview<br><small>Alt+click: pilih layer bawah • klik kanan: stack layer</small></div>
+      <div id="layerInfo" class="empty">Loading target preview…</div>
+      <div class="diag-title">DIAGNOSTICS</div>
+      <div class="diag-row"><span>Broken images</span><b id="brokenCount">—</b></div>
+      <div class="diag-row"><span>Console</span><b id="consoleCount">—</b></div>
+      <div class="diag-row"><span>Live edit</span><b>ON</b></div>
+      <div class="diag-title">ASSETS</div><div id="assetList" class="asset-list"><div class="empty">Belum ada upload draft.</div></div>
+    </aside>
+    <section class="stage-wrap"><div class="devicebar"><button data-width="100%" class="active">Desktop</button><button data-width="768px">Tablet</button><button data-width="430px">Mobile</button><span id="stageStatus">Resolving route…</span></div><div class="stage"><iframe id="previewFrame" title="4N1F editable target preview"></iframe></div></section>
+    <aside class="inspector">
+      <div class="panel-title inspector-title"><span>INSPECTOR</span><span class="live-badge">● LIVE</span></div><div id="nothingSelected" class="empty">Klik elemen di target preview.</div>
+      <div id="editorFields" hidden>
+        <div class="selected-meta"><strong id="selectedTag">—</strong><code id="selectedSelector">—</code><small class="direct-hint">Drag elemen • tarik sudut untuk resize • handle atas untuk rotate</small></div>
+        <label class="field"><span>Text — real time</span><textarea id="textValue" rows="3"></textarea></label>
+        <div class="grid2">
+          <div class="field color-field" data-color-field="color"><span>Text color</span><div class="color-row"><button type="button" class="color-swatch" data-color-open="color"></button><input id="colorValue" placeholder="#ffffff"></div><div class="color-popover" data-color-popover="color" hidden><input class="visual-color" data-color-picker="color" type="color" value="#ffffff"><label class="alpha-row"><span>Alpha</span><input data-color-alpha="color" type="range" min="0" max="100" value="100"><b data-alpha-label="color">100%</b></label><div class="swatch-presets" data-presets="color"></div></div></div>
+          <div class="field color-field" data-color-field="background"><span>Background</span><div class="color-row"><button type="button" class="color-swatch" data-color-open="background"></button><input id="backgroundValue" placeholder="transparent"></div><div class="color-popover" data-color-popover="background" hidden><input class="visual-color" data-color-picker="background" type="color" value="#000000"><label class="alpha-row"><span>Alpha</span><input data-color-alpha="background" type="range" min="0" max="100" value="100"><b data-alpha-label="background">100%</b></label><div class="swatch-presets" data-presets="background"></div></div></div>
+          <label class="field"><span>Font size</span><input id="fontSizeValue" placeholder="48px"></label><label class="field"><span>Opacity</span><input id="opacityValue" type="number" min="0" max="1" step="0.01"></label><label class="field"><span>Radius</span><input id="radiusValue" placeholder="12px"></label><label class="field"><span>Display</span><select id="displayValue"><option value="">auto</option><option>block</option><option>flex</option><option>grid</option><option>none</option></select></label>
+        </div>
+        <div class="grid2"><label class="field"><span>Move X</span><input id="moveX" type="number" value="0"></label><label class="field"><span>Move Y</span><input id="moveY" type="number" value="0"></label><label class="field"><span>Scale</span><input id="scaleValue" type="number" step="0.01" value="1"></label><label class="field"><span>Rotate</span><input id="rotateValue" type="number" step="0.01" value="0"></label><label class="field"><span>Blur</span><input id="blurValue" type="number" value="0"></label></div>
+        <label class="field"><span>Image / asset URL</span><input id="srcValue" placeholder="https://… atau upload file"></label><div class="asset-actions"><input id="assetUpload" type="file" accept="image/*,audio/*,.svg,.webp,.gif" hidden><button id="uploadAssetBtn" type="button">Upload Asset</button><span id="uploadHint">Draft lokal • maks 8 MB</span></div><div class="actions"><button id="applyBtn" class="primary">Apply Draft + Code</button><button id="resetElementBtn">Reset Element</button></div>
+      </div>
+      <div class="patch-head"><span>SESSION PATCHES</span><button id="clearPatchesBtn">Clear</button></div><div id="patchLog" class="patch-log"><div class="empty">Belum ada patch.</div></div><div class="code-head"><span>VISUAL → CODE</span><button id="copyCodeBtn" disabled>Copy Code</button></div><pre id="codeOutput" class="code-output">Apply Draft untuk menghasilkan kode.</pre><details class="patch-json-wrap"><summary>Patch JSON</summary><pre id="jsonOutput" class="code-output json-output">—</pre></details>
+    </aside>
+  </main>
+  <div id="exportMenu" class="export-menu" hidden><div class="export-card"><div class="export-title"><strong>EXPORT</strong><button id="closeExportBtn">×</button></div><p>Download seluruh revisi aktif dari sesi editor ini.</p><button data-export="patch">Patch JSON</button><button data-export="code">Generated Code</button><button data-export="bundle" class="primary">Source Bundle JSON</button><small>Patch bersifat kumulatif per elemen. Asset draft ikut bundle sebagai data URL.</small></div></div><div id="toast"></div>
+</div>
+<script src="/editor/background-fluid.js"></script>
+<script src="/editor/addons/v1.3.2-kv-route-loader.js"></script>
+<script src="/editor/editor.js"></script>
+<script src="/editor/addons/v1.2.3-layer-engine.js"></script>
+<script src="/editor/addons/v1.2.4-align-responsive.js"></script>
+<script src="/editor/addons/v1.2.5-multiselect-group.js"></script>
+<script src="/editor/addons/v1.3.3-editor-route-nav.js"></script>
+</body>
+</html>
