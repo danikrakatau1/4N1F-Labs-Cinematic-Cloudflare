@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - fix-preview-key-session-timeout-v1
+      - diag-preview-key-live-v1
   workflow_dispatch:
 
 permissions:
@@ -39,3 +40,41 @@ jobs:
           grep -q "url.pathname === '/api/kv-session'" dist/status-motion-v1.js
           grep -q 'Preview session timeout' dist/status-motion-v1.js
           echo 'Preview Key session timeout + retry guard verified.'
+
+      - name: Diagnose upstream KV session endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          code=$(curl --max-time 12 --connect-timeout 5 -sS -o /tmp/kv-upstream.json -w '%{http_code}' \
+            -X POST 'https://4n1f-kv-api.faqihanif12282000.workers.dev/session' \
+            -H 'content-type: application/json' \
+            -H 'accept: application/json' \
+            --data '{"package_key":"4N1F_000000000000"}' || true)
+          elapsed=$(( $(date +%s) - start ))
+          echo "UPSTREAM_HTTP=$code"
+          echo "UPSTREAM_SECONDS=$elapsed"
+          echo 'UPSTREAM_BODY:'
+          cat /tmp/kv-upstream.json 2>/dev/null || true
+          echo
+          test "$code" != "000" || { echo 'Upstream KV endpoint unreachable/timeout'; exit 21; }
+          test "$elapsed" -lt 12 || { echo 'Upstream KV endpoint too slow'; exit 22; }
+
+      - name: Diagnose live Hub KV bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          code=$(curl --max-time 12 --connect-timeout 5 -sS -o /tmp/kv-bridge.json -w '%{http_code}' \
+            -X POST 'https://4n1f-labs-cinematic-cloudflare.faqihanif2000.workers.dev/api/kv-session' \
+            -H 'content-type: application/json' \
+            -H 'accept: application/json' \
+            --data '{"package_key":"4N1F_000000000000"}' || true)
+          elapsed=$(( $(date +%s) - start ))
+          echo "BRIDGE_HTTP=$code"
+          echo "BRIDGE_SECONDS=$elapsed"
+          echo 'BRIDGE_BODY:'
+          cat /tmp/kv-bridge.json 2>/dev/null || true
+          echo
+          test "$code" != "000" || { echo 'Live Hub KV bridge unreachable/timeout'; exit 31; }
+          test "$elapsed" -lt 12 || { echo 'Live Hub KV bridge too slow'; exit 32; }
