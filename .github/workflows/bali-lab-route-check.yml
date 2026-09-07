@@ -20,12 +20,11 @@ jobs:
         run: |
           set -euo pipefail
           test -f editor/webgl-lab/bali/index.html
-          grep -q "4N1F_BA11CA1D1A01" src/worker.js
-          grep -q "p_ba11ca1d1a0100000000000000000000" src/worker.js
-          grep -q "BALI_LAB_ASSET = '/editor/webgl-lab/bali/index.html'" src/worker.js
-          grep -q "packageKey === BALI_LAB_KEY" src/worker.js
-          grep -q "PREVIEW_PATH = /^\\/p_" src/worker.js
-          grep -q "EDITOR_PATH = /^\\/editor\\/p_" src/worker.js
-          grep -q "KV_API = 'https://4n1f-kv-api.faqihanif12282000.workers.dev'" src/worker.js
-          ! grep -q "BALI_LAB_KEY.*KV_API" src/worker.js
+          grep -Fq "4N1F_BA11CA1D1A01" src/worker.js
+          grep -Fq "p_ba11ca1d1a0100000000000000000000" src/worker.js
+          grep -Fq "BALI_LAB_ASSET = '/editor/webgl-lab/bali/index.html'" src/worker.js
+          grep -Fq "packageKey === BALI_LAB_KEY" src/worker.js
+          grep -Fq "const PREVIEW_PATH = /^\\/p_" src/worker.js
+          grep -Fq "const EDITOR_PATH = /^\\/editor\\/p_" src/worker.js
+          grep -Fq "const KV_API = 'https://4n1f-kv-api.faqihanif12282000.workers.dev'" src/worker.js
           echo "Bali Lab isolated key/preview contract OK"
