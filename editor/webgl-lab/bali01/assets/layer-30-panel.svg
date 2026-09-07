@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 760">
+  <defs><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter></defs>
+  <path d="M210 18 C225 42 244 51 270 60 C310 73 336 105 338 151 L338 585 C337 618 320 639 286 649 C274 699 246 729 210 744 C174 729 146 699 134 649 C100 639 83 618 82 585 L82 151 C84 105 110 73 150 60 C176 51 195 42 210 18Z" fill="#fffdf7" fill-opacity=".88" stroke="#8f1f28" stroke-width="2.4"/>
+  <path id="draw" d="M210 18 C225 42 244 51 270 60 C310 73 336 105 338 151 L338 585 C337 618 320 639 286 649 C274 699 246 729 210 744 C174 729 146 699 134 649 C100 639 83 618 82 585 L82 151 C84 105 110 73 150 60 C176 51 195 42 210 18Z" fill="none" stroke="#8f1f28" stroke-width="2.4" stroke-linecap="round" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/>
+  <g fill="#8f1f28" opacity=".95"><path d="M210 52 l9 12 -9 12 -9-12z"/><circle cx="210" cy="64" r="3"/></g>
+  <g fill="#8f1f28" opacity=".95"><path d="M210 708 l9 12 -9 12 -9-12z"/><circle cx="210" cy="720" r="3"/></g>
+</svg>
