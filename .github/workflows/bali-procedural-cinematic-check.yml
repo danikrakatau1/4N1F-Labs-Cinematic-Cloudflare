@@ -1,0 +1,33 @@
+name: Bali Procedural Cinematic Check
+
+on:
+  push:
+    branches:
+      - lab/bali-procedural-cinematic-v1
+  pull_request:
+    paths:
+      - 'editor/webgl-lab/bali/**'
+      - '.github/workflows/bali-procedural-cinematic-check.yml'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify procedural cinematic contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=editor/webgl-lab/bali/index.html
+          test -f "$file"
+          grep -q 'BALI PROCEDURAL CINEMATIC V1' "$file"
+          grep -q 'PROCEDURAL SVG' "$file"
+          grep -q '<svg class="scene"' "$file"
+          grep -q 'gate-left' "$file"
+          grep -q 'gate-right' "$file"
+          grep -q 'panel-group' "$file"
+          grep -q 'panel-outline' "$file"
+          grep -q 'stoneNoise' "$file"
+          ! grep -Eq '<img|<video|\.mp4|\.jpg|\.jpeg|\.png|https?://' "$file"
+          ! grep -qi 'mousemove\|pointermove\|deviceorientation' "$file"
+          echo 'Bali procedural cinematic contract OK'
