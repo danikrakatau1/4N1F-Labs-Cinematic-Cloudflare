@@ -3,6 +3,54 @@
 
   if (window.StatusMotion) return;
 
+  // Preview Key resilience guard: the Hub's native generator awaits
+  // /api/kv-session without an AbortSignal. If the upstream KV bridge stalls,
+  // the button would otherwise stay disabled/loading forever. Guard only this
+  // same-origin route, retry one transient/network failure, then reject cleanly
+  // so the existing Hub catch/finally path restores the UI.
+  if (!window.__4n1fPreviewSessionFetchGuard) {
+    const nativeFetch = window.fetch.bind(window);
+    window.__4n1fPreviewSessionFetchGuard = true;
+    window.fetch = async function guarded4N1FFetch(input, init) {
+      let url;
+      try {
+        const raw = typeof input === 'string' || input instanceof URL ? String(input) : String(input?.url || '');
+        url = new URL(raw, location.href);
+      } catch {
+        return nativeFetch(input, init);
+      }
+      const isPreviewSession = url.origin === location.origin && url.pathname === '/api/kv-session';
+      if (!isPreviewSession || init?.signal) return nativeFetch(input, init);
+
+      let lastError;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6500);
+        try {
+          const response = await nativeFetch(input, { ...(init || {}), signal: controller.signal });
+          clearTimeout(timer);
+          // Retry one transient server-side failure; preserve normal 4xx errors.
+          if (attempt === 0 && response.status >= 500) {
+            await new Promise(resolve => setTimeout(resolve, 260));
+            continue;
+          }
+          return response;
+        } catch (error) {
+          clearTimeout(timer);
+          lastError = error;
+          if (attempt === 0) {
+            await new Promise(resolve => setTimeout(resolve, 260));
+            continue;
+          }
+        }
+      }
+      const timedOut = lastError?.name === 'AbortError';
+      throw new Error(timedOut
+        ? 'Preview session timeout. Bridge KV tidak merespons; silakan Generate lagi.'
+        : (lastError?.message || 'Preview session bridge gagal. Silakan Generate lagi.'));
+    };
+  }
+
   const ACTIONS = {
     'home-preview': { title:'Generate Preview', glyph:'▣' },
     fetch: { title:'Fetch Source', glyph:'↗' },
@@ -103,7 +151,7 @@
   }
 
   const positive = text => /\b(berhasil|selesai|complete|completed|ready|fetched|generated|tersedia|dibuat|valid|success)\b/i.test(text || '');
-  const negative = text => /(gagal|error|failed|invalid|tidak valid|ditolak|blocked|unsupported|tidak tersedia)/i.test(text || '');
+  const negative = text => /(gagal|error|failed|invalid|tidak valid|ditolak|blocked|unsupported|tidak tersedia|timeout)/i.test(text || '');
 
   function observe(el, callback) {
     if (!el) return;
