@@ -1,0 +1,31 @@
+name: Bali Vector Cinematic V2 Check
+
+on:
+  push:
+    branches:
+      - lab/bali-vector-cinematic-v2
+  pull_request:
+    paths:
+      - 'editor/webgl-lab/bali/index.html'
+      - '.github/workflows/bali-vector-cinematic-v2-check.yml'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify no-photo organic vector contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=editor/webgl-lab/bali/index.html
+          test -f "$f"
+          grep -q 'BALI VECTOR CINEMATIC V2' "$f"
+          grep -q '<svg class="scene"' "$f"
+          grep -q 'Organic vector Candi Bentar left' "$f"
+          grep -q 'cubic-bezier' "$f"
+          grep -q 'panel-outline' "$f"
+          grep -q 'stroke-linecap="round"' "$f"
+          ! grep -Eqi '<img|\.jpg|\.jpeg|\.png|\.webp|\.mp4|upload\.wikimedia|background-image:url\(https?://' "$f"
+          ! grep -Eqi 'mousemove|pointermove|deviceorientation' "$f"
+          echo 'Bali Vector Cinematic V2 no-photo/no-video/no-mouse contract OK'
