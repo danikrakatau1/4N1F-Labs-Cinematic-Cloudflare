@@ -163,12 +163,76 @@
     const button = document.getElementById('generateBtn');
     const state = document.getElementById('state');
     const stateText = document.getElementById('stateText');
-    if (!button || !state || !stateText) return;
+    const input = document.getElementById('sourceInput');
+    const resultBox = document.getElementById('resultBox');
+    const resultId = document.getElementById('resultId');
+    if (!button || !state || !stateText || !input) return;
+
+    const setHubState = (message, kind='') => {
+      state.className = `state${kind ? ` ${kind}` : ''}`;
+      stateText.textContent = message;
+    };
+    const validPackage = value => /^4N1F_[A-F0-9]{12}$/i.test(String(value || '').trim());
+    const validPreview = value => /^p_[a-f0-9]{32}$/i.test(String(value || '').trim());
+    const showFallbackResult = previewId => {
+      if (resultId) resultId.textContent = previewId;
+      resultBox?.classList.add('show');
+    };
+
+    async function fallbackGenerate(initialStateText) {
+      // Native Hub handler is synchronous before its first await. If it moved the
+      // state text or disabled the button, it is healthy and this fallback stays off.
+      if (!pending.has('home-preview') || button.disabled || stateText.textContent !== initialStateText) return;
+      if (button.dataset.smFallback === 'running') return;
+
+      const value = String(input.value || '').trim();
+      if (validPreview(value)) {
+        const id = value.toLowerCase();
+        showFallbackResult(id);
+        setHubState(`Membuka ${id}`, 'ok');
+        setTimeout(() => { location.href = `/${encodeURIComponent(id)}`; }, 180);
+        return;
+      }
+      if (!validPackage(value)) {
+        setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
+        input.focus();
+        return;
+      }
+
+      button.dataset.smFallback = 'running';
+      button.disabled = true;
+      setHubState('Membuat Preview ID dari Package Key…');
+      try {
+        const response = await fetch('/api/kv-session', {
+          method:'POST',
+          headers:{'content-type':'application/json',accept:'application/json'},
+          body:JSON.stringify({package_key:value.toUpperCase()})
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.success || !data?.preview_id) {
+          throw new Error(data?.message || `Generate Preview gagal (${response.status}).`);
+        }
+        const id = String(data.preview_id).toLowerCase();
+        showFallbackResult(id);
+        input.value = id;
+        setHubState(`Preview session dibuat · ${id}`, 'ok');
+        setTimeout(() => { location.href = `/${encodeURIComponent(id)}`; }, 220);
+      } catch (err) {
+        setHubState(err?.message || 'Generate Preview gagal.', 'error');
+      } finally {
+        button.disabled = false;
+        delete button.dataset.smFallback;
+      }
+    }
 
     bind(button, 'home-preview');
     button.addEventListener('click', () => {
       if (button.disabled) return;
+      const initialStateText = stateText.textContent;
       begin('home-preview', 'Membangun Preview ID dan menyiapkan portal preview…');
+      // Zero-delay watchdog: native handler should have changed state synchronously
+      // before this runs. If the screenshot state remains "Ready", recover here.
+      setTimeout(() => fallbackGenerate(initialStateText), 0);
     }, { capture:true });
 
     observe(state, () => {
