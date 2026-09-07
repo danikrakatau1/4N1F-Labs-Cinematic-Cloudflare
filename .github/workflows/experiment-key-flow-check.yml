@@ -1,0 +1,35 @@
+name: Experiment Key Flow Check
+
+on:
+  push:
+    branches:
+      - 'lab/experiment-key-flow-v1'
+      - 'lab/experiment-*'
+    paths:
+      - 'experiments/**'
+      - 'docs/EXPERIMENT-KEY-FLOW-V1.md'
+      - '.github/workflows/experiment-key-flow-check.yml'
+  pull_request:
+    paths:
+      - 'experiments/**'
+      - 'docs/EXPERIMENT-KEY-FLOW-V1.md'
+      - '.github/workflows/experiment-key-flow-check.yml'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate experiment package contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f docs/EXPERIMENT-KEY-FLOW-V1.md
+          test -f experiments/bali-painterly-v1/package.template.json
+          grep -q '"schema": "4n1f.experiment.v1"' experiments/bali-painterly-v1/package.template.json
+          grep -q '"deploy_policy": "package-key-only"' experiments/bali-painterly-v1/package.template.json
+          grep -q '"html_code"' experiments/bali-painterly-v1/package.template.json
+          grep -q '"css_code"' experiments/bali-painterly-v1/package.template.json
+          grep -q '"js_code"' experiments/bali-painterly-v1/package.template.json
+          ! grep -R -E 'wrangler deploy|vercel --prod|npx vercel|npm run deploy' experiments/
+          echo 'Experiment package contract OK: package/key flow only, no deploy command.'
