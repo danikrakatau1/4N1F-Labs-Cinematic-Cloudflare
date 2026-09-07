@@ -6,6 +6,11 @@ const FETCH_SOURCE_LIMIT = 3_500_000;
 const FETCH_ASSET_CHUNK = 3_000_000;
 const FETCH_REDIRECTS = 3;
 
+// Isolated 4N1F experiment contract. This never enters the immutable-package KV flow.
+const BALI_LAB_KEY = '4N1F_BA11CA1D1A01';
+const BALI_LAB_PREVIEW = 'p_ba11ca1d1a0100000000000000000000';
+const BALI_LAB_ASSET = '/editor/webgl-lab/bali/index.html';
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -225,6 +230,16 @@ async function createPreviewSession(request) {
   if (!body) return json({ success: false, message: 'Body JSON tidak valid.' }, 400);
   const packageKey = String(body?.package_key || '').trim().toUpperCase();
   if (!/^4N1F_[A-F0-9]{12}$/.test(packageKey)) return json({ success: false, message: 'Format Package Key tidak valid.' }, 400);
+
+  if (packageKey === BALI_LAB_KEY) {
+    return json({
+      success: true,
+      preview_id: BALI_LAB_PREVIEW,
+      storage_engine: '4n1f-isolated-lab',
+      experiment: 'bali-candi-bentar-v1'
+    });
+  }
+
   try {
     const response = await fetch(`${KV_API}/session`, {method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:JSON.stringify({package_key:packageKey})});
     const data = await response.json().catch(() => null);
@@ -254,6 +269,9 @@ export default {
     if (path === '/api/kv-preview') return loadPreview(request);
     if (path === '/api/fetch-source') return fetchSource(request);
     if (path === '/api/fetch-asset') return fetchAsset(request);
+
+    if (path === `/${BALI_LAB_PREVIEW}` || path === `/${BALI_LAB_PREVIEW}/`) return serveAsset(request, env, BALI_LAB_ASSET, true);
+    if (path === `/editor/${BALI_LAB_PREVIEW}` || path === `/editor/${BALI_LAB_PREVIEW}/`) return serveAsset(request, env, BALI_LAB_ASSET, true);
 
     if (path === '/fetch' || path === '/fetch/') return serveAsset(request, env, '/fetch/index.html', true);
     if (path === '/fetch/editor' || path === '/fetch/editor/') return serveAsset(request, env, '/fetch/editor/index.html', true);
