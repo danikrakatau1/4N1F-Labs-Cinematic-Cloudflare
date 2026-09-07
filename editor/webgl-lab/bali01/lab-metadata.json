@@ -1,0 +1,11 @@
+{
+  "lab_key": "4N1F_LAB_BALI01",
+  "preview_id": "p_5a261fd0a07697fb2c7d2a9a053679c3",
+  "kind": "isolated-experiment",
+  "theme": "Bali Candi Bentar",
+  "renderer": "WebGL2 + DOM/SVG panel",
+  "reference_duration_seconds": 9.663106,
+  "kv_session": false,
+  "production_package": false,
+  "fetch_engine_touched": false
+}
