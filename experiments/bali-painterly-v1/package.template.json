@@ -1,0 +1,24 @@
+{
+  "schema": "4n1f.experiment.v1",
+  "kind": "illustration-scene",
+  "project": "Bali Painterly Cinematic V1",
+  "html_code": "<main class=\"scene\" data-4n1f-experiment=\"bali-painterly-v1\"><div class=\"layer bg\"></div><div class=\"layer mountain\"></div><div class=\"layer cloud-back\"></div><div class=\"layer hero\"></div><div class=\"layer flora-back\"></div><div class=\"layer flora-front\"></div><div class=\"layer mist\"></div><section class=\"invite-panel\" aria-hidden=\"true\"></section></main>",
+  "css_code": "html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7dc}.scene{position:fixed;inset:0;overflow:hidden;isolation:isolate}.layer{position:absolute;inset:-3%;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:transform,opacity}.bg{background-image:var(--asset-bg)}.mountain{background-image:var(--asset-mountain)}.cloud-back{background-image:var(--asset-cloud-back)}.hero{background-image:var(--asset-hero)}.flora-back{background-image:var(--asset-flora-back)}.flora-front{background-image:var(--asset-flora-front)}.mist{background:radial-gradient(ellipse at 50% 70%,rgba(255,255,255,.42),transparent 58%);mix-blend-mode:screen;opacity:.4}.invite-panel{position:absolute;left:12%;right:12%;top:19%;bottom:15%;border:1.5px solid rgba(119,52,45,.62);border-radius:28px;background:rgba(255,250,242,.88);box-shadow:0 22px 70px rgba(67,39,29,.12);opacity:0;transform:translateY(4%) scale(.96)}",
+  "js_code": "(()=>{const q=s=>document.querySelector(s);const layers=[['.bg',1.035,0],['.mountain',1.025,-8],['.cloud-back',1.02,-4],['.hero',1.015,0],['.flora-back',1.01,6],['.flora-front',1.0,10]];for(const [sel,scale,y] of layers){const el=q(sel);if(!el)continue;el.animate([{opacity:0,transform:`translateY(${y+28}px) scale(${scale+.025})`},{opacity:1,offset:.48,transform:`translateY(${y}px) scale(${scale})`},{opacity:1,transform:`translateY(${y-5}px) scale(${Math.max(1,scale-.01)})`}],{duration:9660,easing:'cubic-bezier(.18,.72,.18,1)',fill:'both'});}const mist=q('.mist');mist?.animate([{opacity:.08,transform:'translateX(-4%)'},{opacity:.42,offset:.5,transform:'translateX(3%)'},{opacity:.24,transform:'translateX(-1%)'}],{duration:9660,easing:'ease-in-out',fill:'both'});const panel=q('.invite-panel');panel?.animate([{opacity:0,transform:'translateY(4%) scale(.96)'},{opacity:0,offset:.745,transform:'translateY(4%) scale(.96)'},{opacity:1,offset:.88,transform:'translateY(0) scale(1)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:9660,easing:'cubic-bezier(.18,.86,.2,1)',fill:'both'});})();",
+  "meta": {
+    "aspect_ratio": "9:16",
+    "duration": 9.66,
+    "motion_recipe": "cinematic-soft-reveal-v1",
+    "source_mode": "illustration-based",
+    "visual_target": "premium painterly editorial illustration; dense ornamental detail; no lego/blocky primitives",
+    "deploy_policy": "package-key-only",
+    "asset_slots": {
+      "--asset-bg": "asset://bali-bg-pattern.webp",
+      "--asset-mountain": "asset://bali-mountain.webp",
+      "--asset-cloud-back": "asset://bali-cloud-back.webp",
+      "--asset-hero": "asset://bali-candi-bentar-hero.webp",
+      "--asset-flora-back": "asset://bali-flora-back.webp",
+      "--asset-flora-front": "asset://bali-flora-front.webp"
+    }
+  }
+}
