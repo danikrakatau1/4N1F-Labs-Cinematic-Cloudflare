@@ -24,6 +24,7 @@
     .preview-nav:hover,.preview-nav:focus-within{opacity:1}
     .preview-nav a{display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(7,10,17,.58);color:#e8eef4;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.02em;box-shadow:0 12px 32px rgba(0,0,0,.22);backdrop-filter:blur(18px) saturate(130%);-webkit-backdrop-filter:blur(18px) saturate(130%)}
     .preview-nav a.primary{background:rgba(174,247,209,.93);color:#06110d;border-color:rgba(174,247,209,.62)}
+    .preview-nav a[aria-disabled="true"]{opacity:.48;pointer-events:none}
     .error-card{position:fixed;z-index:8;inset:0;display:none;place-items:center;padding:22px}
     body.is-error .error-card{display:grid}
     .error-inner{width:min(520px,100%);padding:24px;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:rgba(8,10,18,.66);box-shadow:0 28px 90px rgba(0,0,0,.38);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);text-align:center}
@@ -38,7 +39,7 @@
 <body>
   <div class="cinematic-bg" aria-hidden="true"><canvas class="fluid-canvas"></canvas><div class="fluid-scrim"></div></div>
   <div class="preview-shell"><iframe id="previewFrame" title="4N1F package preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads" allow="autoplay; fullscreen"></iframe></div>
-  <nav class="preview-nav" aria-label="Preview navigation"><a class="home-link" href="/">Preview Hub</a><a class="primary" id="editorLink" href="/">Open Live Editor ↗</a></nav>
+  <nav class="preview-nav" aria-label="Preview navigation"><a class="home-link" href="/">Preview Hub</a><a class="primary" id="editorLink" href="#">Open Live Editor ↗</a></nav>
   <div class="status" id="status"><span class="dot"></span><span id="statusText">Resolving Preview Key…</span></div>
   <div class="error-card"><div class="error-inner"><small id="errorId">PREVIEW KEY</small><h1>Preview belum bisa dibuka.</h1><p id="errorMessage">Preview Key tidak ditemukan.</p><button type="button" onclick="location.href='/'">Kembali ke Preview Hub</button></div></div>
 
@@ -46,14 +47,15 @@
   <script>
     (() => {
       'use strict';
-      const SUPABASE_URL = 'https://awoefnctmalhtywrxizi.supabase.co';
-      const SUPABASE_KEY = 'sb_publishable_1njtXPhuEmASkStTOTDJ1w_lHROXljp';
       const frame = document.getElementById('previewFrame');
       const status = document.getElementById('status');
       const statusText = document.getElementById('statusText');
       const errorId = document.getElementById('errorId');
       const errorMessage = document.getElementById('errorMessage');
       const editorLink = document.getElementById('editorLink');
+      let activePackageKey = '';
+      let activePackage = null;
+      let editorBusy = false;
 
       function readPackageKey() {
         const key = String(new URLSearchParams(location.search).get('package_key') || '').trim().toUpperCase();
@@ -70,6 +72,16 @@
         }
       }
 
+      async function loadPackage(packageKey) {
+        const response = await fetchJsonWithTimeout(`/api/kv-package?package_key=${encodeURIComponent(packageKey)}`, {
+          headers:{accept:'application/json'},
+          cache:'no-store'
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.success) throw new Error(data?.message || `Preview Key gagal di-resolve (${response.status}).`);
+        return data;
+      }
+
       async function createSession(packageKey) {
         let lastError;
         for (let attempt=0; attempt<2; attempt++) {
@@ -81,38 +93,14 @@
             });
             const data = await response.json().catch(() => null);
             if (response.ok && data?.success && /^p_[a-f0-9]{32}$/i.test(String(data.preview_id || ''))) return String(data.preview_id).toLowerCase();
-            if (response.status < 500 || attempt === 1) throw new Error(data?.message || `Preview Key gagal di-resolve (${response.status}).`);
+            if (response.status < 500 || attempt === 1) throw new Error(data?.message || `Editable session gagal dibuat (${response.status}).`);
           } catch (error) {
             lastError = error;
             if (attempt === 1) break;
             await new Promise(resolve => setTimeout(resolve, 260));
           }
         }
-        throw new Error(lastError?.name === 'AbortError' ? 'Preview Key timeout saat menghubungi KV.' : (lastError?.message || 'Preview Key tidak dapat di-resolve.'));
-      }
-
-      async function fromKv(previewId) {
-        const response = await fetch(`/api/kv-preview?preview_id=${encodeURIComponent(previewId)}`, { headers:{accept:'application/json'}, cache:'no-store' });
-        if (response.status === 404) return null;
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data?.success) {
-          if (response.status >= 500) return null;
-          throw new Error(data?.message || `KV preview gagal (${response.status}).`);
-        }
-        return { ...data, storage_engine:data.storage_engine || 'cloudflare-kv' };
-      }
-
-      async function fromLegacy(previewId) {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_lab_preview_source`, {
-          method:'POST',
-          headers:{'content-type':'application/json',apikey:SUPABASE_KEY,authorization:`Bearer ${SUPABASE_KEY}`},
-          body:JSON.stringify({input_preview_id:previewId})
-        });
-        const data = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(data?.message || `Legacy preview gagal (${response.status}).`);
-        const row = Array.isArray(data) ? data[0] : data;
-        if (!row?.success || !row?.html_code) return null;
-        return { ...row, storage_engine:'supabase-legacy' };
+        throw new Error(lastError?.name === 'AbortError' ? 'Editable session timeout.' : (lastError?.message || 'Editable session tidak dapat dibuat.'));
       }
 
       function srcdoc(row) {
@@ -136,24 +124,47 @@
         errorMessage.textContent = message || 'Preview Key tidak ditemukan.';
       }
 
+      editorLink.addEventListener('click', async event => {
+        event.preventDefault();
+        if (!activePackageKey || editorBusy) return;
+        if (activePackage?.editable === false) {
+          status.classList.remove('ok');
+          statusText.textContent = 'Preview ini tidak memiliki editable session.';
+          return;
+        }
+        editorBusy = true;
+        editorLink.setAttribute('aria-disabled','true');
+        status.classList.remove('ok');
+        statusText.textContent = 'Creating editable session…';
+        try {
+          const previewId = await createSession(activePackageKey);
+          location.href = `/editor/${encodeURIComponent(previewId)}`;
+        } catch (error) {
+          statusText.textContent = error?.message || 'Editable session gagal dibuat.';
+          editorLink.removeAttribute('aria-disabled');
+          editorBusy = false;
+        }
+      });
+
       async function boot() {
         const packageKey = readPackageKey();
         if (!packageKey) return fail('', 'URL harus berisi Preview Key 4N1F_ + 12 hexadecimal.');
+        activePackageKey = packageKey;
         errorId.textContent = packageKey;
         statusText.textContent = `Loading ${packageKey}`;
         try {
-          const previewId = await createSession(packageKey);
-          editorLink.href = `/editor/${encodeURIComponent(previewId)}`;
-          let row = await fromKv(previewId).catch(() => null);
-          if (!row) row = await fromLegacy(previewId);
-          if (!row?.html_code) throw new Error('Source package untuk Preview Key tidak ditemukan.');
+          const row = await loadPackage(packageKey);
+          activePackage = row;
+          if (row.editable === false) editorLink.setAttribute('aria-disabled','true');
           document.title = `${row.project || '4N1F Labs'} — Preview Only`;
           frame.addEventListener('load', () => {
             status.classList.add('ok');
             statusText.textContent = `${String(row.storage_engine || 'preview').toUpperCase()} · PREVIEW ONLY`;
             requestAnimationFrame(() => document.body.classList.add('is-ready'));
           }, { once:true });
-          frame.srcdoc = srcdoc(row);
+          if (row.asset_url) frame.src = row.asset_url;
+          else if (row.html_code) frame.srcdoc = srcdoc(row);
+          else throw new Error('Source package untuk Preview Key tidak ditemukan.');
         } catch (error) {
           fail(packageKey, error?.message || 'Preview Key tidak dapat dimuat.');
         }
