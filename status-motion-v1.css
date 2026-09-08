@@ -165,3 +165,137 @@ body:has(.hub) .state.error i{
   body:has(.hub) .sm-status-host.show[data-state="success"]::after,
   body:has(.hub) .sm-status-host.show[data-state="error"]::after{animation:none!important}
 }
+
+/* V8 STEP 4 — FINAL RESTRAINT SWEEP
+   Final anti-slop balance pass: 80% calm / 20% wow.
+   This layer only trims intensity, hierarchy and motion amplitude on the Hub.
+   No routing, Fetch, KV, Preview Key, Live Editor or editor-session behavior changes. */
+body:has(.hub){
+  --v8-restraint-ambient:.86;
+  --v8-restraint-accent:.78;
+}
+
+/* Ambient budget: keep depth, remove the "everything glows" impression. */
+body:has(.hub) .cinematic-bg::before{opacity:.66!important;filter:blur(62px) saturate(112%)!important}
+body:has(.hub) .cinematic-bg::after{opacity:.30!important;filter:blur(26px) contrast(104%)!important}
+body:has(.hub) .wrap::after{opacity:.74!important;filter:blur(18px)!important}
+body:has(.hub) .ambient-film.is-active{opacity:.24!important}
+
+/* Surface hierarchy: shell first, effects second. */
+body:has(.hub) .hub{
+  border-color:rgba(220,229,255,.105)!important;
+  box-shadow:
+    0 28px 76px rgba(0,0,0,.41),
+    0 -10px 34px rgba(var(--v8-violet),.026),
+    0 14px 42px rgba(var(--v8-cyan),.018),
+    inset 0 1px 0 rgba(244,248,255,.065)!important;
+}
+body:has(.hub) .hub-body::before{opacity:.66!important}
+body:has(.hub) .statusbar::before{opacity:.54!important}
+body:has(.hub) .hub-gate.active{
+  box-shadow:inset 0 1px rgba(255,255,255,.04),inset 0 0 0 1px rgba(var(--v8-violet),.032),0 1px 2px rgba(0,0,0,.18),0 0 14px rgba(var(--v8-violet),.022)!important;
+}
+body:has(.hub) .hub-gate.active::after{opacity:.84!important;box-shadow:0 0 10px rgba(var(--v8-mint),.075)!important}
+
+/* Interaction budget: tactile response remains obvious without turning neon. */
+body:has(.hub) .row:focus-within{
+  border-color:rgba(var(--v8-cyan),.18)!important;
+  box-shadow:inset 0 0 0 1px rgba(var(--v8-cyan),.045),inset 0 1px rgba(255,255,255,.026),0 0 0 2px rgba(var(--v8-cyan),.014),0 0 20px rgba(var(--v8-violet),.024)!important;
+}
+body:has(.hub) #generateBtn:hover,
+body:has(.hub) #generateBtn:focus-visible{
+  box-shadow:inset 0 1px rgba(255,255,255,.058),inset 0 0 0 1px rgba(var(--v8-cyan),.018),0 6px 18px rgba(0,0,0,.14),0 0 16px rgba(var(--v8-cyan),.028),0 0 22px rgba(var(--v8-violet),.020)!important;
+}
+@media(hover:hover) and (pointer:fine){
+  body:has(.hub) .hub:hover{
+    border-color:rgba(220,229,255,.125)!important;
+    box-shadow:0 30px 80px rgba(0,0,0,.42),0 -10px 38px rgba(var(--v8-violet),.032),0 15px 44px rgba(var(--v8-cyan),.023),inset 0 1px 0 rgba(244,248,255,.072)!important;
+  }
+  body:has(.hub) .hub-gate:hover{box-shadow:inset 0 0 0 1px rgba(var(--v8-cyan),.026),0 6px 16px rgba(0,0,0,.09),0 0 12px rgba(var(--v8-violet),.016)!important}
+  body:has(.hub) .hub-gate:hover .hub-gate-icon{box-shadow:0 0 10px rgba(var(--v8-cyan),.045),inset 0 1px rgba(255,255,255,.03)!important}
+  body:has(.hub) .result-actions button:hover{box-shadow:0 5px 14px rgba(0,0,0,.09),0 0 10px rgba(var(--v8-cyan),.016)!important}
+}
+
+/* State payoff: same choreography, smaller amplitude and shorter afterglow. */
+body:has(.hub) .sm-status-host{
+  width:min(350px,calc(100vw - 28px));
+  gap:11px;
+  padding:11px 13px;
+  border-radius:14px;
+  box-shadow:0 18px 52px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.05);
+}
+body:has(.hub) .sm-status-host.show[data-state="loading"]{box-shadow:0 18px 52px rgba(0,0,0,.42),0 0 18px rgba(var(--v8-cyan),.024),inset 0 1px rgba(255,255,255,.052)}
+body:has(.hub) .sm-status-host.show[data-state="success"]{border-color:rgba(var(--v8-mint),.24)}
+body:has(.hub) .sm-status-host.show[data-state="error"]{border-color:rgba(255,143,164,.24)}
+body:has(.hub) .sm-icon{width:42px;height:42px;border-radius:13px}
+body:has(.hub) .sm-icon::before{inset:5px;border-radius:10px}
+body:has(.hub) .sm-svg{inset:2px;width:38px;height:38px}
+body:has(.hub) .sm-copy strong{font-size:11.5px;font-weight:680}
+body:has(.hub) .sm-copy small{font-size:10px;color:#8794a4}
+body:has(.hub) #generateBtn[aria-busy="true"]{animation-duration:1.45s;box-shadow:inset 0 1px rgba(255,255,255,.05),inset 0 0 0 1px rgba(var(--v8-cyan),.018),0 0 15px rgba(var(--v8-cyan),.026)!important}
+body:has(.hub) .result.show{animation-duration:.32s}
+body:has(.hub) .result.show code{text-shadow:0 0 12px rgba(var(--v8-cyan),.025)}
+body:has(.hub) .state.ok i{box-shadow:0 0 8px rgba(var(--v8-mint),.18)!important}
+body:has(.hub) .state.error i{box-shadow:0 0 8px rgba(255,143,164,.14)!important}
+
+/* Redefine existing Step 3 keyframes with a restrained amplitude; no extra animation systems are added. */
+@keyframes v8BusyBreath{
+  0%,100%{box-shadow:inset 0 1px rgba(255,255,255,.045),inset 0 0 0 1px rgba(var(--v8-cyan),.015),0 0 12px rgba(var(--v8-cyan),.018);filter:saturate(.88)}
+  50%{box-shadow:inset 0 1px rgba(255,255,255,.06),inset 0 0 0 1px rgba(var(--v8-cyan),.032),0 0 20px rgba(var(--v8-cyan),.042),0 0 24px rgba(var(--v8-violet),.014);filter:saturate(.97)}
+}
+@keyframes v8ResultReveal{
+  0%{opacity:0;transform:translateY(3px) scale(.997);filter:blur(1px)}
+  62%{opacity:1;transform:translateY(-.5px) scale(1);filter:blur(0)}
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+@keyframes v8InlineConfirm{
+  0%{opacity:.66;transform:translateY(1px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@keyframes v8InlineError{
+  0%,100%{transform:translateX(0)}
+  38%{transform:translateX(-1px)}
+  68%{transform:translateX(.65px)}
+}
+@keyframes v8StateDotSuccess{
+  0%{transform:scale(.82);opacity:.55;box-shadow:0 0 0 rgba(var(--v8-mint),0)}
+  58%{transform:scale(1.10);opacity:1;box-shadow:0 0 11px rgba(var(--v8-mint),.23)}
+  100%{transform:scale(1);opacity:1;box-shadow:0 0 8px rgba(var(--v8-mint),.18)}
+}
+@keyframes v8StateDotError{
+  0%{transform:scale(.84);opacity:.58}
+  56%{transform:scale(1.08);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes v8StateSuccessWash{
+  0%{opacity:0;transform:translateX(-5%) scaleX(.96)}
+  40%{opacity:.62}
+  100%{opacity:0;transform:translateX(4%) scaleX(1.02)}
+}
+@keyframes v8StateErrorWash{
+  0%{opacity:0;transform:translateX(-3%)}
+  38%{opacity:.52}
+  100%{opacity:0;transform:translateX(2%)}
+}
+
+@media(max-width:620px){
+  body:has(.hub) .cinematic-bg::before{opacity:.52!important;filter:blur(68px) saturate(106%)!important}
+  body:has(.hub) .cinematic-bg::after{opacity:.18!important}
+  body:has(.hub) .wrap::after{opacity:.60!important}
+  body:has(.hub) .sm-status-host{width:calc(100vw - 28px);gap:10px;padding:10px 12px;border-radius:12px}
+  body:has(.hub) .sm-icon{width:40px;height:40px}
+  body:has(.hub) .row:focus-within{box-shadow:0 0 0 2px rgba(var(--v8-cyan),.012),0 0 14px rgba(var(--v8-violet),.018)!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body:has(.hub) .cinematic-bg::before,
+  body:has(.hub) .cinematic-bg::after{animation:none!important;transform:none!important}
+  body:has(.hub) #generateBtn[aria-busy="true"],
+  body:has(.hub) .result.show,
+  body:has(.hub) .state.ok,
+  body:has(.hub) .state.ok i,
+  body:has(.hub) .state.error,
+  body:has(.hub) .state.error i,
+  body:has(.hub) .sm-status-host.show[data-state="success"]::after,
+  body:has(.hub) .sm-status-host.show[data-state="error"]::after{animation:none!important}
+}
