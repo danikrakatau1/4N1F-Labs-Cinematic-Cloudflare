@@ -1,0 +1,157 @@
+name: KV Backend Post Cleanup Smoke V1
+
+on:
+  push:
+    branches:
+      - test/kv-backend-post-cleanup-smoke-v1
+    paths:
+      - '.github/workflows/kv-backend-post-cleanup-smoke-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      KV_NAMESPACE_ID: f5d2286e18e8401aa40ec9d8591bf8b6
+      PACKAGE_KEY: 4N1F_C7E21B9A6D04
+      BACKEND: https://4n1f-kv-api.faqihanif12282000.workers.dev
+      FRONTEND: https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify post-cleanup Cloudflare bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" "$BASE/settings" -o settings.json
+          python - <<'PY'
+          import json, os
+          d=json.load(open('settings.json'))
+          assert d.get('success') is True, d
+          bindings={b['name']:b for b in d['result'].get('bindings',[])}
+          safe={name:{k:v for k,v in b.items() if k not in ('text',)} for name,b in bindings.items()}
+          print('bindings-safe=', json.dumps(safe, sort_keys=True))
+          assert 'ASSETS' not in bindings, bindings
+          assert bindings.get('PACKAGES',{}).get('type')=='kv_namespace'
+          assert bindings['PACKAGES'].get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings.get('PUBLISH_TOKEN',{}).get('type')=='secret_text'
+          assert bindings.get('RETENTION_LIMIT',{}).get('type')=='plain_text'
+          assert bindings['RETENTION_LIMIT'].get('text')=='500'
+          assert bindings.get('ALLOWED_ORIGINS',{}).get('type')=='plain_text'
+          assert os.environ['FRONTEND'] in [x.strip() for x in bindings['ALLOWED_ORIGINS'].get('text','').split(',')]
+          print('SETTINGS=GREEN ASSETS_ABSENT=TRUE')
+          PY
+
+      - name: Probe backend endpoints without early assertions
+        shell: bash
+        run: |
+          set -u
+          : > probe.env
+          probe() {
+            name="$1"; shift
+            body="${name}.body"
+            code=$(curl -sS --retry 2 --retry-delay 1 --retry-all-errors -o "$body" -w '%{http_code}' "$@" || echo CURL_ERROR)
+            echo "${name}_STATUS=${code}"
+            printf '%s_BODY=' "$name"
+            head -c 1400 "$body" 2>/dev/null || true
+            echo
+            printf '%s=%q\n' "${name}_STATUS" "$code" >> probe.env
+          }
+          probe HEALTH "$BACKEND/health"
+          probe ROOT "$BACKEND/"
+          probe PACKAGE "$BACKEND/package/$PACKAGE_KEY"
+          probe SESSION -X POST "$BACKEND/session" -H 'Content-Type: application/json' -H "Origin: $FRONTEND" --data "{\"package_key\":\"$PACKAGE_KEY\"}"
+
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          try:
+              d=json.load(open('SESSION.body'))
+          except Exception:
+              print(''); raise SystemExit
+          p=str(d.get('preview_id','')).lower()
+          print(p if re.fullmatch(r'p_[a-f0-9]{32}',p) else '')
+          PY
+          )
+          echo "BACKEND_PREVIEW_ID=${PREVIEW_ID:-NONE}"
+          printf 'BACKEND_PREVIEW_ID=%q\n' "$PREVIEW_ID" >> probe.env
+          if [ -n "$PREVIEW_ID" ]; then
+            probe PREVIEW "$BACKEND/preview/$PREVIEW_ID"
+          else
+            echo 'PREVIEW_STATUS=SKIPPED'
+            echo 'PREVIEW_STATUS=SKIPPED' >> probe.env
+          fi
+
+      - name: Probe frontend Service Binding endpoints without early assertions
+        shell: bash
+        run: |
+          set -u
+          probe() {
+            name="$1"; shift
+            body="${name}.body"
+            code=$(curl -sS --retry 2 --retry-delay 1 --retry-all-errors -o "$body" -w '%{http_code}' "$@" || echo CURL_ERROR)
+            echo "${name}_STATUS=${code}"
+            printf '%s_BODY=' "$name"
+            head -c 1400 "$body" 2>/dev/null || true
+            echo
+            printf '%s=%q\n' "${name}_STATUS" "$code" >> probe.env
+          }
+          probe FRONT_PACKAGE "$FRONTEND/api/kv-package?package_key=$PACKAGE_KEY"
+          probe FRONT_SESSION -X POST "$FRONTEND/api/kv-session" -H 'Content-Type: application/json' --data "{\"package_key\":\"$PACKAGE_KEY\"}"
+          FRONT_PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          try:
+              d=json.load(open('FRONT_SESSION.body'))
+          except Exception:
+              print(''); raise SystemExit
+          p=str(d.get('preview_id','')).lower()
+          print(p if re.fullmatch(r'p_[a-f0-9]{32}',p) else '')
+          PY
+          )
+          echo "FRONT_PREVIEW_ID=${FRONT_PREVIEW_ID:-NONE}"
+          printf 'FRONT_PREVIEW_ID=%q\n' "$FRONT_PREVIEW_ID" >> probe.env
+          if [ -n "$FRONT_PREVIEW_ID" ]; then
+            probe FRONT_PREVIEW "$FRONTEND/api/kv-preview?preview_id=$FRONT_PREVIEW_ID"
+          else
+            echo 'FRONT_PREVIEW_STATUS=SKIPPED'
+            echo 'FRONT_PREVIEW_STATUS=SKIPPED' >> probe.env
+          fi
+
+      - name: Validate actual API contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          source probe.env
+          python - <<'PY'
+          import json, os, re
+          key=os.environ['PACKAGE_KEY']
+          checks=[]
+          def load(name):
+              with open(name+'.body') as f: return json.load(f)
+          h=load('HEALTH'); checks.append(h.get('success') is True and h.get('service')=='4n1f-kv-api')
+          r=load('ROOT'); checks.append(r.get('success') is False and r.get('message')=='Route tidak ditemukan.')
+          p=load('PACKAGE'); checks.append(p.get('success') is True and p.get('package_key')==key)
+          s=load('SESSION'); pid=str(s.get('preview_id','')).lower(); checks.append(s.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',pid) is not None)
+          if pid:
+              pv=load('PREVIEW'); checks.append(pv.get('success') is True and pv.get('preview_id')==pid and pv.get('package_key')==key)
+          fp=load('FRONT_PACKAGE'); checks.append(fp.get('success') is True and fp.get('package_key')==key)
+          fs=load('FRONT_SESSION'); fpid=str(fs.get('preview_id','')).lower(); checks.append(fs.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',fpid) is not None)
+          if fpid:
+              fpv=load('FRONT_PREVIEW'); checks.append(fpv.get('success') is True and fpv.get('preview_id')==fpid and fpv.get('package_key')==key)
+          statuses={}
+          for line in open('probe.env'):
+              if '_STATUS=' in line:
+                  k,v=line.strip().split('=',1); statuses[k]=v.strip("'")
+          expected={'HEALTH_STATUS':'200','ROOT_STATUS':'404','PACKAGE_STATUS':'200','SESSION_STATUS':'200','PREVIEW_STATUS':'200','FRONT_PACKAGE_STATUS':'200','FRONT_SESSION_STATUS':'200','FRONT_PREVIEW_STATUS':'200'}
+          print('status-summary=', statuses)
+          for k,v in expected.items(): checks.append(statuses.get(k)==v)
+          assert all(checks), 'One or more post-cleanup API checks failed; inspect printed probes.'
+          print(f'POST_CLEANUP_API=GREEN backend_session={pid} frontend_session={fpid}')
+          PY
