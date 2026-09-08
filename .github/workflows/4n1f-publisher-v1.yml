@@ -1,0 +1,125 @@
+name: 4N1F Publisher V1
+
+on:
+  push:
+    paths:
+      - 'publisher/queue/*.json'
+  workflow_dispatch:
+    inputs:
+      package_file:
+        description: 'Path package JSON, contoh publisher/queue/4N1F_0123456789AB.json'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 4n1f-publisher-v1-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CLOUDFLARE_KV_NAMESPACE_ID: f5d2286e18e8401aa40ec9d8591bf8b6
+      CANONICAL_ORIGIN: https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Select one package
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            FILE='${{ inputs.package_file }}'
+          else
+            BEFORE='${{ github.event.before }}'
+            if [[ -n "$BEFORE" && "$BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+              mapfile -t FILES < <(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'publisher/queue/*.json')
+            else
+              mapfile -t FILES < <(git show --pretty='' --name-only "$GITHUB_SHA" -- 'publisher/queue/*.json')
+            fi
+            if [[ ${#FILES[@]} -ne 1 ]]; then
+              echo "Publisher V1 membutuhkan tepat satu package JSON per commit; ditemukan ${#FILES[@]}." >&2
+              exit 1
+            fi
+            FILE="${FILES[0]}"
+          fi
+          [[ -f "$FILE" ]] || { echo "Package file tidak ditemukan: $FILE" >&2; exit 1; }
+          [[ "$FILE" =~ ^publisher/queue/4N1F_[A-Fa-f0-9]{12}\.json$ ]] || { echo "Path package tidak valid: $FILE" >&2; exit 1; }
+          echo "PACKAGE_FILE=$FILE" >> "$GITHUB_ENV"
+
+      - name: Normalize and validate package
+        shell: bash
+        run: |
+          set -euo pipefail
+          META="$(node scripts/publisher-v1-prepare.mjs "$PACKAGE_FILE" /tmp/4n1f-publish.json)"
+          PACKAGE_KEY="$(node -e 'const x=JSON.parse(process.argv[1]);process.stdout.write(x.package_key)' "$META")"
+          PACKAGE_HASH="$(node -e 'const x=JSON.parse(process.argv[1]);process.stdout.write(x.package_hash)' "$META")"
+          echo "PACKAGE_KEY=$PACKAGE_KEY" >> "$GITHUB_ENV"
+          echo "PACKAGE_HASH=$PACKAGE_HASH" >> "$GITHUB_ENV"
+          echo "Prepared $PACKAGE_KEY ($PACKAGE_HASH)"
+
+      - name: Publish directly to canonical KV
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]] || { echo 'CLOUDFLARE_API_TOKEN missing.' >&2; exit 1; }
+          URL="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/storage/kv/namespaces/${CLOUDFLARE_KV_NAMESPACE_ID}/values/pkg:${PACKAGE_KEY}"
+          curl --fail-with-body --silent --show-error \
+            -X PUT "$URL" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary @/tmp/4n1f-publish.json
+          echo
+
+      - name: Verify KV readback
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/storage/kv/namespaces/${CLOUDFLARE_KV_NAMESPACE_ID}/values/pkg:${PACKAGE_KEY}"
+          ok=0
+          for attempt in 1 2 3 4 5; do
+            if curl --fail-with-body --silent --show-error "$URL" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -o /tmp/4n1f-readback.json; then
+              if node -e '
+                const fs=require("fs");
+                const row=JSON.parse(fs.readFileSync("/tmp/4n1f-readback.json","utf8"));
+                if(row.package_key!==process.env.PACKAGE_KEY) process.exit(2);
+                if(row.package_hash!==process.env.PACKAGE_HASH) process.exit(3);
+                if(!String(row.html_code||"").trim()) process.exit(4);
+              '; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 1
+          done
+          [[ "$ok" == 1 ]] || { echo 'KV readback verification failed.' >&2; exit 1; }
+          echo "KV readback OK: $PACKAGE_KEY"
+
+      - name: Smoke-test production preview resolver
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            "${CANONICAL_ORIGIN}/api/kv-package?package_key=${PACKAGE_KEY}" \
+            -H 'accept: application/json' \
+            -o /tmp/4n1f-live.json
+          node -e '
+            const fs=require("fs");
+            const row=JSON.parse(fs.readFileSync("/tmp/4n1f-live.json","utf8"));
+            if(!row.success) throw new Error(row.message||"resolver returned success=false");
+            if(row.package_key!==process.env.PACKAGE_KEY) throw new Error("package_key mismatch");
+            if(row.package_hash!==process.env.PACKAGE_HASH) throw new Error("package_hash mismatch");
+          '
+          echo "LIVE PREVIEW RESOLVER OK: $PACKAGE_KEY"
