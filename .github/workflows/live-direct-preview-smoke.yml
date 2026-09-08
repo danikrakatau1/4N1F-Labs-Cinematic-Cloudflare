@@ -36,11 +36,17 @@ jobs:
           KEY='4N1F_4CF2BA8CB435'
           curl -fsS --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY" > /tmp/preview.html
           grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
-          if grep -Fq 'const previewId = await createSession(packageKey);' /tmp/preview.html; then
-            echo 'Preview page still creates p session during boot' >&2
-            exit 1
-          fi
-          echo 'PREVIEW-ONLY SHELL PASS'
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('/tmp/preview.html','utf8');
+          const start=s.indexOf('async function boot()');
+          const end=s.indexOf('\n      boot();', start);
+          if(start<0||end<0) throw new Error('boot function not found');
+          const boot=s.slice(start,end);
+          if(boot.includes('createSession(')) throw new Error('preview boot still creates p session');
+          if(!boot.includes('loadPackage(packageKey)')) throw new Error('preview boot missing direct package load');
+          console.log('PREVIEW-ONLY SHELL PASS');
+          NODE
       - name: Verify editor session remains separate
         shell: bash
         run: |
