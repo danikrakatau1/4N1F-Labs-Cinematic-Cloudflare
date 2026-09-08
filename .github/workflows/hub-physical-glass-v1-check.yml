@@ -1,0 +1,52 @@
+name: Hub Physical Glass V1 Check
+
+on:
+  push:
+    branches:
+      - ui/physical-glass-hub-v1
+  pull_request:
+    paths:
+      - 'openai-type.css'
+      - '.github/workflows/hub-physical-glass-v1-check.yml'
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify physical-glass markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'SOFT PHYSICAL GLASS V1' openai-type.css
+          grep -q 'Calendar-inspired floating hardware UI experiment' openai-type.css
+          grep -Fq 'section.hub.hub.exp-tabs-beam' openai-type.css
+          grep -Fq '#sourceInput' openai-type.css
+          grep -Fq '#generateBtn' openai-type.css
+          grep -Fq ':has(#generateBtn[aria-busy="true"])' openai-type.css
+          grep -Fq ':has(.state.ok)' openai-type.css
+          grep -Fq ':has(.state.error)' openai-type.css
+
+      - name: Verify architecture remains locked
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' index.html
+          grep -q '4N1F_' index.html
+          grep -q 'p_' index.html
+          grep -q '/api/kv-session' src/worker.js
+          grep -q '/api/kv-preview' src/worker.js
+          grep -q '/api/fetch-source' src/worker.js
+          grep -q '/api/fetch-asset' src/worker.js
+
+      - name: Build full Cloudflare bundle
+        run: bash build-cloudflare.sh
+
+      - name: Verify style ships to dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'SOFT PHYSICAL GLASS V1' dist/openai-type.css
+          grep -q 'openai-type.css' dist/index.html
