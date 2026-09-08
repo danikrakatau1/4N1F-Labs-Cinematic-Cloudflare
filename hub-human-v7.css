@@ -1,0 +1,283 @@
+/* 4N1F Preview Hub V7 — human-authored restraint pass.
+   Visual-only override. No routing, KV, Generate Preview, Live Editor, or Fetch logic changes. */
+
+:root{
+  --human-panel:rgba(8,11,19,.78);
+  --human-panel-2:rgba(255,255,255,.025);
+  --human-line:rgba(255,255,255,.085);
+  --human-line-hi:rgba(255,255,255,.14);
+  --human-text:#eef3f8;
+  --human-muted:#8190a0;
+  --human-mint:#9ce8c2;
+  --human-cyan:#8bdcf4;
+}
+
+/* Quiet the ambient scene: keep the cinematic identity, remove billboard glow. */
+.cinematic-bg .fluid-canvas{
+  filter:saturate(.96) contrast(1.04) brightness(.92)!important;
+}
+.ambient-film.is-active{opacity:.28!important}
+.fluid-scrim{
+  background:radial-gradient(115% 95% at 50% 46%,
+    rgba(4,5,12,.57) 0%,
+    rgba(4,5,12,.54) 28%,
+    rgba(4,5,12,.36) 58%,
+    rgba(4,5,12,.12) 100%)!important;
+}
+.wrap::before{opacity:.12!important;filter:blur(34px)!important}
+
+/* One shell, not a stack of glowing cards. */
+.hub{
+  border-radius:18px!important;
+  border-color:rgba(255,255,255,.09)!important;
+  background:linear-gradient(180deg,rgba(10,13,22,.82),rgba(6,8,14,.80))!important;
+  box-shadow:0 28px 72px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.045)!important;
+  backdrop-filter:blur(24px) saturate(116%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(116%)!important;
+}
+.hub::before{
+  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 18%)!important;
+  opacity:1!important;
+}
+.hub::after{display:none!important;animation:none!important}
+.hub-body{padding:18px 18px 16px!important}
+
+/* Entry points become a restrained segmented workspace switcher. */
+.hub-gates{
+  grid-template-columns:1fr 1fr!important;
+  gap:3px!important;
+  margin-bottom:18px!important;
+  padding:3px!important;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:13px;
+  background:rgba(0,0,0,.16);
+  box-shadow:inset 0 1px rgba(255,255,255,.02);
+}
+.hub-gate{
+  min-height:61px!important;
+  padding:11px 12px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.hub-gate::before{display:none!important}
+.hub-gate:hover{
+  transform:none!important;
+  background:rgba(255,255,255,.028)!important;
+  box-shadow:none!important;
+}
+.hub-gate.active{
+  background:rgba(255,255,255,.045)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 1px 2px rgba(0,0,0,.18)!important;
+}
+.hub-gate.active::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(156,232,194,.52),transparent);
+}
+.hub-gate-copy strong{
+  margin-bottom:4px!important;
+  font-family:var(--sans)!important;
+  font-size:11.5px!important;
+  font-weight:650!important;
+  line-height:1.1!important;
+  letter-spacing:.015em!important;
+  color:var(--human-text)!important;
+}
+.hub-gate-copy small{
+  color:#778596!important;
+  font-family:var(--sans)!important;
+  font-size:10px!important;
+  line-height:1.35!important;
+  font-weight:430!important;
+  letter-spacing:0!important;
+}
+.hub-gate.active .hub-gate-copy small{color:#8d9b92!important}
+.hub-gate-icon{
+  flex-basis:28px!important;
+  width:28px!important;
+  height:28px!important;
+  border-color:rgba(255,255,255,.07)!important;
+  border-radius:8px!important;
+  background:rgba(0,0,0,.18)!important;
+  color:#8196a5!important;
+  box-shadow:none!important;
+  font-size:11px!important;
+}
+.hub-gate.active .hub-gate-icon{color:var(--human-mint)!important;border-color:rgba(156,232,194,.12)!important}
+
+/* Simple section heading. Technical metadata stays secondary. */
+.label{
+  min-height:auto!important;
+  margin:0 2px 9px!important;
+  padding:0!important;
+}
+.label b{
+  gap:0!important;
+  color:#b8c2cc!important;
+  font-family:var(--sans)!important;
+  font-size:10.5px!important;
+  font-weight:620!important;
+  letter-spacing:.025em!important;
+}
+.label b::before{display:none!important}
+.label span{
+  min-height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#677483!important;
+  font-size:8.5px!important;
+  letter-spacing:.025em!important;
+}
+
+/* The input is the primary interaction: one rail, one border, one action. */
+.row{
+  grid-template-columns:minmax(0,1fr) 178px!important;
+  gap:0!important;
+  padding:0!important;
+  border:1px solid rgba(255,255,255,.095)!important;
+  border-radius:12px!important;
+  background:rgba(1,3,8,.47)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.02)!important;
+  overflow:hidden;
+}
+.row::before{
+  left:13px!important;
+  height:20px!important;
+  padding:0 6px!important;
+  border:0!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.04)!important;
+  color:#6e8290!important;
+  font-size:7.5px!important;
+  letter-spacing:.07em!important;
+}
+input#sourceInput{
+  height:52px!important;
+  padding:0 14px 0 52px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#e9f0f5!important;
+  font-size:11.5px!important;
+  font-weight:500!important;
+}
+input#sourceInput:focus{
+  border:0!important;
+  background:rgba(255,255,255,.012)!important;
+  box-shadow:inset 0 0 0 1px rgba(139,220,244,.12)!important;
+}
+
+#generateBtn{
+  height:52px!important;
+  border:0!important;
+  border-left:1px solid rgba(255,255,255,.08)!important;
+  border-radius:0!important;
+  padding:0 15px!important;
+  background:rgba(255,255,255,.035)!important;
+  color:#e8eef3!important;
+  font-family:var(--sans)!important;
+  font-size:10.5px!important;
+  font-weight:620!important;
+  letter-spacing:0!important;
+  text-shadow:none!important;
+  box-shadow:none!important;
+}
+#generateBtn::before,#generateBtn::after{display:none!important;animation:none!important}
+#generateBtn:hover{
+  transform:none!important;
+  border-color:rgba(255,255,255,.10)!important;
+  background:rgba(255,255,255,.062)!important;
+  box-shadow:none!important;
+}
+#generateBtn:active{transform:none!important;background:rgba(255,255,255,.045)!important}
+#generateBtn:focus-visible{outline:2px solid rgba(139,220,244,.30)!important;outline-offset:-3px!important;box-shadow:none!important}
+#generateBtn .sm-button-icon{display:none!important}
+
+/* Result becomes an inline confirmation row instead of another card. */
+.result{
+  margin-top:10px!important;
+  padding:10px 3px 0!important;
+  border:0!important;
+  border-top:1px solid rgba(255,255,255,.065)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.result code{color:#cfd9e1!important;font-size:10.5px!important}
+.result-actions{gap:5px!important}
+.result-actions button{
+  height:30px!important;
+  padding:0 9px!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  color:#9ba8b3!important;
+  font-family:var(--sans)!important;
+  font-size:9.5px!important;
+  font-weight:560!important;
+  box-shadow:none!important;
+}
+.result-actions button:hover{
+  transform:none!important;
+  border-color:rgba(255,255,255,.12)!important;
+  background:rgba(255,255,255,.035)!important;
+  color:#dce5eb!important;
+}
+
+/* Console-like status line: useful telemetry, not a third card. */
+.statusbar{
+  margin:0!important;
+  min-height:41px!important;
+  padding:10px 18px!important;
+  border:0!important;
+  border-top:1px solid rgba(255,255,255,.065)!important;
+  border-radius:0!important;
+  background:rgba(0,0,0,.08)!important;
+  box-shadow:none!important;
+}
+.state{font-size:10px!important;color:#7e8a96!important}
+.state i{width:5px!important;height:5px!important;box-shadow:none!important}
+.state.ok i{background:var(--human-mint)!important;box-shadow:0 0 10px rgba(156,232,194,.20)!important}
+.engine{
+  min-height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#596674!important;
+  font-size:8px!important;
+  letter-spacing:.07em!important;
+}
+
+/* The architecture is obvious from the controls now; remove tutorial chrome. */
+.hint{display:none!important}
+
+@media(max-width:620px){
+  .cinematic-bg .fluid-canvas{filter:saturate(.94) contrast(1.03) brightness(.90)!important}
+  .ambient-film.is-active{opacity:.22!important}
+  .hub{border-radius:16px!important}
+  .hub-body{padding:13px!important}
+  .hub-gates{grid-template-columns:1fr!important;margin-bottom:14px!important}
+  .hub-gate{min-height:56px!important}
+  .row{grid-template-columns:1fr!important;overflow:visible!important;background:transparent!important;border:0!important}
+  .row::before{top:26px!important;left:12px!important}
+  input#sourceInput{height:52px!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;background:rgba(1,3,8,.47)!important}
+  #generateBtn{height:46px!important;margin-top:7px;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;background:rgba(255,255,255,.04)!important}
+  .result.show{gap:9px!important}
+  .statusbar{padding:10px 13px!important;gap:6px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hub-gate,#generateBtn,.result-actions button{transition:none!important}
+}
