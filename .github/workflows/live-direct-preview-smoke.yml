@@ -1,0 +1,57 @@
+name: Live Direct Preview Smoke
+
+on:
+  push:
+    branches:
+      - test/live-direct-preview-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify direct package endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
+          KEY='4N1F_4CF2BA8CB435'
+          curl -fsS --retry 3 --retry-delay 2 "$BASE/api/kv-package?package_key=$KEY" > /tmp/package.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const d=JSON.parse(fs.readFileSync('/tmp/package.json','utf8'));
+          if(!d.success) throw new Error('success=false');
+          if(d.package_key!=='4N1F_4CF2BA8CB435') throw new Error('wrong key');
+          if(!String(d.html_code||'').includes('4N1F KV OK')) throw new Error('html payload missing');
+          console.log('DIRECT PACKAGE API PASS', d.storage_engine, d.project);
+          NODE
+      - name: Verify preview-only shell route
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
+          KEY='4N1F_4CF2BA8CB435'
+          curl -fsS --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY" > /tmp/preview.html
+          grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
+          if grep -Fq 'const previewId = await createSession(packageKey);' /tmp/preview.html; then
+            echo 'Preview page still creates p session during boot' >&2
+            exit 1
+          fi
+          echo 'PREVIEW-ONLY SHELL PASS'
+      - name: Verify editor session remains separate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
+          KEY='4N1F_4CF2BA8CB435'
+          curl -fsS --retry 3 --retry-delay 2 -X POST "$BASE/api/kv-session" -H 'content-type: application/json' --data "{\"package_key\":\"$KEY\"}" > /tmp/session.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const d=JSON.parse(fs.readFileSync('/tmp/session.json','utf8'));
+          if(!d.success) throw new Error('session success=false');
+          if(!/^p_[a-f0-9]{32}$/i.test(String(d.preview_id||''))) throw new Error('invalid p id');
+          console.log('EDITOR SESSION PASS', d.preview_id);
+          NODE
