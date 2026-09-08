@@ -1,0 +1,99 @@
+name: Hub Semantic Copy Patcher V1
+
+on:
+  push:
+    branches:
+      - ops/hub-semantic-copy-patcher-v1
+    paths:
+      - '.github/workflows/hub-semantic-copy-patcher-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout semantic target branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/hub-semantic-copy-v1
+          fetch-depth: 0
+
+      - name: Apply wording-only semantic patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path, replacements):
+              p = Path(path)
+              text = p.read_text()
+              for old, new in replacements:
+                  count = text.count(old)
+                  if count != 1:
+                      raise SystemExit(f'{path}: expected exactly 1 match for {old!r}, found {count}')
+                  text = text.replace(old, new)
+              p.write_text(text)
+
+          replace_exact('index.html', [
+              ('<strong>PACKAGE KEY / PREVIEW ID</strong><small>Open package or resume an existing Preview session</small>', '<strong>PREVIEW KEY / EDITOR SESSION</strong><small>4N1F_ opens preview-only · p_ opens Live Editor</small>'),
+              ('<div class="label"><b>PACKAGE KEY / PREVIEW ID</b><span>KV → legacy fallback</span></div>', '<div class="label"><b>PREVIEW KEY / EDITOR SESSION</b><span>4N1F_ preview-only · p_ editable</span></div>'),
+              ('<button id="openBtn" type="button">Open Preview ↗</button>', '<button id="openBtn" type="button">Open ↗</button>'),
+              ('<span id="stateText">Ready untuk Package Key atau Preview ID.</span>', '<span id="stateText">Ready untuk Preview Key 4N1F_… atau editor session p_….</span>'),
+              ('<div class="engine">IMMUTABLE PACKAGE · TEMPORARY PREVIEW SESSION</div>', '<div class="engine">4N1F = PREVIEW ONLY · p_ = EDITABLE SESSION</div>'),
+              ('<div class="hint">Flow resmi: <b>Package Key → Generate → Preview → Open Live Editor → Revision → Key baru</b></div>', '<div class="hint">Flow resmi: <b>4N1F Preview Key → Preview-only · p_ Editor Session → Live Editor</b></div>'),
+          ])
+
+          replace_exact('status-motion-v1.js', [
+              ("setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');", "setHubState('Format harus 4N1F_XXXXXXXXXXXX atau editor session p_ + 32 hex.', 'error');"),
+              ("error('home-preview', 'Gagal · Preview Key / Preview ID tidak valid.', true);", "error('home-preview', 'Gagal · Preview Key / editor session tidak valid.', true);"),
+              ("setHubState(`${validPackage(currentRef) ? 'Preview Key' : 'Preview ID'} disalin.`, 'ok');", "setHubState(`${validPackage(currentRef) ? 'Preview Key' : 'Editor Session'} disalin.`, 'ok');"),
+          ])
+          PY
+
+      - name: Verify UI skin untouched and semantic copy exact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git diff -- index.html status-motion-v1.js
+
+          grep -Fq '<strong>PREVIEW KEY / EDITOR SESSION</strong><small>4N1F_ opens preview-only · p_ opens Live Editor</small>' index.html
+          grep -Fq '4N1F_ preview-only · p_ editable' index.html
+          grep -Fq '4N1F = PREVIEW ONLY · p_ = EDITABLE SESSION' index.html
+          grep -Fq '4N1F Preview Key → Preview-only · p_ Editor Session → Live Editor' index.html
+          grep -Fq 'editor session p_ + 32 hex.' status-motion-v1.js
+          grep -Fq "'Editor Session'} disalin." status-motion-v1.js
+
+          ! grep -Fq 'IMMUTABLE PACKAGE · TEMPORARY PREVIEW SESSION' index.html
+          ! grep -Fq 'Package Key → Generate → Preview → Open Live Editor → Revision → Key baru' index.html
+          ! grep -Fq 'Preview Key / Preview ID tidak valid.' status-motion-v1.js
+
+          # Skin lock: only text-bearing HTML/JS files may change.
+          changed=$(git diff --name-only)
+          test "$changed" = $'index.html\nstatus-motion-v1.js'
+
+      - name: Build full Cloudflare bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash build-cloudflare.sh
+          node --check dist/status-motion-v1.js
+          grep -Fq '4N1F = PREVIEW ONLY · p_ = EDITABLE SESSION' dist/index.html
+          grep -Fq '4N1F Preview Key → Preview-only · p_ Editor Session → Live Editor' dist/index.html
+          grep -Fq 'editor session p_ + 32 hex.' dist/status-motion-v1.js
+          test -f dist/fetch/editor/editor.js
+          echo 'HUB_SEMANTIC_COPY=GREEN UI_SKIN=UNCHANGED FETCH=UNTOUCHED'
+
+      - name: Commit semantic target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name '4N1F CI'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html status-motion-v1.js
+          git commit -m 'Align Hub copy with preview and editor semantics'
+          git push origin HEAD:fix/hub-semantic-copy-v1
