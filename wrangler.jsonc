@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "4n1f-labs-cinematic-cloudflare",
   "account_id": "69b3344647228e4e7c1c85f7a5136f23",
-  "main": "src/worker.js",
+  "main": "src/worker-entry.js",
   "compatibility_date": "2026-09-06",
   "kv_namespaces": [
     {
