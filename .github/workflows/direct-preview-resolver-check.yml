@@ -1,0 +1,38 @@
+name: Direct Preview Resolver Check
+
+on:
+  push:
+    branches:
+      - fix/direct-preview-resolver-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  direct-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify direct Preview Key contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"main": "src/worker-entry.js"' wrangler.jsonc
+          grep -Fq '"binding": "PREVIEW_PACKAGES"' wrangler.jsonc
+          grep -Fq '"id": "f5d2286e18e8401aa40ec9d8591bf8b6"' wrangler.jsonc
+          grep -Fq "url.pathname === '/api/kv-package'" src/worker-entry.js
+          grep -Fq 'env.PREVIEW_PACKAGES.get(`pkg:${packageKey}`, '\''json'\'')' src/worker-entry.js
+          grep -Fq '/api/kv-package?package_key=' editor/package-preview.html
+          grep -Fq "editorLink.addEventListener('click'" editor/package-preview.html
+          if grep -Fq 'const previewId = await createSession(packageKey);' editor/package-preview.html; then
+            echo 'Forbidden: preview boot still creates p session' >&2
+            exit 1
+          fi
+          grep -Fq 'const row = await loadPackage(packageKey);' editor/package-preview.html
+          grep -Fq "if (row.asset_url) frame.src = row.asset_url;" editor/package-preview.html
+          echo 'DIRECT PREVIEW CONTRACT PASS'
+      - name: Wrangler dry run
+        run: npx --yes wrangler@latest deploy --dry-run --outdir /tmp/4n1f-wrangler-dryrun
