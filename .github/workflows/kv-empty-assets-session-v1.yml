@@ -1,0 +1,43 @@
+name: KV Empty Assets Session V1
+
+on:
+  push:
+    branches:
+      - test/kv-empty-assets-session-v1
+    paths:
+      - '.github/workflows/kv-empty-assets-session-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Request empty assets upload session only
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}/assets-upload-session"
+          curl -sS -X POST "$URL" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            --data '{"manifest":{}}' -o response.json -w 'HTTP_STATUS=%{http_code}\n'
+          python - <<'PY'
+          import json
+          d=json.load(open('response.json'))
+          print('success=',d.get('success'))
+          print('errors=',d.get('errors'))
+          r=d.get('result') or {}
+          print('bucket_count=',len(r.get('buckets') or []))
+          print('jwt_present=',bool(r.get('jwt')))
+          assert d.get('success') is True and bool(r.get('jwt')), d
+          assert len(r.get('buckets') or []) == 0, r
+          print('EMPTY_ASSETS_SESSION=SUPPORTED')
+          PY
