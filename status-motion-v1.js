@@ -248,8 +248,8 @@
           return;
         }
 
-        setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
-        error('home-preview', 'Gagal · Preview Key / Preview ID tidak valid.', true);
+        setHubState('Format harus 4N1F_XXXXXXXXXXXX atau editor session p_ + 32 hex.', 'error');
+        error('home-preview', 'Gagal · Preview Key / editor session tidak valid.', true);
         input.focus();
       } catch (err) {
         const message = err?.message || 'Preview tidak dapat divalidasi.';
@@ -267,7 +267,7 @@
       event.stopImmediatePropagation();
       try {
         await navigator.clipboard.writeText(currentRef);
-        setHubState(`${validPackage(currentRef) ? 'Preview Key' : 'Preview ID'} disalin.`, 'ok');
+        setHubState(`${validPackage(currentRef) ? 'Preview Key' : 'Editor Session'} disalin.`, 'ok');
       } catch {
         setHubState('Browser tidak mengizinkan clipboard.', 'error');
       }

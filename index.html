@@ -126,17 +126,17 @@
               <span class="hub-gate-icon" aria-hidden="true">↗</span>
             </a>
             <button class="hub-gate hub-gate-package active" type="button" aria-current="page" onclick="document.getElementById('sourceInput')?.focus()">
-              <span class="hub-gate-copy"><strong>PACKAGE KEY / PREVIEW ID</strong><small>Open package or resume an existing Preview session</small></span>
+              <span class="hub-gate-copy"><strong>PREVIEW KEY / EDITOR SESSION</strong><small>4N1F_ opens preview-only · p_ opens Live Editor</small></span>
               <span class="hub-gate-icon" aria-hidden="true">KV</span>
             </button>
           </div>
-          <div class="label"><b>PACKAGE KEY / PREVIEW ID</b><span>KV → legacy fallback</span></div>
+          <div class="label"><b>PREVIEW KEY / EDITOR SESSION</b><span>4N1F_ preview-only · p_ editable</span></div>
           <div class="row"><input id="sourceInput" autocomplete="off" spellcheck="false" placeholder="4N1F_XXXXXXXXXXXX atau p_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><button id="generateBtn" type="button">Generate Preview ↗</button></div>
-          <div class="result" id="resultBox"><code id="resultId">—</code><div class="result-actions"><button id="copyBtn" type="button">Copy ID</button><button id="openBtn" type="button">Open Preview ↗</button></div></div>
+          <div class="result" id="resultBox"><code id="resultId">—</code><div class="result-actions"><button id="copyBtn" type="button">Copy ID</button><button id="openBtn" type="button">Open ↗</button></div></div>
         </div>
-        <div class="statusbar"><div class="state" id="state"><i></i><span id="stateText">Ready untuk Package Key atau Preview ID.</span></div><div class="engine">IMMUTABLE PACKAGE · TEMPORARY PREVIEW SESSION</div></div>
+        <div class="statusbar"><div class="state" id="state"><i></i><span id="stateText">Ready untuk Preview Key 4N1F_… atau editor session p_….</span></div><div class="engine">4N1F = PREVIEW ONLY · p_ = EDITABLE SESSION</div></div>
       </section>
-      <div class="hint">Flow resmi: <b>Package Key → Generate → Preview → Open Live Editor → Revision → Key baru</b></div>
+      <div class="hint">Flow resmi: <b>4N1F Preview Key → Preview-only · p_ Editor Session → Live Editor</b></div>
     </div>
   </main>
   <script src="/editor/background-fluid.js"></script>
