@@ -1,0 +1,162 @@
+name: Cleanup KV Backend API Only V1
+
+on:
+  push:
+    branches:
+      - cleanup/kv-backend-api-only-v1
+    paths:
+      - '.github/workflows/cleanup-kv-backend-api-only-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      KV_NAMESPACE_ID: f5d2286e18e8401aa40ec9d8591bf8b6
+      PACKAGE_KEY: 4N1F_C7E21B9A6D04
+      BACKEND: https://4n1f-kv-api.faqihanif12282000.workers.dev
+      FRONTEND: https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact backend baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" "$BASE/settings" -o before.json
+          python - <<'PY'
+          import json, os
+          data=json.load(open('before.json'))
+          assert data.get('success') is True, data
+          result=data['result']
+          bindings={b['name']:b for b in result.get('bindings',[])}
+          expected={'ALLOWED_ORIGINS':'plain_text','ASSETS':'assets','PACKAGES':'kv_namespace','PUBLISH_TOKEN':'secret_text','RETENTION_LIMIT':'plain_text'}
+          for name, typ in expected.items():
+              assert bindings.get(name,{}).get('type')==typ, (name,bindings.get(name))
+          assert bindings['PACKAGES'].get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings['RETENTION_LIMIT'].get('text')=='500'
+          allowed=bindings['ALLOWED_ORIGINS'].get('text','')
+          assert os.environ['FRONTEND'] in allowed.split(','), allowed
+          print('Baseline exact: PACKAGES + PUBLISH_TOKEN + vars + stale ASSETS present.')
+          PY
+
+      - name: Remove only stale ASSETS binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          cat > patch.json <<'JSON'
+          {
+            "bindings": [
+              {"name":"ALLOWED_ORIGINS","type":"inherit"},
+              {"name":"PACKAGES","type":"inherit"},
+              {"name":"PUBLISH_TOKEN","type":"inherit"},
+              {"name":"RETENTION_LIMIT","type":"inherit"}
+            ],
+            "annotations": {
+              "workers/message": "4N1F backend API-only cleanup: remove unused ASSETS binding"
+            }
+          }
+          JSON
+          curl -fsS -X PATCH -H "$AUTH" -H 'Content-Type: application/json' --data @patch.json "$BASE/settings" -o patch-result.json
+          python - <<'PY'
+          import json
+          data=json.load(open('patch-result.json'))
+          assert data.get('success') is True, data
+          print('Cloudflare settings patch accepted.')
+          PY
+
+      - name: Verify API-only bindings after patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" "$BASE/settings" -o after.json
+          python - <<'PY'
+          import json, os
+          data=json.load(open('after.json'))
+          assert data.get('success') is True, data
+          bindings={b['name']:b for b in data['result'].get('bindings',[])}
+          assert 'ASSETS' not in bindings, bindings
+          expected={'ALLOWED_ORIGINS':'plain_text','PACKAGES':'kv_namespace','PUBLISH_TOKEN':'secret_text','RETENTION_LIMIT':'plain_text'}
+          for name, typ in expected.items():
+              assert bindings.get(name,{}).get('type')==typ, (name,bindings.get(name))
+          assert bindings['PACKAGES'].get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings['RETENTION_LIMIT'].get('text')=='500'
+          assert os.environ['FRONTEND'] in bindings['ALLOWED_ORIGINS'].get('text','').split(',')
+          print('API-only binding set verified; ASSETS removed.')
+          PY
+
+      - name: Smoke backend API compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS "$BACKEND/health" -o health.json
+          python - <<'PY'
+          import json
+          d=json.load(open('health.json')); assert d.get('success') is True and d.get('service')=='4n1f-kv-api', d
+          PY
+
+          code=$(curl -sS -o root.json -w '%{http_code}' "$BACKEND/")
+          test "$code" = "404"
+          python - <<'PY'
+          import json
+          d=json.load(open('root.json')); assert d.get('success') is False and d.get('message')=='Route tidak ditemukan.', d
+          PY
+
+          curl -fsS "$BACKEND/package/$PACKAGE_KEY" -o package.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('package.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+
+          curl -fsS -X POST "$BACKEND/session" \
+            -H 'Content-Type: application/json' \
+            -H "Origin: $FRONTEND" \
+            --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o session.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('session.json')); p=d.get('preview_id',''); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS "$BACKEND/preview/$PREVIEW_ID" -o preview.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('preview.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "Backend API smoke GREEN: $PACKAGE_KEY -> $PREVIEW_ID"
+
+      - name: Smoke frontend Service Binding compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS "$FRONTEND/api/kv-package?package_key=$PACKAGE_KEY" -o front-package.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('front-package.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+
+          curl -fsS -X POST "$FRONTEND/api/kv-session" \
+            -H 'Content-Type: application/json' \
+            --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o front-session.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('front-session.json')); p=d.get('preview_id',''); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS "$FRONTEND/api/kv-preview?preview_id=$PREVIEW_ID" -o front-preview.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('front-preview.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "Frontend Service Binding smoke GREEN: $PACKAGE_KEY -> $PREVIEW_ID"
