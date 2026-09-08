@@ -10,6 +10,12 @@
       "id": "f5d2286e18e8401aa40ec9d8591bf8b6"
     }
   ],
+  "services": [
+    {
+      "binding": "KV_BACKEND",
+      "service": "4n1f-kv-api"
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
