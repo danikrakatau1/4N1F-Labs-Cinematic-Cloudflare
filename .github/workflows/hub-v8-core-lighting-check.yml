@@ -1,0 +1,42 @@
+name: Hub V8 Core Lighting Check
+
+on:
+  push:
+    branches:
+      - style/hub-v8-core-lighting-v1
+      - main
+  pull_request:
+    paths:
+      - 'hub-portals-v6.css'
+      - '.github/workflows/hub-v8-core-lighting-check.yml'
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify V8 Core Lighting contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'V8 STEP 1 — CORE LIGHTING' hub-portals-v6.css
+          grep -q 'v8AuroraDrift' hub-portals-v6.css
+          grep -q 'v8SpectralDrift' hub-portals-v6.css
+          grep -q 'Volumetric top spotlight' hub-portals-v6.css
+          grep -q 'Hairline spectral reflection' hub-portals-v6.css
+          grep -q 'Active workspace gets a quiet optical edge' hub-portals-v6.css
+          grep -q 'prefers-reduced-motion:reduce' hub-portals-v6.css
+
+      - name: Verify architecture semantics remain intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '/api/kv-package?package_key=' editor/package-preview.html
+          grep -q '/api/kv-session' editor/package-preview.html
+          grep -q '4N1F_' index.html
+          grep -q 'p_' index.html
+
+      - name: Build full Cloudflare bundle
+        run: bash build-cloudflare.sh
