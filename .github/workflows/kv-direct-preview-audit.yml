@@ -1,0 +1,37 @@
+name: KV Direct Preview Audit
+
+on:
+  push:
+    branches:
+      - audit/kv-direct-preview-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect canonical KV namespace and sample package keys
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== KV namespaces ==='
+          npx --yes wrangler@latest kv namespace list
+          echo '=== Resolve 4n1f-labs-cinematic namespace id ==='
+          npx --yes wrangler@latest kv namespace list --json > /tmp/namespaces.json
+          NS_ID="$(node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('/tmp/namespaces.json','utf8'));const x=a.find(v=>v.title==='4n1f-labs-cinematic');if(!x)process.exit(2);process.stdout.write(x.id)")"
+          echo "NAMESPACE_ID=$NS_ID"
+          echo '=== pkg: keys (first 20) ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'pkg:' | head -c 12000
+          echo
+          echo '=== prev: keys (first 20) ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'prev:' | head -c 12000
+          echo
+          echo '=== proj: keys (first 20) ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'proj:' | head -c 12000
+          echo
