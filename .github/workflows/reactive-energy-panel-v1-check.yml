@@ -1,0 +1,27 @@
+name: Reactive Energy Panel V1 Check
+
+on:
+  push:
+    branches:
+      - ui/reactive-energy-panel-v1
+  pull_request:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify visual-only reactive panel contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'REACTIVE ENERGY PANEL V1' index.html
+          grep -Fq 'section.hub.hub:has(#generateBtn[aria-busy="true"])' index.html
+          grep -Fq 'section.hub.hub:has(.state.ok)' index.html
+          grep -Fq 'section.hub.hub:has(.state.error)' index.html
+          grep -q 'reactivePanelCharge' index.html
+          grep -q 'reactivePanelSuccess' index.html
+          grep -q 'reactivePanelError' index.html
+          ! grep -q 'window.location.*reactive' index.html
+          bash build-cloudflare.sh
+          grep -q 'REACTIVE ENERGY PANEL V1' dist/index.html
