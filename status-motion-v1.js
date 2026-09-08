@@ -3,11 +3,9 @@
 
   if (window.StatusMotion) return;
 
-  // Preview Key resilience guard: the Hub's native generator awaits
-  // /api/kv-session without an AbortSignal. If the upstream KV bridge stalls,
-  // the button would otherwise stay disabled/loading forever. Guard only this
-  // same-origin route, retry one transient/network failure, then reject cleanly
-  // so the existing Hub catch/finally path restores the UI.
+  // Preview Key resilience guard: the Hub's editor-session creation awaits
+  // /api/kv-session. If the upstream KV bridge stalls, fail cleanly so the
+  // existing Hub catch/finally path restores the UI.
   if (!window.__4n1fPreviewSessionFetchGuard) {
     const nativeFetch = window.fetch.bind(window);
     window.__4n1fPreviewSessionFetchGuard = true;
@@ -29,7 +27,6 @@
         try {
           const response = await nativeFetch(input, { ...(init || {}), signal: controller.signal });
           clearTimeout(timer);
-          // Retry one transient server-side failure; preserve normal 4xx errors.
           if (attempt === 0 && response.status >= 500) {
             await new Promise(resolve => setTimeout(resolve, 260));
             continue;
@@ -187,43 +184,81 @@
       if (resultId) resultId.textContent = ref;
       resultBox?.classList.add('show');
     };
+    const clearHubResult = () => {
+      currentRef = '';
+      currentUrl = '';
+      if (resultId) resultId.textContent = '';
+      resultBox?.classList.remove('show');
+    };
     const openTarget = url => {
-      const popup = window.open(url, '_blank', 'noopener');
-      if (!popup) location.href = url;
+      const popup = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!popup) {
+        error('home-preview', 'Browser memblokir tab baru. Izinkan pop-up lalu tekan Open Preview lagi.', true);
+      }
+    };
+    const readJson = async response => {
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) throw new Error(data?.message || `Request gagal (${response.status}).`);
+      return data;
+    };
+    const verifyPackage = async key => {
+      const response = await fetch(`/api/kv-package?package_key=${encodeURIComponent(key)}`, {
+        headers:{ accept:'application/json' }, cache:'no-store'
+      });
+      return readJson(response);
+    };
+    const verifyEditableSession = async id => {
+      const response = await fetch(`/api/kv-preview?preview_id=${encodeURIComponent(id)}`, {
+        headers:{ accept:'application/json' }, cache:'no-store'
+      });
+      return readJson(response);
     };
 
     bind(button, 'home-preview');
-    button.addEventListener('click', event => {
+    button.addEventListener('click', async event => {
       if (button.disabled) return;
       event.preventDefault();
       event.stopImmediatePropagation();
 
       const value = String(input.value || '').trim();
-      begin('home-preview', 'Menyiapkan Preview Key / editable session…');
+      clearHubResult();
+      button.disabled = true;
+      button.setAttribute('aria-busy','true');
 
-      if (validPackage(value)) {
-        const key = value.toUpperCase();
-        const url = packagePreviewUrl(key);
-        showHubResult(key, url);
-        setHubState(`Preview-only · ${key}`, 'ok');
-        success('home-preview', `Preview-only siap · ${key}`);
-        openTarget(url);
-        return;
+      try {
+        if (validPackage(value)) {
+          const key = value.toUpperCase();
+          begin('home-preview', `Memvalidasi Preview Key · ${key}…`);
+          await verifyPackage(key);
+          const url = packagePreviewUrl(key);
+          showHubResult(key, url);
+          setHubState(`Preview-only · ${key}`, 'ok');
+          success('home-preview', `Berhasil · Preview ${key} siap dibuka.`);
+          return;
+        }
+
+        if (validPreview(value)) {
+          const id = value.toLowerCase();
+          begin('home-preview', `Memvalidasi editable session · ${id}…`);
+          await verifyEditableSession(id);
+          const url = editorUrl(id);
+          showHubResult(id, url);
+          setHubState(`Editable session · ${id}`, 'ok');
+          success('home-preview', `Berhasil · Live Editor ${id} siap dibuka.`);
+          return;
+        }
+
+        setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
+        error('home-preview', 'Gagal · Preview Key / Preview ID tidak valid.', true);
+        input.focus();
+      } catch (err) {
+        const message = err?.message || 'Preview tidak dapat divalidasi.';
+        setHubState(`Gagal · ${message}`, 'error');
+        error('home-preview', `Gagal · ${message}`, true);
+      } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
       }
-
-      if (validPreview(value)) {
-        const id = value.toLowerCase();
-        const url = editorUrl(id);
-        showHubResult(id, url);
-        setHubState(`Editable session · ${id}`, 'ok');
-        success('home-preview', `Membuka Live Editor · ${id}`);
-        openTarget(url);
-        return;
-      }
-
-      setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
-      error('home-preview', 'Preview Key / Preview ID tidak valid.');
-      input.focus();
     }, { capture:true });
 
     copyBtn?.addEventListener('click', async event => {
