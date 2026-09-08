@@ -1,0 +1,39 @@
+name: Generate Preview No Redirect Check
+
+on:
+  push:
+    branches:
+      - fix/generate-preview-no-redirect-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify Hub Generate contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check status-motion-v1.js
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('status-motion-v1.js','utf8');
+          const start=s.indexOf("button.addEventListener('click', async event => {");
+          const end=s.indexOf("copyBtn?.addEventListener", start);
+          if(start<0||end<0) throw new Error('Generate handler not found');
+          const block=s.slice(start,end);
+          if(block.includes('openTarget(')) throw new Error('Generate Preview still opens preview/editor directly');
+          if(!block.includes('await verifyPackage(key)')) throw new Error('4N1F key is not validated before success');
+          if(!block.includes('await verifyEditableSession(id)')) throw new Error('p_ session is not validated before success');
+          if(!s.includes("openBtn?.addEventListener('click'")) throw new Error('Open Preview handler missing');
+          if(!s.includes("window.open(url, '_blank'")) throw new Error('Open Preview does not use a new tab');
+          console.log('GENERATE PREVIEW NO-REDIRECT PASS');
+          NODE
+      - name: Wrangler dry run
+        run: npx --yes wrangler@latest deploy --dry-run
