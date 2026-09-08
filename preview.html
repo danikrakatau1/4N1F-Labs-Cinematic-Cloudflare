@@ -7,8 +7,12 @@
   <meta name="theme-color" content="#04050c">
   <title>4N1F Labs — Live Preview</title>
   <script>
-    if(location.pathname.replace(/^\/+|\/+$/g,'').toLowerCase()==='p_8c5360de7ef242a08cfd0adb37421d68'){
+    const experimentalPreviewPath=location.pathname.replace(/^\/+|\/+$/g,'').toLowerCase();
+    if(experimentalPreviewPath==='p_8c5360de7ef242a08cfd0adb37421d68'){
       location.replace('/editor/webgl-lab/index.html');
+    }
+    if(experimentalPreviewPath==='p_3fd3805d11ab7117a73a47837c082f1a'){
+      location.replace('/editor/webgl-lab/painterly-v1/index.html');
     }
   </script>
   <style>
