@@ -110,6 +110,111 @@
       #generateBtn,.eyebrow i,.eyebrow span,.hub::after{animation:none}
       button,input{transition:none}
     }
+
+    /* REACTIVE ENERGY PANEL V1 — premium ambient + state-reactive shell.
+       Visual-only: no routing, Fetch, KV, Preview Key or Live Editor behavior changes. */
+    :root{--rep-cyan:104,220,255;--rep-violet:150,104,255;--rep-mint:156,232,194;--rep-rose:255,143,164;--rep-ease:cubic-bezier(.2,.78,.2,1)}
+    body .page section.hub.hub{
+      border-color:rgba(220,229,255,.13)!important;
+      box-shadow:0 34px 92px rgba(0,0,0,.43),0 -16px 54px rgba(var(--rep-violet),.045),0 18px 58px rgba(var(--rep-cyan),.036),-30px -8px 80px rgba(var(--rep-violet),.018),30px 18px 80px rgba(var(--rep-cyan),.015),inset 0 1px 0 rgba(246,249,255,.075)!important;
+      transition:border-color .38s ease,box-shadow .46s ease,filter .38s ease!important;
+    }
+    body .page section.hub.hub::before{
+      display:block!important;
+      opacity:1!important;
+      background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.012) 13%,transparent 28%),radial-gradient(68% 88% at 3% 0%,rgba(var(--rep-violet),.055),transparent 68%),radial-gradient(62% 82% at 100% 100%,rgba(var(--rep-cyan),.045),transparent 72%)!important;
+      transition:opacity .4s ease,filter .4s ease!important;
+    }
+    body .page section.hub.hub::after{
+      display:block!important;
+      content:""!important;
+      position:absolute!important;
+      inset:-1px!important;
+      z-index:4!important;
+      padding:1px!important;
+      border-radius:inherit!important;
+      pointer-events:none!important;
+      opacity:.48!important;
+      background:linear-gradient(105deg,transparent 4%,rgba(var(--rep-violet),.24) 22%,rgba(255,255,255,.20) 44%,rgba(var(--rep-mint),.28) 57%,rgba(var(--rep-cyan),.24) 76%,transparent 96%)!important;
+      background-size:180% 100%!important;
+      background-position:50% 50%!important;
+      -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0)!important;
+      -webkit-mask-composite:xor!important;
+      mask-composite:exclude!important;
+      animation:none!important;
+      transition:opacity .36s ease,filter .36s ease!important;
+    }
+    body .page section.hub.hub:focus-within{
+      border-color:rgba(var(--rep-cyan),.18)!important;
+      box-shadow:0 36px 96px rgba(0,0,0,.44),0 -18px 58px rgba(var(--rep-violet),.060),0 20px 64px rgba(var(--rep-cyan),.052),0 0 38px rgba(var(--rep-violet),.022),inset 0 1px 0 rgba(246,249,255,.086)!important;
+    }
+    body .page section.hub.hub:focus-within::before{filter:saturate(1.08) brightness(1.06)!important}
+    body .page section.hub.hub:focus-within::after{opacity:.70!important;filter:brightness(1.12)!important}
+
+    body .page section.hub.hub:has(#generateBtn[aria-busy="true"]){
+      border-color:rgba(var(--rep-cyan),.24)!important;
+      animation:reactivePanelCharge 1.6s ease-in-out infinite!important;
+      filter:saturate(1.025)!important;
+    }
+    body .page section.hub.hub:has(#generateBtn[aria-busy="true"])::before{
+      background:linear-gradient(180deg,rgba(255,255,255,.064),rgba(255,255,255,.014) 14%,transparent 30%),radial-gradient(76% 100% at 6% 0%,rgba(var(--rep-violet),.075),transparent 70%),radial-gradient(70% 96% at 96% 100%,rgba(var(--rep-cyan),.065),transparent 72%)!important;
+    }
+    body .page section.hub.hub:has(#generateBtn[aria-busy="true"])::after{
+      opacity:.92!important;
+      background:linear-gradient(100deg,transparent 8%,rgba(var(--rep-violet),.25) 28%,rgba(255,255,255,.58) 47%,rgba(var(--rep-mint),.54) 56%,rgba(var(--rep-cyan),.34) 72%,transparent 92%)!important;
+      background-size:240% 100%!important;
+      animation:reactivePanelEdgeSweep 1.85s linear infinite!important;
+      filter:brightness(1.08)!important;
+    }
+
+    body .page section.hub.hub:has(.state.ok){animation:reactivePanelSuccess .96s var(--rep-ease) both!important}
+    body .page section.hub.hub:has(.state.ok)::after{
+      opacity:.76!important;
+      background:linear-gradient(100deg,transparent 5%,rgba(var(--rep-cyan),.22) 30%,rgba(255,255,255,.58) 47%,rgba(var(--rep-mint),.70) 55%,rgba(var(--rep-cyan),.26) 72%,transparent 95%)!important;
+      background-size:220% 100%!important;
+      animation:reactivePanelSuccessEdge .96s var(--rep-ease) both!important;
+    }
+    body .page section.hub.hub:has(.state.error){animation:reactivePanelError .58s ease-out both!important}
+    body .page section.hub.hub:has(.state.error)::after{
+      opacity:.60!important;
+      background:linear-gradient(100deg,transparent 8%,rgba(var(--rep-violet),.20) 30%,rgba(var(--rep-rose),.54) 51%,rgba(var(--rep-violet),.22) 70%,transparent 92%)!important;
+      background-size:200% 100%!important;
+      animation:reactivePanelErrorEdge .58s ease-out both!important;
+    }
+
+    @keyframes reactivePanelCharge{
+      0%,100%{box-shadow:0 34px 92px rgba(0,0,0,.43),0 -16px 52px rgba(var(--rep-violet),.050),0 18px 58px rgba(var(--rep-cyan),.042),0 0 24px rgba(var(--rep-cyan),.016),inset 0 1px 0 rgba(246,249,255,.078)}
+      50%{box-shadow:0 36px 98px rgba(0,0,0,.44),0 -22px 68px rgba(var(--rep-violet),.085),0 24px 74px rgba(var(--rep-cyan),.075),0 0 46px rgba(var(--rep-cyan),.035),0 0 54px rgba(var(--rep-violet),.024),inset 0 1px 0 rgba(246,249,255,.095)}
+    }
+    @keyframes reactivePanelEdgeSweep{0%{background-position:145% 50%}100%{background-position:-95% 50%}}
+    @keyframes reactivePanelSuccess{
+      0%{box-shadow:0 34px 92px rgba(0,0,0,.43),0 -16px 54px rgba(var(--rep-violet),.045),0 18px 58px rgba(var(--rep-cyan),.036),inset 0 1px 0 rgba(246,249,255,.075)}
+      42%{box-shadow:0 36px 98px rgba(0,0,0,.44),0 -18px 66px rgba(var(--rep-cyan),.075),0 22px 76px rgba(var(--rep-mint),.105),0 0 56px rgba(var(--rep-mint),.052),inset 0 1px 0 rgba(255,255,255,.105)}
+      100%{box-shadow:0 34px 92px rgba(0,0,0,.43),0 -16px 54px rgba(var(--rep-violet),.045),0 18px 58px rgba(var(--rep-cyan),.036),inset 0 1px 0 rgba(246,249,255,.075)}
+    }
+    @keyframes reactivePanelSuccessEdge{0%{background-position:135% 50%;opacity:0}32%{opacity:.95}100%{background-position:-80% 50%;opacity:.42}}
+    @keyframes reactivePanelError{
+      0%,100%{transform:translateX(0);box-shadow:0 34px 92px rgba(0,0,0,.43),0 -16px 54px rgba(var(--rep-violet),.045),0 18px 58px rgba(var(--rep-cyan),.036),inset 0 1px 0 rgba(246,249,255,.075)}
+      34%{transform:translateX(-1px);box-shadow:0 34px 92px rgba(0,0,0,.43),0 0 48px rgba(var(--rep-rose),.052),inset 0 1px 0 rgba(255,255,255,.080)}
+      68%{transform:translateX(.7px)}
+    }
+    @keyframes reactivePanelErrorEdge{0%{background-position:120% 50%;opacity:0}42%{opacity:.72}100%{background-position:-55% 50%;opacity:.38}}
+
+    @media(max-width:620px){
+      body .page section.hub.hub{box-shadow:0 26px 70px rgba(0,0,0,.42),0 -12px 42px rgba(var(--rep-violet),.032),0 14px 46px rgba(var(--rep-cyan),.026),inset 0 1px 0 rgba(246,249,255,.068)!important}
+      body .page section.hub.hub:focus-within{box-shadow:0 28px 74px rgba(0,0,0,.43),0 -14px 46px rgba(var(--rep-violet),.045),0 16px 52px rgba(var(--rep-cyan),.038),inset 0 1px 0 rgba(246,249,255,.078)!important}
+      body .page section.hub.hub::after{opacity:.40!important}
+    }
+    @media(prefers-reduced-motion:reduce){
+      body .page section.hub.hub,
+      body .page section.hub.hub::after,
+      body .page section.hub.hub:has(#generateBtn[aria-busy="true"]),
+      body .page section.hub.hub:has(#generateBtn[aria-busy="true"])::after,
+      body .page section.hub.hub:has(.state.ok),
+      body .page section.hub.hub:has(.state.ok)::after,
+      body .page section.hub.hub:has(.state.error),
+      body .page section.hub.hub:has(.state.error)::after{animation:none!important;transform:none!important}
+    }
   </style>
 </head>
 <body>
