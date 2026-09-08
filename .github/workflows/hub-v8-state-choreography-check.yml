@@ -1,0 +1,56 @@
+name: Hub V8 State Choreography Check
+
+on:
+  push:
+    branches:
+      - style/hub-v8-state-choreography-v1
+      - main
+  pull_request:
+    paths:
+      - 'status-motion-v1.css'
+      - '.github/workflows/hub-v8-state-choreography-check.yml'
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify V8 State Choreography contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'V8 STEP 3 — STATE CHOREOGRAPHY' status-motion-v1.css
+          grep -q 'body:has(.hub) #generateBtn\[aria-busy="true"\]' status-motion-v1.css
+          grep -q 'body:has(.hub) .result.show' status-motion-v1.css
+          grep -q 'body:has(.hub) .state.ok' status-motion-v1.css
+          grep -q 'body:has(.hub) .state.error' status-motion-v1.css
+          grep -q 'sm-status-host.show\[data-state="success"\]' status-motion-v1.css
+          grep -q 'sm-status-host.show\[data-state="error"\]' status-motion-v1.css
+          grep -q 'v8BusyBreath' status-motion-v1.css
+          grep -q 'v8ResultReveal' status-motion-v1.css
+          grep -q 'prefers-reduced-motion:reduce' status-motion-v1.css
+
+      - name: Verify choreography stays Hub-scoped
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '/V8 STEP 3 — STATE CHOREOGRAPHY/{capture=1} capture{print}' status-motion-v1.css > /tmp/v8-step3.css
+          grep -q 'Keep the shared Status Motion system untouched on Fetch' /tmp/v8-step3.css
+          ! grep -q '#fetchSourceBtn' /tmp/v8-step3.css
+          ! grep -q '#analyzeBtn' /tmp/v8-step3.css
+          ! grep -q '#buildBtn' /tmp/v8-step3.css
+          ! grep -q '#previewBtn' /tmp/v8-step3.css
+
+      - name: Verify architecture semantics remain intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '/api/kv-package?package_key=' editor/package-preview.html
+          grep -q '/api/kv-session' editor/package-preview.html
+          grep -q '4N1F_' index.html
+          grep -q 'p_' index.html
+
+      - name: Build full Cloudflare bundle
+        run: bash build-cloudflare.sh
