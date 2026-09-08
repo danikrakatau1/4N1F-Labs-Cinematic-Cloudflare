@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#04050c">
+  <meta name="robots" content="noindex,nofollow">
+  <title>4N1F Labs — Preview Only</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04050c;color:#eef0f6;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .cinematic-bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#04050c;pointer-events:none}
+    .fluid-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+    .fluid-scrim{position:absolute;inset:0;background:radial-gradient(115% 95% at 50% 46%,rgba(4,5,12,.68) 0%,rgba(4,5,12,.68) 24%,rgba(4,5,12,.46) 52%,rgba(4,5,12,.12) 100%)}
+    .preview-shell{position:fixed;inset:0;z-index:2}
+    #previewFrame{display:block;width:100%;height:100%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .42s cubic-bezier(.2,0,0,1)}
+    body.is-ready #previewFrame{opacity:1;visibility:visible}
+    .status{position:fixed;z-index:6;left:50%;top:max(18px,env(safe-area-inset-top));transform:translateX(-50%);display:flex;align-items:center;gap:9px;max-width:calc(100vw - 28px);padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(7,9,16,.56);box-shadow:0 12px 36px rgba(0,0,0,.24);backdrop-filter:blur(18px) saturate(130%);-webkit-backdrop-filter:blur(18px) saturate(130%);font-size:10px;font-weight:750;letter-spacing:.04em;color:#d7dce7;transition:opacity .3s ease,transform .3s ease}
+    .status .dot{width:7px;height:7px;border-radius:50%;background:#9ba6b4;box-shadow:0 0 0 4px rgba(155,166,180,.08)}
+    .status.ok .dot{background:#7ce8b1;box-shadow:0 0 0 4px rgba(124,232,177,.08),0 0 16px rgba(124,232,177,.36)}
+    body.is-ready .status{opacity:0;transform:translate(-50%,-8px);pointer-events:none}
+    .preview-nav{position:fixed;z-index:7;right:max(14px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));display:flex;gap:8px;opacity:.72;transition:opacity .2s ease}
+    .preview-nav:hover,.preview-nav:focus-within{opacity:1}
+    .preview-nav a{display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(7,10,17,.58);color:#e8eef4;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.02em;box-shadow:0 12px 32px rgba(0,0,0,.22);backdrop-filter:blur(18px) saturate(130%);-webkit-backdrop-filter:blur(18px) saturate(130%)}
+    .preview-nav a.primary{background:rgba(174,247,209,.93);color:#06110d;border-color:rgba(174,247,209,.62)}
+    .error-card{position:fixed;z-index:8;inset:0;display:none;place-items:center;padding:22px}
+    body.is-error .error-card{display:grid}
+    .error-inner{width:min(520px,100%);padding:24px;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:rgba(8,10,18,.66);box-shadow:0 28px 90px rgba(0,0,0,.38);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);text-align:center}
+    .error-inner small{display:block;color:#8f9aaa;font:700 10px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;word-break:break-all}
+    .error-inner h1{margin:12px 0 8px;font-size:24px;letter-spacing:-.035em}
+    .error-inner p{margin:0;color:#aeb7c5;font-size:12px;line-height:1.65}
+    .error-inner button{margin-top:18px;height:40px;padding:0 15px;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(255,255,255,.92);color:#070910;font-weight:800;cursor:pointer}
+    @media(max-width:640px){.preview-nav{top:auto;right:12px;bottom:max(12px,env(safe-area-inset-bottom));opacity:.92}.preview-nav a{height:40px}.preview-nav .home-link{display:none}}
+    @media(prefers-reduced-motion:reduce){#previewFrame,.status,.preview-nav{transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cinematic-bg" aria-hidden="true"><canvas class="fluid-canvas"></canvas><div class="fluid-scrim"></div></div>
+  <div class="preview-shell"><iframe id="previewFrame" title="4N1F package preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads" allow="autoplay; fullscreen"></iframe></div>
+  <nav class="preview-nav" aria-label="Preview navigation"><a class="home-link" href="/">Preview Hub</a><a class="primary" id="editorLink" href="/">Open Live Editor ↗</a></nav>
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">Resolving Preview Key…</span></div>
+  <div class="error-card"><div class="error-inner"><small id="errorId">PREVIEW KEY</small><h1>Preview belum bisa dibuka.</h1><p id="errorMessage">Preview Key tidak ditemukan.</p><button type="button" onclick="location.href='/'">Kembali ke Preview Hub</button></div></div>
+
+  <script src="/editor/background-fluid.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const SUPABASE_URL = 'https://awoefnctmalhtywrxizi.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_1njtXPhuEmASkStTOTDJ1w_lHROXljp';
+      const frame = document.getElementById('previewFrame');
+      const status = document.getElementById('status');
+      const statusText = document.getElementById('statusText');
+      const errorId = document.getElementById('errorId');
+      const errorMessage = document.getElementById('errorMessage');
+      const editorLink = document.getElementById('editorLink');
+
+      function readPackageKey() {
+        const key = String(new URLSearchParams(location.search).get('package_key') || '').trim().toUpperCase();
+        return /^4N1F_[A-F0-9]{12}$/.test(key) ? key : '';
+      }
+
+      async function fetchJsonWithTimeout(url, init, timeoutMs=6500) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch(url, { ...(init || {}), signal:controller.signal });
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function createSession(packageKey) {
+        let lastError;
+        for (let attempt=0; attempt<2; attempt++) {
+          try {
+            const response = await fetchJsonWithTimeout('/api/kv-session', {
+              method:'POST',
+              headers:{'content-type':'application/json',accept:'application/json'},
+              body:JSON.stringify({package_key:packageKey})
+            });
+            const data = await response.json().catch(() => null);
+            if (response.ok && data?.success && /^p_[a-f0-9]{32}$/i.test(String(data.preview_id || ''))) return String(data.preview_id).toLowerCase();
+            if (response.status < 500 || attempt === 1) throw new Error(data?.message || `Preview Key gagal di-resolve (${response.status}).`);
+          } catch (error) {
+            lastError = error;
+            if (attempt === 1) break;
+            await new Promise(resolve => setTimeout(resolve, 260));
+          }
+        }
+        throw new Error(lastError?.name === 'AbortError' ? 'Preview Key timeout saat menghubungi KV.' : (lastError?.message || 'Preview Key tidak dapat di-resolve.'));
+      }
+
+      async function fromKv(previewId) {
+        const response = await fetch(`/api/kv-preview?preview_id=${encodeURIComponent(previewId)}`, { headers:{accept:'application/json'}, cache:'no-store' });
+        if (response.status === 404) return null;
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.success) {
+          if (response.status >= 500) return null;
+          throw new Error(data?.message || `KV preview gagal (${response.status}).`);
+        }
+        return { ...data, storage_engine:data.storage_engine || 'cloudflare-kv' };
+      }
+
+      async function fromLegacy(previewId) {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_lab_preview_source`, {
+          method:'POST',
+          headers:{'content-type':'application/json',apikey:SUPABASE_KEY,authorization:`Bearer ${SUPABASE_KEY}`},
+          body:JSON.stringify({input_preview_id:previewId})
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(data?.message || `Legacy preview gagal (${response.status}).`);
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row?.success || !row?.html_code) return null;
+        return { ...row, storage_engine:'supabase-legacy' };
+      }
+
+      function srcdoc(row) {
+        let html = String(row.html_code || '').trim();
+        const css = String(row.css_code || '');
+        const js = String(row.js_code || '').replace(/<\/script/gi, '<\\/script');
+        const base = `<base href="${location.origin}/">`;
+        const style = css ? `<style data-4n1f-package-css>${css}</style>` : '';
+        const script = js ? `<script data-4n1f-package-js>${js}<\/script>` : '';
+        if (!/^<!doctype/i.test(html) && !/<html[\s>]/i.test(html)) return `<!doctype html><html><head>${base}${style}</head><body>${html}${script}</body></html>`;
+        if (/<head[\s>]/i.test(html)) html = html.replace(/<head([^>]*)>/i, `<head$1>${base}${style}`);
+        else html = html.replace(/<html([^>]*)>/i, `<html$1><head>${base}${style}</head>`);
+        if (/<\/body>/i.test(html)) return html.replace(/<\/body>/i, `${script}</body>`);
+        return `${html}${script}`;
+      }
+
+      function fail(key, message) {
+        document.body.classList.add('is-error');
+        statusText.textContent = 'Preview gagal dimuat';
+        errorId.textContent = key || 'INVALID PREVIEW KEY';
+        errorMessage.textContent = message || 'Preview Key tidak ditemukan.';
+      }
+
+      async function boot() {
+        const packageKey = readPackageKey();
+        if (!packageKey) return fail('', 'URL harus berisi Preview Key 4N1F_ + 12 hexadecimal.');
+        errorId.textContent = packageKey;
+        statusText.textContent = `Loading ${packageKey}`;
+        try {
+          const previewId = await createSession(packageKey);
+          editorLink.href = `/editor/${encodeURIComponent(previewId)}`;
+          let row = await fromKv(previewId).catch(() => null);
+          if (!row) row = await fromLegacy(previewId);
+          if (!row?.html_code) throw new Error('Source package untuk Preview Key tidak ditemukan.');
+          document.title = `${row.project || '4N1F Labs'} — Preview Only`;
+          frame.addEventListener('load', () => {
+            status.classList.add('ok');
+            statusText.textContent = `${String(row.storage_engine || 'preview').toUpperCase()} · PREVIEW ONLY`;
+            requestAnimationFrame(() => document.body.classList.add('is-ready'));
+          }, { once:true });
+          frame.srcdoc = srcdoc(row);
+        } catch (error) {
+          fail(packageKey, error?.message || 'Preview Key tidak dapat dimuat.');
+        }
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
