@@ -1,0 +1,27 @@
+name: Cloudflare Account Lock Check
+
+on:
+  push:
+    branches:
+      - fix/cloudflare-account-lock-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  account-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify canonical account target
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"name": "4n1f-labs-cinematic-cloudflare"' wrangler.jsonc
+          grep -Fq '"account_id": "69b3344647228e4e7c1c85f7a5136f23"' wrangler.jsonc
+          test -s dist/index.html
+          test -s dist/src/worker.js || test -s src/worker.js
+          echo 'CLOUDFLARE ACCOUNT LOCK PASS'
