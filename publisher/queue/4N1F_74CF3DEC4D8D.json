@@ -1,0 +1,8 @@
+{
+  "package_key": "4N1F_74CF3DEC4D8D",
+  "project": "preview-hub-create-package-key-smoke",
+  "version": "v1",
+  "html_code": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>4N1F Preview Key Smoke</title></head><body><main><p>4N1F LABS</p><h1>Package Key Ready</h1><p id=\"status\">Server-side publisher smoke package.</p></main></body></html>",
+  "css_code": "html,body{margin:0;min-height:100%;background:#060811;color:#f5f7fb;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center;min-height:100vh}main{width:min(640px,calc(100vw - 48px));padding:42px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:linear-gradient(145deg,rgba(17,22,38,.86),rgba(7,10,19,.82));box-shadow:0 28px 90px rgba(0,0,0,.42)}p{opacity:.72}h1{font-size:clamp(38px,7vw,70px);line-height:.98;letter-spacing:-.045em;margin:.35em 0}",
+  "js_code": "document.getElementById('status').dataset.publisher='ok';"
+}
