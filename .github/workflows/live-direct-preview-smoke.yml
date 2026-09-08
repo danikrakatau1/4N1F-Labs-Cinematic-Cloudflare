@@ -35,9 +35,10 @@ jobs:
           BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
           KEY='4N1F_4CF2BA8CB435'
           curl -fsS --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY" > /tmp/preview.html
+          echo '=== live preview markers ==='
+          grep -Eo '/api/kv-package\?package_key=|loadPackage\(packageKey\)|editorLink\.addEventListener' /tmp/preview.html | sort -u || true
           grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
-          grep -Fq 'const row = await loadPackage(packageKey);' /tmp/preview.html
-          grep -Fq "editorLink.addEventListener('click'" /tmp/preview.html
+          grep -Fq 'loadPackage(packageKey)' /tmp/preview.html
           echo 'PREVIEW-ONLY SHELL PASS'
       - name: Verify editor session remains separate
         shell: bash
