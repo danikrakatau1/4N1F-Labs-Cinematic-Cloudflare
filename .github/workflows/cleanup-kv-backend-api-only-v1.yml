@@ -67,7 +67,7 @@ jobs:
             }
           }
           JSON
-          curl -fsS -X PATCH -H "$AUTH" -H 'Content-Type: application/json' --data @patch.json "$BASE/settings" -o patch-result.json
+          curl -fsS -X PATCH -H "$AUTH" -F "settings=@patch.json;type=application/json" "$BASE/settings" -o patch-result.json
           python - <<'PY'
           import json
           data=json.load(open('patch-result.json'))
