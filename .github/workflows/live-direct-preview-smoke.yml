@@ -38,12 +38,25 @@ jobs:
           grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
           grep -Fq 'loadPackage(packageKey)' /tmp/preview.html
           echo 'PREVIEW-ONLY SHELL PASS'
-      - name: Probe backend session routes read-only
+      - name: Compare direct and bridged editor session POST
         shell: bash
         run: |
           set -euo pipefail
           BACK='https://4n1f-kv-api.faqihanif12282000.workers.dev'
-          for path in /session /api/session /api/kv-session /health /; do
-            code="$(curl -sS -o /tmp/body.txt -w '%{http_code}' "$BACK$path")"
-            echo "$path -> $code :: $(head -c 180 /tmp/body.txt | tr '\n' ' ')"
-          done
+          BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
+          KEY='4N1F_4CF2BA8CB435'
+          payload="{\"package_key\":\"$KEY\"}"
+          direct_code="$(curl -sS -o /tmp/direct.json -w '%{http_code}' -X POST "$BACK/session" -H 'content-type: application/json' --data "$payload")"
+          bridge_code="$(curl -sS -o /tmp/bridge.json -w '%{http_code}' -X POST "$BASE/api/kv-session" -H 'content-type: application/json' --data "$payload")"
+          echo "DIRECT POST /session -> $direct_code :: $(head -c 500 /tmp/direct.json | tr '\n' ' ')"
+          echo "BRIDGE POST /api/kv-session -> $bridge_code :: $(head -c 500 /tmp/bridge.json | tr '\n' ' ')"
+          test "$direct_code" = '200'
+          test "$bridge_code" = '200'
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const f of ['/tmp/direct.json','/tmp/bridge.json']){
+            const d=JSON.parse(fs.readFileSync(f,'utf8'));
+            if(!d.success || !/^p_[a-f0-9]{32}$/i.test(String(d.preview_id||''))) throw new Error(`${f}: invalid session`);
+          }
+          console.log('EDITOR SESSION SPLIT PASS');
+          NODE
