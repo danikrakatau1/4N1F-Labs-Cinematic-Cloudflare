@@ -28,18 +28,24 @@ jobs:
           if(!String(d.html_code||'').includes('4N1F KV OK')) throw new Error('html payload missing');
           console.log('DIRECT PACKAGE API PASS', d.storage_engine, d.project);
           NODE
-      - name: Verify preview-only shell route
+      - name: Inspect live preview asset
         shell: bash
         run: |
           set -euo pipefail
           BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
           KEY='4N1F_4CF2BA8CB435'
-          curl -fsS --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY" > /tmp/preview.html
-          echo '=== live preview markers ==='
-          grep -Eo '/api/kv-package\?package_key=|loadPackage\(packageKey\)|editorLink\.addEventListener' /tmp/preview.html | sort -u || true
-          grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
-          grep -Fq 'loadPackage(packageKey)' /tmp/preview.html
-          echo 'PREVIEW-ONLY SHELL PASS'
+          curl -fsS -D /tmp/headers.txt --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY&cb=$(date +%s)" > /tmp/preview.html
+          echo '=== headers ==='
+          cat /tmp/headers.txt
+          echo '=== bytes / sha ==='
+          wc -c /tmp/preview.html
+          sha256sum /tmp/preview.html
+          echo '=== title / markers ==='
+          grep -Eo '<title>[^<]+' /tmp/preview.html | head -n 3 || true
+          grep -Eo '/api/kv-package\?package_key=|/api/kv-session|loadPackage\(packageKey\)|createSession\(packageKey\)|editorLink\.addEventListener' /tmp/preview.html | sort -u || true
+          echo '=== first 800 bytes ==='
+          head -c 800 /tmp/preview.html
+          echo
       - name: Verify editor session remains separate
         shell: bash
         run: |
