@@ -1,0 +1,8 @@
+{
+  "package_key": "4N1F_9D1C7A2E4B60",
+  "project": "publisher-v1-main-history-smoke",
+  "version": "v1",
+  "html_code": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Publisher V1 History Smoke</title></head><body><main><p>4N1F PUBLISHER V1</p><h1>Full History Checkout OK</h1><p id=\"status\">Main fast-forward safe.</p></main></body></html>",
+  "css_code": "html,body{margin:0;min-height:100%;background:#0a0c12;color:#f7f8fb;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center;min-height:100vh}main{width:min(620px,calc(100vw - 48px));padding:42px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(255,255,255,.05)}p{opacity:.72}h1{font-size:clamp(36px,7vw,68px);line-height:.98;letter-spacing:-.045em}",
+  "js_code": "document.getElementById('status').dataset.publisher='ok';"
+}
