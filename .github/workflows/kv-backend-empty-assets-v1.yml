@@ -1,0 +1,223 @@
+name: KV Backend Empty Assets V1
+
+on:
+  push:
+    branches:
+      - cleanup/kv-backend-empty-assets-v1
+    paths:
+      - '.github/workflows/kv-backend-empty-assets-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      KV_NAMESPACE_ID: f5d2286e18e8401aa40ec9d8591bf8b6
+      PACKAGE_KEY: 4N1F_C7E21B9A6D04
+      BACKEND: https://4n1f-kv-api.faqihanif12282000.workers.dev
+      FRONTEND: https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Snapshot exact current module and bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backend-snapshot
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" -D backend-snapshot/script.headers "$BASE" -o backend-snapshot/script.multipart
+          curl -fsS -H "$AUTH" "$BASE/settings" -o backend-snapshot/settings.json
+          python - <<'PY'
+          import json, os, pathlib, re, hashlib
+          root=pathlib.Path('backend-snapshot')
+          settings=json.loads(root.joinpath('settings.json').read_text())
+          assert settings.get('success') is True, settings
+          bindings={b['name']:b for b in settings['result'].get('bindings',[])}
+          assert 'ASSETS' not in bindings, bindings
+          assert bindings.get('PACKAGES',{}).get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings.get('PUBLISH_TOKEN',{}).get('type')=='secret_text'
+          assert bindings.get('RETENTION_LIMIT',{}).get('text')=='500'
+          assert os.environ['FRONTEND'] in [x.strip() for x in bindings.get('ALLOWED_ORIGINS',{}).get('text','').split(',')]
+          headers=root.joinpath('script.headers').read_text(errors='replace')
+          ctype=next((x.split(':',1)[1].strip() for x in headers.splitlines() if x.lower().startswith('content-type:')), '')
+          m=re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))', ctype, re.I); assert m, ctype
+          boundary=(m.group(1) or m.group(2)).encode(); raw=root.joinpath('script.multipart').read_bytes(); found=None
+          for chunk in raw.split(b'--'+boundary):
+              if b'\r\n\r\n' not in chunk: continue
+              head,body=chunk.split(b'\r\n\r\n',1); body=body.rstrip(b'\r\n-')
+              nm=re.search(br'name="([^"]+)"',head)
+              if nm and nm.group(1)==b'index.js': found=body; break
+          assert found
+          text=found.decode('utf-8')
+          assert 'Route tidak ditemukan.' in text
+          assert 'env.ASSETS' not in text
+          assert 'BALI_LAB_KEY' not in text and 'BA11CA1D1A01' not in text
+          root.joinpath('index.js').write_bytes(found)
+          digest=hashlib.sha256(found).hexdigest(); root.joinpath('index.sha256').write_text(digest+'\n')
+          print('PRECONDITION=GREEN source_sha256='+digest)
+          PY
+
+      - name: Create empty static-assets completion token
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}/assets-upload-session"
+          curl -fsS -X POST "$URL" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            --data '{"manifest":{}}' -o empty-assets.json
+          JWT=$(python - <<'PY'
+          import json
+          d=json.load(open('empty-assets.json')); r=d.get('result') or {}
+          assert d.get('success') is True and bool(r.get('jwt')), d
+          assert len(r.get('buckets') or [])==0, r
+          print(r['jwt'])
+          PY
+          )
+          echo "::add-mask::$JWT"
+          printf 'ASSET_JWT=%s\n' "$JWT" >> "$GITHUB_ENV"
+          echo 'EMPTY_ASSET_MANIFEST=GREEN'
+
+      - name: Deploy identical module with empty asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          python - <<'PY'
+          import json,os
+          meta={
+            'main_module':'index.js',
+            'compatibility_date':'2026-09-06',
+            'assets':{'jwt':os.environ['ASSET_JWT']},
+            'bindings':[
+              {'name':'ALLOWED_ORIGINS','type':'inherit'},
+              {'name':'PACKAGES','type':'inherit'},
+              {'name':'PUBLISH_TOKEN','type':'inherit'},
+              {'name':'RETENTION_LIMIT','type':'inherit'},
+            ],
+            'annotations':{'workers/message':'4N1F backend API-only cleanup: replace legacy assets with empty asset set'}
+          }
+          open('metadata.json','w').write(json.dumps(meta,separators=(',',':')))
+          PY
+          curl -fsS -X PUT \
+            -H "$AUTH" \
+            -F 'metadata=@metadata.json;type=application/json' \
+            -F 'index.js=@backend-snapshot/index.js;type=application/javascript+module' \
+            "$BASE?bindings_inherit=strict" -o deploy.json
+          python - <<'PY'
+          import json
+          d=json.load(open('deploy.json')); assert d.get('success') is True, d
+          print('EMPTY_ASSET_DEPLOY=ACCEPTED')
+          PY
+
+      - name: Verify source identity and required bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" -D after.headers "$BASE" -o after.multipart
+          curl -fsS -H "$AUTH" "$BASE/settings" -o after-settings.json
+          python - <<'PY'
+          import json,os,re,hashlib,pathlib
+          d=json.load(open('after-settings.json')); assert d.get('success') is True, d
+          bindings={b['name']:b for b in d['result'].get('bindings',[])}
+          assert 'ASSETS' not in bindings, bindings
+          assert bindings.get('PACKAGES',{}).get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings.get('PUBLISH_TOKEN',{}).get('type')=='secret_text'
+          assert bindings.get('RETENTION_LIMIT',{}).get('text')=='500'
+          assert os.environ['FRONTEND'] in [x.strip() for x in bindings.get('ALLOWED_ORIGINS',{}).get('text','').split(',')]
+          headers=pathlib.Path('after.headers').read_text(errors='replace')
+          ctype=next((x.split(':',1)[1].strip() for x in headers.splitlines() if x.lower().startswith('content-type:')), '')
+          m=re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))',ctype,re.I); assert m
+          raw=pathlib.Path('after.multipart').read_bytes(); boundary=(m.group(1) or m.group(2)).encode(); found=None
+          for chunk in raw.split(b'--'+boundary):
+              if b'\r\n\r\n' not in chunk: continue
+              head,body=chunk.split(b'\r\n\r\n',1); body=body.rstrip(b'\r\n-')
+              nm=re.search(br'name="([^"]+)"',head)
+              if nm and nm.group(1)==b'index.js': found=body; break
+          assert found
+          before=pathlib.Path('backend-snapshot/index.sha256').read_text().strip(); after=hashlib.sha256(found).hexdigest(); assert before==after,(before,after)
+          print('SOURCE_IDENTITY=GREEN sha256='+after)
+          print('BINDINGS=GREEN ASSETS_BINDING_ABSENT=TRUE')
+          PY
+
+      - name: Wait for edge propagation
+        run: sleep 3
+
+      - name: Verify backend is now API-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEALTH_STATUS=$(curl -sS --retry 5 --retry-delay 1 --retry-all-errors -o health.json -w '%{http_code}' "$BACKEND/health")
+          test "$HEALTH_STATUS" = 200
+          python - <<'PY'
+          import json
+          d=json.load(open('health.json')); assert d.get('success') is True and d.get('service')=='4n1f-kv-api', d
+          PY
+          ROOT_STATUS=$(curl -sS --retry 5 --retry-delay 1 --retry-all-errors -o root.json -w '%{http_code}' "$BACKEND/")
+          echo "ROOT_STATUS=$ROOT_STATUS"
+          head -c 700 root.json || true; echo
+          test "$ROOT_STATUS" = 404
+          python - <<'PY'
+          import json
+          d=json.load(open('root.json')); assert d.get('success') is False and d.get('message')=='Route tidak ditemukan.', d
+          PY
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors "$BACKEND/package/$PACKAGE_KEY" -o package.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('package.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors -X POST "$BACKEND/session" \
+            -H 'Content-Type: application/json' -H "Origin: $FRONTEND" \
+            --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o session.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('session.json')); p=str(d.get('preview_id','')).lower(); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors "$BACKEND/preview/$PREVIEW_ID" -o preview.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('preview.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "BACKEND_API_ONLY=GREEN $PACKAGE_KEY -> $PREVIEW_ID"
+
+      - name: Verify frontend direct preview and Service Binding compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors "$FRONTEND/api/kv-package?package_key=$PACKAGE_KEY" -o fp.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('fp.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors -X POST "$FRONTEND/api/kv-session" \
+            -H 'Content-Type: application/json' --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o fs.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('fs.json')); p=str(d.get('preview_id','')).lower(); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors "$FRONTEND/api/kv-preview?preview_id=$PREVIEW_ID" -o fv.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('fv.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "FRONTEND_COMPAT=GREEN $PACKAGE_KEY -> $PREVIEW_ID"
+
+      - name: Upload pre-cleanup rollback snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kv-backend-pre-empty-assets-snapshot
+          path: backend-snapshot/
+          retention-days: 3
