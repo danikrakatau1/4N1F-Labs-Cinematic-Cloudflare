@@ -23,21 +23,21 @@ jobs:
           NS_ID='f5d2286e18e8401aa40ec9d8591bf8b6'
           echo "NAMESPACE_ID=$NS_ID"
           echo '=== pkg: keys ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'pkg:' > /tmp/pkg.json
+          npx --yes wrangler@latest kv key list --remote --namespace-id "$NS_ID" --prefix 'pkg:' > /tmp/pkg.json
           cat /tmp/pkg.json | head -c 12000
           echo
           echo '=== prev: keys ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'prev:' > /tmp/prev.json
+          npx --yes wrangler@latest kv key list --remote --namespace-id "$NS_ID" --prefix 'prev:' > /tmp/prev.json
           cat /tmp/prev.json | head -c 12000
           echo
           echo '=== proj: keys ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'proj:' > /tmp/proj.json
+          npx --yes wrangler@latest kv key list --remote --namespace-id "$NS_ID" --prefix 'proj:' > /tmp/proj.json
           cat /tmp/proj.json | head -c 12000
           echo
           echo '=== first pkg value shape ==='
           FIRST_PKG="$(node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('/tmp/pkg.json','utf8'));const x=a[0];if(!x)process.exit(2);process.stdout.write(x.name)")"
           echo "FIRST_PKG_KEY=$FIRST_PKG"
-          npx --yes wrangler@latest kv key get "$FIRST_PKG" --namespace-id "$NS_ID" > /tmp/pkg-value.txt
+          npx --yes wrangler@latest kv key get "$FIRST_PKG" --remote --namespace-id "$NS_ID" > /tmp/pkg-value.txt
           node - <<'NODE'
           const fs=require('fs');
           const raw=fs.readFileSync('/tmp/pkg-value.txt','utf8');
