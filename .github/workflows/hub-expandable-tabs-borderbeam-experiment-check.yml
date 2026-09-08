@@ -1,0 +1,44 @@
+name: Hub ExpandableTabs BorderBeam Experiment Check
+
+on:
+  push:
+    branches:
+      - experiment/hub-expandable-tabs-borderbeam-v1
+  pull_request:
+    paths:
+      - 'hub-portals-v6.js'
+      - '.github/workflows/hub-expandable-tabs-borderbeam-experiment-check.yml'
+
+jobs:
+  experiment-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify experiment markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'ExpandableTabs + BorderBeam native port' hub-portals-v6.js
+          grep -q 'exp-panel-shell' hub-portals-v6.js
+          grep -q 'expBorderBeam' hub-portals-v6.js
+          grep -q 'aria-expanded' hub-portals-v6.js
+          grep -q 'prefers-reduced-motion:reduce' hub-portals-v6.js
+          grep -q '4N1F_ opens preview-only · p_ opens Live Editor' hub-portals-v6.js
+
+      - name: Verify JavaScript syntax
+        run: node --check hub-portals-v6.js
+
+      - name: Verify Fetch and architecture guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'class="hub-gate hub-gate-fetch" href="/fetch/"' index.html
+          grep -q '4N1F_' index.html
+          grep -q 'p_' index.html
+          grep -q '/api/kv-package?package_key=' editor/package-preview.html
+          grep -q '/api/kv-session' editor/package-preview.html
+
+      - name: Build full Cloudflare bundle
+        run: bash build-cloudflare.sh
