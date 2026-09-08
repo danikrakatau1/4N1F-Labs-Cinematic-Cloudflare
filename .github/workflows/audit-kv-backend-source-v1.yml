@@ -1,0 +1,75 @@
+name: Audit KV Backend Source V1
+
+on:
+  push:
+    branches:
+      - audit/kv-backend-source-v1
+    paths:
+      - '.github/workflows/audit-kv-backend-source-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch deployed backend source and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit-output
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" -D audit-output/script.headers "$BASE" -o audit-output/script.multipart
+          curl -fsS -H "$AUTH" "$BASE/settings" -o audit-output/settings.json
+          curl -fsS -H "$AUTH" "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}/deployments" -o audit-output/deployments.json
+          python - <<'PY'
+          import json, pathlib, re
+          root=pathlib.Path('audit-output')
+          raw=root.joinpath('script.multipart').read_bytes()
+          ctype=''
+          for line in root.joinpath('script.headers').read_text(errors='replace').splitlines():
+              if line.lower().startswith('content-type:'):
+                  ctype=line.split(':',1)[1].strip()
+          m=re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))', ctype, re.I)
+          parts=[]
+          if m:
+              boundary=(m.group(1) or m.group(2)).encode()
+              for chunk in raw.split(b'--'+boundary):
+                  if b'\r\n\r\n' not in chunk: continue
+                  head, body=chunk.split(b'\r\n\r\n',1)
+                  body=body.rstrip(b'\r\n-')
+                  name='part'
+                  nm=re.search(br'name="([^"]+)"',head)
+                  fn=re.search(br'filename="([^"]+)"',head)
+                  if fn: name=fn.group(1).decode('utf-8','replace')
+                  elif nm: name=nm.group(1).decode('utf-8','replace')
+                  safe=re.sub(r'[^A-Za-z0-9._-]+','_',name)
+                  root.joinpath('part-'+safe).write_bytes(body)
+                  parts.append({'name':name,'bytes':len(body),'headers':head.decode('utf-8','replace')})
+          root.joinpath('parts.json').write_text(json.dumps(parts,indent=2))
+          settings=json.loads(root.joinpath('settings.json').read_text())
+          result=settings.get('result') or {}
+          bindings=[]
+          for b in result.get('bindings') or []:
+              item={'name':b.get('name'),'type':b.get('type')}
+              for k in ('namespace_id','service','environment'):
+                  if b.get(k) is not None:item[k]=b.get(k)
+              bindings.append(item)
+          summary={'script':'4n1f-kv-api','compatibility_date':result.get('compatibility_date'),'usage_model':result.get('usage_model'),'bindings':bindings,'multipart_parts':parts}
+          root.joinpath('audit-summary.json').write_text(json.dumps(summary,indent=2))
+          print(json.dumps(summary,indent=2))
+          PY
+      - name: Upload backend audit snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: kv-backend-audit-v1
+          path: audit-output/
+          retention-days: 1
