@@ -1,0 +1,32 @@
+name: KV Service Binding Check
+
+on:
+  push:
+    branches:
+      - fix/kv-service-binding-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify KV service binding contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"binding": "KV_BACKEND"' wrangler.jsonc
+          grep -Fq '"service": "4n1f-kv-api"' wrangler.jsonc
+          grep -Fq "url.pathname === '/api/kv-session'" src/worker-entry.js
+          grep -Fq "url.pathname === '/api/kv-preview'" src/worker-entry.js
+          grep -Fq "env.KV_BACKEND.fetch('https://4n1f-kv-api.internal/session'" src/worker-entry.js
+          grep -Fq 'https://4n1f-kv-api.internal/preview/' src/worker-entry.js
+          grep -Fq '/api/kv-package?package_key=' editor/package-preview.html
+          echo 'KV SERVICE BINDING CONTRACT PASS'
+      - name: Wrangler dry run
+        run: npx --yes wrangler@latest deploy --dry-run --outdir /tmp/4n1f-kv-service-dryrun
