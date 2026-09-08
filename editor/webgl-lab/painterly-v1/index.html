@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eee2cc">
+<meta name="robots" content="noindex,nofollow">
+<title>4N1F Experimental Preview — Painterly Cinematic V1</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eee2cc}body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#493326;touch-action:manipulation}.stage{position:fixed;inset:0;overflow:hidden;isolation:isolate;background:linear-gradient(180deg,#f2e7d4 0%,#ead9bf 100%)}.art{position:absolute;inset:-3%;background-image:linear-gradient(180deg,rgba(242,231,212,.03),rgba(68,40,23,.08)),url('https://at.adobe.com/uavRSBHHTiGYBUwX');background-size:cover;background-position:center 54%;transform:scale(1.07);filter:saturate(.96) contrast(1.02);will-change:transform,filter;animation:camera 9.66s cubic-bezier(.18,.64,.18,1) both}.art::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 55% at 50% 42%,rgba(255,249,235,0) 20%,rgba(88,57,36,.12) 100%),linear-gradient(180deg,rgba(255,247,230,.13),transparent 36%,rgba(68,38,20,.1));mix-blend-mode:multiply;pointer-events:none}.mist{position:absolute;z-index:2;left:-15%;right:-15%;bottom:19%;height:24%;background:radial-gradient(ellipse at 50% 60%,rgba(255,247,232,.64),rgba(255,247,232,.2) 48%,transparent 72%);filter:blur(15px);opacity:.5;transform:translate3d(0,16px,0);animation:mist 9.66s ease-in-out both;pointer-events:none}.paper{position:absolute;z-index:3;inset:0;opacity:.18;background-image:repeating-linear-gradient(0deg,rgba(89,62,38,.04) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,transparent 1px 5px);mix-blend-mode:soft-light;pointer-events:none}.panel{position:absolute;z-index:4;left:50%;top:19%;width:min(72vw,420px);transform:translate(-50%,20px) scale(.985);padding:22px 22px 20px;border:1px solid rgba(112,76,45,.18);border-radius:2px;background:linear-gradient(180deg,rgba(250,244,229,.82),rgba(245,237,218,.74));box-shadow:0 26px 70px rgba(79,47,26,.16),inset 0 0 0 1px rgba(255,255,255,.35);backdrop-filter:blur(7px) saturate(104%);-webkit-backdrop-filter:blur(7px) saturate(104%);text-align:center;opacity:0;animation:panel 9.66s cubic-bezier(.18,.74,.18,1) both}.eyebrow{font:700 9px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.16em;color:#8b6b4b}.panel h1{margin:10px 0 4px;font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(27px,7vw,42px);letter-spacing:-.035em;color:#4b3426}.panel p{margin:0;font-size:10px;letter-spacing:.09em;color:#8a705a}.orn{width:54px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,#9e7b57,transparent)}.badge{position:fixed;z-index:6;top:max(10px,env(safe-area-inset-top));right:10px;padding:7px 10px;border:1px solid rgba(76,49,30,.15);background:rgba(248,239,221,.62);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);color:rgba(73,51,38,.76);font:650 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.09em;opacity:.74}.replay{position:fixed;z-index:6;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);border:1px solid rgba(76,49,30,.15);background:rgba(248,239,221,.68);color:#70543e;padding:8px 11px;font:650 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;opacity:0;transition:opacity .2s ease;cursor:pointer}.stage:hover .replay,.replay:focus{opacity:.8}@keyframes camera{0%{transform:scale(1.13) translate3d(0,1.8%,0);filter:saturate(.9) contrast(.98) blur(.35px)}23%{transform:scale(1.105) translate3d(0,1%,0)}64%{transform:scale(1.045) translate3d(0,-.4%,0);filter:saturate(.98) contrast(1.02) blur(0)}75%{transform:scale(1.035) translate3d(0,-.7%,0)}100%{transform:scale(1.028) translate3d(0,-.9%,0)}}@keyframes mist{0%{opacity:.22;transform:translate3d(-1.5%,18px,0) scale(1.04)}38%{opacity:.55}66%{opacity:.42;transform:translate3d(1%,3px,0) scale(1.08)}100%{opacity:.34;transform:translate3d(2%,0,0) scale(1.1)}}@keyframes panel{0%,72%{opacity:0;transform:translate(-50%,20px) scale(.985)}79%{opacity:.88}88%,100%{opacity:1;transform:translate(-50%,0) scale(1)}}@media(max-width:520px){.panel{top:18%;width:min(78vw,360px);padding:18px 18px 17px}.badge{font-size:7px}}@media(prefers-reduced-motion:reduce){.art,.mist,.panel{animation-duration:.01ms!important;animation-delay:0!important;animation-fill-mode:forwards!important}.replay{display:none}}
+</style>
+</head>
+<body>
+<main class="stage" id="stage" aria-label="4N1F experimental painterly cinematic preview">
+  <div class="art" id="art"></div>
+  <div class="mist"></div>
+  <div class="paper"></div>
+  <section class="panel" aria-label="Invitation reveal panel">
+    <div class="eyebrow">4N1F LABS · EXPERIMENTAL PREVIEW</div>
+    <h1>Painterly Cinematic</h1>
+    <p>ARTWORK · DEPTH · SOFT REVEAL</p>
+    <div class="orn"></div>
+  </section>
+  <div class="badge">EXPERIMENTAL · 9.66s · NO KV SESSION</div>
+  <button class="replay" id="replay" type="button">replay</button>
+</main>
+<script>
+(()=>{const stage=document.getElementById('stage');const replay=document.getElementById('replay');function restart(){const clone=stage.cloneNode(true);stage.replaceWith(clone);clone.querySelector('#replay').addEventListener('click',restart)}replay.addEventListener('click',restart);stage.addEventListener('dblclick',restart)})();
+</script>
+</body>
+</html>
