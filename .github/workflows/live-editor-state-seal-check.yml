@@ -1,0 +1,40 @@
+name: Live Editor State Seal Check
+
+on:
+  push:
+    paths:
+      - 'editor/index.html'
+      - 'editor/addons/v1.4.1-state-seal-export.js'
+      - '.github/workflows/live-editor-state-seal-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check addon
+        run: node --check editor/addons/v1.4.1-state-seal-export.js
+      - name: Verify state-seal contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F '/editor/addons/v1.4.1-state-seal-export.js' editor/index.html
+          grep -F "CURRENT = APPLY = CLEAN_PREVIEW = ZIP" editor/addons/v1.4.1-state-seal-export.js
+          grep -F "Website ZIP · Sealed" editor/addons/v1.4.1-state-seal-export.js
+          grep -F "Clean Preview" editor/addons/v1.4.1-state-seal-export.js
+          grep -F '0x04034b50' editor/addons/v1.4.1-state-seal-export.js
+          grep -F '0x02014b50' editor/addons/v1.4.1-state-seal-export.js
+          grep -F '0x06054b50' editor/addons/v1.4.1-state-seal-export.js
+          ! grep -F '/fetch/' editor/addons/v1.4.1-state-seal-export.js
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Verify built editor assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/editor/addons/v1.4.1-state-seal-export.js
+          grep -F '/editor/addons/v1.4.1-state-seal-export.js' dist/editor/index.html
