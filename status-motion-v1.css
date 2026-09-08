@@ -14,3 +14,154 @@
 @keyframes smSpin{to{transform:rotate(360deg)}}@keyframes smGlyphPulse{0%,100%{opacity:.48;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}@keyframes smDraw{to{stroke-dashoffset:0}}@keyframes smSuccessRing{0%{transform:scale(.78);opacity:.2}60%{transform:scale(1.10);opacity:1}100%{transform:scale(1);opacity:.8}}@keyframes smErrorRing{0%{transform:scale(.82);opacity:.25}50%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:.8}}@keyframes smShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}55%{transform:translateX(2px)}75%{transform:translateX(-1px)}}
 @media(max-width:620px){.sm-status-host{right:14px;bottom:max(14px,env(safe-area-inset-bottom));width:calc(100vw - 28px)}}
 @media(prefers-reduced-motion:reduce){.sm-status-host,.sm-button-icon{transition:none}[data-state="loading"] .sm-ring,[data-state="loading"] .sm-orbit,[data-state="loading"] .sm-glyph,[data-state="success"] .sm-ring,[data-state="success"] .sm-check,[data-state="error"] .sm-ring,[data-state="error"] .sm-cross-a,[data-state="error"] .sm-cross-b,[data-state="error"] .sm-icon{animation:none!important}.sm-check,.sm-cross-a,.sm-cross-b{stroke-dashoffset:0!important}}
+
+/* V8 STEP 3 — STATE CHOREOGRAPHY
+   Hub-only state response layered on top of the existing Status Motion contract.
+   Loading may breathe while work is active; success/error are one-shot confirmations.
+   Fetch, routing, KV, Preview Key, Live Editor and editor-session semantics are untouched. */
+:root{
+  --v8-state-ease:cubic-bezier(.2,.78,.2,1);
+  --v8-state-fast:280ms;
+  --v8-state-mid:420ms;
+}
+
+/* Keep the shared Status Motion system untouched on Fetch; these rules activate only on the Hub. */
+body:has(.hub) .sm-status-host{
+  overflow:hidden;
+  border-radius:15px;
+  background:
+    linear-gradient(145deg,rgba(12,16,28,.94),rgba(5,8,15,.91));
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.44),
+    inset 0 1px rgba(255,255,255,.055);
+}
+body:has(.hub) .sm-status-host::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(90% 140% at 10% 50%,rgba(var(--v8-cyan),.12),transparent 64%);
+}
+body:has(.hub) .sm-status-host.show[data-state="loading"]{
+  border-color:rgba(var(--v8-cyan),.22);
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.44),
+    0 0 26px rgba(var(--v8-cyan),.035),
+    inset 0 1px rgba(255,255,255,.06);
+}
+body:has(.hub) .sm-status-host.show[data-state="success"]{
+  border-color:rgba(var(--v8-mint),.30);
+}
+body:has(.hub) .sm-status-host.show[data-state="success"]::after{
+  background:radial-gradient(90% 145% at 10% 50%,rgba(var(--v8-mint),.22),rgba(var(--v8-cyan),.055) 48%,transparent 74%);
+  animation:v8StateSuccessWash .72s var(--v8-state-ease) both;
+}
+body:has(.hub) .sm-status-host.show[data-state="error"]{
+  border-color:rgba(255,143,164,.30);
+}
+body:has(.hub) .sm-status-host.show[data-state="error"]::after{
+  background:radial-gradient(90% 145% at 10% 50%,rgba(255,143,164,.18),rgba(var(--v8-violet),.045) 48%,transparent 74%);
+  animation:v8StateErrorWash .56s ease-out both;
+}
+
+/* Busy energy exists only while validation is actually in flight. */
+body:has(.hub) #generateBtn[aria-busy="true"]{
+  cursor:progress!important;
+  color:#f0f8fc!important;
+  filter:saturate(.92)!important;
+  background:
+    radial-gradient(115% 150% at 50% 100%,rgba(var(--v8-mint),.085),transparent 60%),
+    linear-gradient(110deg,rgba(var(--v8-violet),.05),rgba(255,255,255,.058),rgba(var(--v8-cyan),.07))!important;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.055),
+    inset 0 0 0 1px rgba(var(--v8-cyan),.025),
+    0 0 22px rgba(var(--v8-cyan),.04)!important;
+  animation:v8BusyBreath 1.28s ease-in-out infinite;
+}
+
+/* The validated target arrives as a compact one-shot reveal, not a persistent spectacle. */
+body:has(.hub) .result.show{
+  transform-origin:50% 0;
+  animation:v8ResultReveal .38s var(--v8-state-ease) both;
+}
+body:has(.hub) .result.show code{
+  text-shadow:0 0 18px rgba(var(--v8-cyan),.045);
+}
+
+/* Statusbar confirmations use different motion language for success and failure. */
+body:has(.hub) .state.ok{
+  color:#a9c9b8!important;
+  animation:v8InlineConfirm .46s var(--v8-state-ease) both;
+}
+body:has(.hub) .state.ok i{
+  box-shadow:0 0 10px rgba(var(--v8-mint),.24)!important;
+  animation:v8StateDotSuccess .66s var(--v8-state-ease) both;
+}
+body:has(.hub) .state.error{
+  color:#d8a0aa!important;
+  animation:v8InlineError .42s ease-out both;
+}
+body:has(.hub) .state.error i{
+  background:#ff8fa4!important;
+  box-shadow:0 0 10px rgba(255,143,164,.18)!important;
+  animation:v8StateDotError .48s ease-out both;
+}
+
+@keyframes v8BusyBreath{
+  0%,100%{box-shadow:inset 0 1px rgba(255,255,255,.05),inset 0 0 0 1px rgba(var(--v8-cyan),.02),0 0 16px rgba(var(--v8-cyan),.025);filter:saturate(.86)}
+  50%{box-shadow:inset 0 1px rgba(255,255,255,.07),inset 0 0 0 1px rgba(var(--v8-cyan),.045),0 0 28px rgba(var(--v8-cyan),.065),0 0 34px rgba(var(--v8-violet),.025);filter:saturate(1)}
+}
+@keyframes v8ResultReveal{
+  0%{opacity:0;transform:translateY(5px) scale(.995);filter:blur(2px)}
+  58%{opacity:1;transform:translateY(-1px) scale(1.001);filter:blur(0)}
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+@keyframes v8InlineConfirm{
+  0%{opacity:.58;transform:translateY(2px)}
+  60%{opacity:1;transform:translateY(-.5px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@keyframes v8InlineError{
+  0%,100%{transform:translateX(0)}
+  32%{transform:translateX(-1.5px)}
+  64%{transform:translateX(1px)}
+}
+@keyframes v8StateDotSuccess{
+  0%{transform:scale(.72);opacity:.45;box-shadow:0 0 0 rgba(var(--v8-mint),0)}
+  58%{transform:scale(1.18);opacity:1;box-shadow:0 0 16px rgba(var(--v8-mint),.34)}
+  100%{transform:scale(1);opacity:1;box-shadow:0 0 10px rgba(var(--v8-mint),.24)}
+}
+@keyframes v8StateDotError{
+  0%{transform:scale(.76);opacity:.5}
+  54%{transform:scale(1.15);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes v8StateSuccessWash{
+  0%{opacity:0;transform:translateX(-8%) scaleX(.92)}
+  38%{opacity:.88}
+  100%{opacity:0;transform:translateX(7%) scaleX(1.04)}
+}
+@keyframes v8StateErrorWash{
+  0%{opacity:0;transform:translateX(-4%)}
+  34%{opacity:.72}
+  100%{opacity:0;transform:translateX(3%)}
+}
+
+@media(max-width:620px){
+  body:has(.hub) .sm-status-host{border-radius:13px}
+  body:has(.hub) #generateBtn[aria-busy="true"]{box-shadow:inset 0 1px rgba(255,255,255,.05),0 0 18px rgba(var(--v8-cyan),.035)!important}
+  body:has(.hub) .result.show{animation-duration:.32s}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body:has(.hub) #generateBtn[aria-busy="true"],
+  body:has(.hub) .result.show,
+  body:has(.hub) .state.ok,
+  body:has(.hub) .state.ok i,
+  body:has(.hub) .state.error,
+  body:has(.hub) .state.error i,
+  body:has(.hub) .sm-status-host.show[data-state="success"]::after,
+  body:has(.hub) .sm-status-host.show[data-state="error"]::after{animation:none!important}
+}
