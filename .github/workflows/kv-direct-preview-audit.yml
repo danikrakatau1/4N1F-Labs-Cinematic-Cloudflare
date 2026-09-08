@@ -20,18 +20,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '=== KV namespaces ==='
-          npx --yes wrangler@latest kv namespace list
-          echo '=== Resolve 4n1f-labs-cinematic namespace id ==='
-          npx --yes wrangler@latest kv namespace list --json > /tmp/namespaces.json
-          NS_ID="$(node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('/tmp/namespaces.json','utf8'));const x=a.find(v=>v.title==='4n1f-labs-cinematic');if(!x)process.exit(2);process.stdout.write(x.id)")"
+          NS_ID='f5d2286e18e8401aa40ec9d8591bf8b6'
           echo "NAMESPACE_ID=$NS_ID"
-          echo '=== pkg: keys (first 20) ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'pkg:' | head -c 12000
+          echo '=== pkg: keys ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'pkg:' > /tmp/pkg.json
+          cat /tmp/pkg.json | head -c 12000
           echo
-          echo '=== prev: keys (first 20) ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'prev:' | head -c 12000
+          echo '=== prev: keys ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'prev:' > /tmp/prev.json
+          cat /tmp/prev.json | head -c 12000
           echo
-          echo '=== proj: keys (first 20) ==='
-          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'proj:' | head -c 12000
+          echo '=== proj: keys ==='
+          npx --yes wrangler@latest kv key list --namespace-id "$NS_ID" --prefix 'proj:' > /tmp/proj.json
+          cat /tmp/proj.json | head -c 12000
           echo
+          echo '=== first pkg value shape ==='
+          FIRST_PKG="$(node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('/tmp/pkg.json','utf8'));const x=a[0];if(!x)process.exit(2);process.stdout.write(x.name)")"
+          echo "FIRST_PKG_KEY=$FIRST_PKG"
+          npx --yes wrangler@latest kv key get "$FIRST_PKG" --namespace-id "$NS_ID" > /tmp/pkg-value.txt
+          node - <<'NODE'
+          const fs=require('fs');
+          const raw=fs.readFileSync('/tmp/pkg-value.txt','utf8');
+          let v; try { v=JSON.parse(raw); } catch { console.log('VALUE_IS_NON_JSON bytes='+Buffer.byteLength(raw)); process.exit(0); }
+          const out={};
+          for (const [k,val] of Object.entries(v)) {
+            if (typeof val==='string') out[k]=k.toLowerCase().includes('token')?'[redacted]':(val.length>180?`[string ${val.length} chars]`:val);
+            else if (Array.isArray(val)) out[k]=`[array ${val.length}]`;
+            else if (val && typeof val==='object') out[k]=`[object keys: ${Object.keys(val).slice(0,12).join(',')}]`;
+            else out[k]=val;
+          }
+          console.log(JSON.stringify(out,null,2));
+          NODE
