@@ -4,6 +4,12 @@
   "account_id": "69b3344647228e4e7c1c85f7a5136f23",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-06",
+  "kv_namespaces": [
+    {
+      "binding": "PREVIEW_PACKAGES",
+      "id": "f5d2286e18e8401aa40ec9d8591bf8b6"
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
