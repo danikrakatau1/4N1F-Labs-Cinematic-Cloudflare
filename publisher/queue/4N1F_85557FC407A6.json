@@ -1,0 +1,8 @@
+{
+  "package_key": "4N1F_85557FC407A6",
+  "project": "publisher-v1-e2e-smoke",
+  "version": "v1",
+  "html_code": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>4N1F Publisher V1 Smoke</title></head><body><main class=\"smoke-card\"><p class=\"eyebrow\">4N1F PUBLISHER V1</p><h1 id=\"smoke-title\">Publisher V1 OK</h1><p id=\"smoke-copy\">Deployment-independent package smoke test.</p><button id=\"smoke-button\" type=\"button\">Interactive source</button></main></body></html>",
+  "css_code": "html,body{margin:0;min-height:100%;background:#090b11;color:#f5f7fb;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center;min-height:100vh}.smoke-card{width:min(560px,calc(100vw - 48px));padding:40px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(255,255,255,.05);box-shadow:0 30px 90px rgba(0,0,0,.35)}.eyebrow{font-size:12px;letter-spacing:.16em;opacity:.58}h1{margin:10px 0 12px;font-size:clamp(38px,8vw,72px);letter-spacing:-.05em}#smoke-copy{opacity:.72;line-height:1.65}button{margin-top:18px;padding:12px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer}",
+  "js_code": "document.getElementById('smoke-button')?.addEventListener('click',()=>{document.getElementById('smoke-copy').textContent='JS package bridge OK';});"
+}
