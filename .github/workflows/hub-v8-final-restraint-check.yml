@@ -1,0 +1,66 @@
+name: Hub V8 Final Restraint Check
+
+on:
+  push:
+    branches:
+      - style/hub-v8-final-restraint-v1
+      - main
+  pull_request:
+    paths:
+      - 'status-motion-v1.css'
+      - '.github/workflows/hub-v8-final-restraint-check.yml'
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify V8 final restraint contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'V8 STEP 4 — FINAL RESTRAINT SWEEP' status-motion-v1.css
+          grep -q '80% calm / 20% wow' status-motion-v1.css
+          grep -q 'body:has(.hub) .cinematic-bg::before' status-motion-v1.css
+          grep -q 'body:has(.hub) .hub{' status-motion-v1.css
+          grep -q 'body:has(.hub) .row:focus-within' status-motion-v1.css
+          grep -q 'body:has(.hub) #generateBtn\[aria-busy="true"\]' status-motion-v1.css
+          grep -q 'body:has(.hub) .sm-status-host' status-motion-v1.css
+          grep -q 'prefers-reduced-motion:reduce' status-motion-v1.css
+
+      - name: Verify all V8 stages remain present
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'V8 STEP 1 — CORE LIGHTING' hub-portals-v6.css
+          grep -q 'V8 STEP 2 — INTERACTION ENERGY' hub-portals-v6.css
+          grep -q 'V8 STEP 3 — STATE CHOREOGRAPHY' status-motion-v1.css
+          grep -q 'V8 STEP 4 — FINAL RESTRAINT SWEEP' status-motion-v1.css
+
+      - name: Guard anti-slop exclusions in Step 4
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '/V8 STEP 4 — FINAL RESTRAINT SWEEP/{capture=1} capture{print}' status-motion-v1.css > /tmp/v8-step4.css
+          ! grep -Eqi 'meteor|shooting.?star|vortex|giant.?orb|particle.?field|rainbow' /tmp/v8-step4.css
+          # Step 4 may only redefine Step 3 keyframes; it must not introduce a new animation family.
+          while read -r name; do
+            case "$name" in
+              v8BusyBreath|v8ResultReveal|v8InlineConfirm|v8InlineError|v8StateDotSuccess|v8StateDotError|v8StateSuccessWash|v8StateErrorWash) ;;
+              *) echo "Unexpected Step 4 animation: $name" >&2; exit 1 ;;
+            esac
+          done < <(grep -oE '@keyframes[[:space:]]+[A-Za-z0-9_-]+' /tmp/v8-step4.css | awk '{print $2}')
+
+      - name: Verify architecture semantics remain intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '/api/kv-package?package_key=' editor/package-preview.html
+          grep -q '/api/kv-session' editor/package-preview.html
+          grep -q '4N1F_' index.html
+          grep -q 'p_' index.html
+
+      - name: Build full Cloudflare bundle
+        run: bash build-cloudflare.sh
