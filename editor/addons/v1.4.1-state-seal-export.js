@@ -57,17 +57,21 @@
     if (!liveDoc?.documentElement) throw new Error('Target preview tidak tersedia.');
     const root = liveDoc.documentElement.cloneNode(true);
 
-    root.querySelectorAll('#__4n1f_box, #__4n1f_editor_style').forEach(node => node.remove());
+    root.querySelectorAll('[id^="__4n1f_"]').forEach(node => node.remove());
     root.querySelectorAll('script').forEach(script => {
       const text = script.textContent || '';
-      if (text.includes("source:'4n1f-frame'") && text.includes("box.id='__4n1f_box'")) script.remove();
+      const isEditorInstrumentation = text.includes('__4n1f_') && /source\s*:\s*['"]4n1f(?:-v\d+)?-frame['"]/i.test(text);
+      if (isEditorInstrumentation) script.remove();
     });
     root.querySelectorAll('*').forEach(el => {
       if (el.classList) {
         [...el.classList].filter(name => name.startsWith('__4n1f_')).forEach(name => el.classList.remove(name));
         if (!el.getAttribute('class')) el.removeAttribute('class');
       }
-      ['data-editor-x','data-editor-y','data-editor-scale','data-editor-rotate','data-editor-blur'].forEach(name => el.removeAttribute(name));
+      [...el.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith('data-editor-') || name.startsWith('data-4n1f-') || name.startsWith('data-four-n1f-')) el.removeAttribute(attr.name);
+      });
     });
 
     const html = '<!doctype html>\n' + root.outerHTML;
