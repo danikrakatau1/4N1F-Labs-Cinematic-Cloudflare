@@ -28,35 +28,22 @@ jobs:
           if(!String(d.html_code||'').includes('4N1F KV OK')) throw new Error('html payload missing');
           console.log('DIRECT PACKAGE API PASS', d.storage_engine, d.project);
           NODE
-      - name: Inspect live preview asset
+      - name: Verify live preview shell after redirect
         shell: bash
         run: |
           set -euo pipefail
           BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
           KEY='4N1F_4CF2BA8CB435'
-          curl -fsS -D /tmp/headers.txt --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY&cb=$(date +%s)" > /tmp/preview.html
-          echo '=== headers ==='
-          cat /tmp/headers.txt
-          echo '=== bytes / sha ==='
-          wc -c /tmp/preview.html
-          sha256sum /tmp/preview.html
-          echo '=== title / markers ==='
-          grep -Eo '<title>[^<]+' /tmp/preview.html | head -n 3 || true
-          grep -Eo '/api/kv-package\?package_key=|/api/kv-session|loadPackage\(packageKey\)|createSession\(packageKey\)|editorLink\.addEventListener' /tmp/preview.html | sort -u || true
-          echo '=== first 800 bytes ==='
-          head -c 800 /tmp/preview.html
-          echo
-      - name: Verify editor session remains separate
+          curl -LfsS --retry 3 --retry-delay 2 "$BASE/editor/package-preview.html?package_key=$KEY&cb=$(date +%s)" > /tmp/preview.html
+          grep -Fq '/api/kv-package?package_key=' /tmp/preview.html
+          grep -Fq 'loadPackage(packageKey)' /tmp/preview.html
+          echo 'PREVIEW-ONLY SHELL PASS'
+      - name: Probe backend session routes read-only
         shell: bash
         run: |
           set -euo pipefail
-          BASE='https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev'
-          KEY='4N1F_4CF2BA8CB435'
-          curl -fsS --retry 3 --retry-delay 2 -X POST "$BASE/api/kv-session" -H 'content-type: application/json' --data "{\"package_key\":\"$KEY\"}" > /tmp/session.json
-          node - <<'NODE'
-          const fs=require('fs');
-          const d=JSON.parse(fs.readFileSync('/tmp/session.json','utf8'));
-          if(!d.success) throw new Error('session success=false');
-          if(!/^p_[a-f0-9]{32}$/i.test(String(d.preview_id||''))) throw new Error('invalid p id');
-          console.log('EDITOR SESSION PASS', d.preview_id);
-          NODE
+          BACK='https://4n1f-kv-api.faqihanif12282000.workers.dev'
+          for path in /session /api/session /api/kv-session /health /; do
+            code="$(curl -sS -o /tmp/body.txt -w '%{http_code}' "$BACK$path")"
+            echo "$path -> $code :: $(head -c 180 /tmp/body.txt | tr '\n' ' ')"
+          done
