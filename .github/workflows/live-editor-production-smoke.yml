@@ -1,0 +1,36 @@
+name: Live Editor Production Smoke
+
+on:
+  push:
+    branches:
+      - test/live-editor-production-smoke-v1
+    paths:
+      - 'tests/live-editor-production-smoke.mjs'
+      - '.github/workflows/live-editor-production-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run production editor smoke
+        run: node tests/live-editor-production-smoke.mjs
+      - name: Upload sealed ZIP proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-editor-production-smoke-proof
+          path: artifacts/*.zip
+          if-no-files-found: ignore
+          retention-days: 3
