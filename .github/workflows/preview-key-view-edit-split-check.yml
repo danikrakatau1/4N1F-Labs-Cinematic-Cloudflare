@@ -1,0 +1,48 @@
+name: Preview Key View/Edit Split Check
+
+on:
+  push:
+    branches:
+      - fix/preview-key-view-edit-split-v1
+  workflow_dispatch:
+
+jobs:
+  preview-key-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare bundle
+        run: bash build-cloudflare.sh
+      - name: Guard Preview Key semantics
+        run: |
+          set -euo pipefail
+          test -s dist/status-motion-v1.js
+          test -s dist/editor/package-preview.html
+
+          # 4N1F_* stays user-facing preview-only and must not be rewritten into p_* in the Hub.
+          grep -Fq "const packagePreviewUrl = key => \`/editor/package-preview.html?package_key=\${encodeURIComponent(String(key).toUpperCase())}\`;" dist/status-motion-v1.js
+          grep -Fq "showHubResult(key, url);" dist/status-motion-v1.js
+          grep -Fq "Preview-only · \${key}" dist/status-motion-v1.js
+          ! grep -Fq "input.value=data.preview_id" dist/status-motion-v1.js
+
+          # p_* is an editable session path from the Hub.
+          grep -Fq "const editorUrl = previewId => \`/editor/\${encodeURIComponent(String(previewId).toLowerCase())}\`;" dist/status-motion-v1.js
+          grep -Fq "Editable session · \${id}" dist/status-motion-v1.js
+
+          # Capture layer must stop the old inline Hub handler from converting 4N1F_* into p_*.
+          grep -Fq "event.stopImmediatePropagation();" dist/status-motion-v1.js
+
+          # Preview-only resolver may create an internal temporary session, but URL identity remains the 4N1F key.
+          grep -Fq "function readPackageKey()" dist/editor/package-preview.html
+          grep -Fq "'/api/kv-session'" dist/editor/package-preview.html
+          grep -Fq "'/api/kv-preview?preview_id='" dist/editor/package-preview.html || grep -Fq "/api/kv-preview?preview_id=" dist/editor/package-preview.html
+          grep -Fq "PREVIEW ONLY" dist/editor/package-preview.html
+          grep -Fq "editorLink.href = \`/editor/\${encodeURIComponent(previewId)}\`;" dist/editor/package-preview.html
+
+          # Fetch remains a separate engine and is still present.
+          test -s dist/fetch/index.html
+          test -s dist/fetch/editor/editor.js
+          grep -q '4N1F LABS · FETCH ENGINE V2.26' dist/fetch/index.html
+
+          node --check dist/status-motion-v1.js
+          echo "4N1F PREVIEW KEY VIEW/EDIT SPLIT PASS"

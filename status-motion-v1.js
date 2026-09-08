@@ -166,6 +166,8 @@
     const input = document.getElementById('sourceInput');
     const resultBox = document.getElementById('resultBox');
     const resultId = document.getElementById('resultId');
+    const copyBtn = document.getElementById('copyBtn');
+    const openBtn = document.getElementById('openBtn');
     if (!button || !state || !stateText || !input) return;
 
     const setHubState = (message, kind='') => {
@@ -174,72 +176,80 @@
     };
     const validPackage = value => /^4N1F_[A-F0-9]{12}$/i.test(String(value || '').trim());
     const validPreview = value => /^p_[a-f0-9]{32}$/i.test(String(value || '').trim());
-    const showFallbackResult = previewId => {
-      if (resultId) resultId.textContent = previewId;
+    let currentRef = '';
+    let currentUrl = '';
+
+    const packagePreviewUrl = key => `/editor/package-preview.html?package_key=${encodeURIComponent(String(key).toUpperCase())}`;
+    const editorUrl = previewId => `/editor/${encodeURIComponent(String(previewId).toLowerCase())}`;
+    const showHubResult = (ref, url) => {
+      currentRef = ref;
+      currentUrl = url;
+      if (resultId) resultId.textContent = ref;
       resultBox?.classList.add('show');
     };
-
-    async function fallbackGenerate(initialStateText) {
-      // Native Hub handler is synchronous before its first await. If it moved the
-      // state text or disabled the button, it is healthy and this fallback stays off.
-      if (!pending.has('home-preview') || button.disabled || stateText.textContent !== initialStateText) return;
-      if (button.dataset.smFallback === 'running') return;
-
-      const value = String(input.value || '').trim();
-      if (validPreview(value)) {
-        const id = value.toLowerCase();
-        showFallbackResult(id);
-        setHubState(`Membuka ${id}`, 'ok');
-        setTimeout(() => { location.href = `/${encodeURIComponent(id)}`; }, 180);
-        return;
-      }
-      if (!validPackage(value)) {
-        setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
-        input.focus();
-        return;
-      }
-
-      button.dataset.smFallback = 'running';
-      button.disabled = true;
-      setHubState('Membuat Preview ID dari Package Key…');
-      try {
-        const response = await fetch('/api/kv-session', {
-          method:'POST',
-          headers:{'content-type':'application/json',accept:'application/json'},
-          body:JSON.stringify({package_key:value.toUpperCase()})
-        });
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data?.success || !data?.preview_id) {
-          throw new Error(data?.message || `Generate Preview gagal (${response.status}).`);
-        }
-        const id = String(data.preview_id).toLowerCase();
-        showFallbackResult(id);
-        input.value = id;
-        setHubState(`Preview session dibuat · ${id}`, 'ok');
-        setTimeout(() => { location.href = `/${encodeURIComponent(id)}`; }, 220);
-      } catch (err) {
-        setHubState(err?.message || 'Generate Preview gagal.', 'error');
-      } finally {
-        button.disabled = false;
-        delete button.dataset.smFallback;
-      }
-    }
+    const openTarget = url => {
+      const popup = window.open(url, '_blank', 'noopener');
+      if (!popup) location.href = url;
+    };
 
     bind(button, 'home-preview');
-    button.addEventListener('click', () => {
+    button.addEventListener('click', event => {
       if (button.disabled) return;
-      const initialStateText = stateText.textContent;
-      begin('home-preview', 'Membangun Preview ID dan menyiapkan portal preview…');
-      // Zero-delay watchdog: native handler should have changed state synchronously
-      // before this runs. If the screenshot state remains "Ready", recover here.
-      setTimeout(() => fallbackGenerate(initialStateText), 0);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const value = String(input.value || '').trim();
+      begin('home-preview', 'Menyiapkan Preview Key / editable session…');
+
+      if (validPackage(value)) {
+        const key = value.toUpperCase();
+        const url = packagePreviewUrl(key);
+        showHubResult(key, url);
+        setHubState(`Preview-only · ${key}`, 'ok');
+        success('home-preview', `Preview-only siap · ${key}`);
+        openTarget(url);
+        return;
+      }
+
+      if (validPreview(value)) {
+        const id = value.toLowerCase();
+        const url = editorUrl(id);
+        showHubResult(id, url);
+        setHubState(`Editable session · ${id}`, 'ok');
+        success('home-preview', `Membuka Live Editor · ${id}`);
+        openTarget(url);
+        return;
+      }
+
+      setHubState('Format harus 4N1F_XXXXXXXXXXXX atau Preview ID p_ + 32 hex.', 'error');
+      error('home-preview', 'Preview Key / Preview ID tidak valid.');
+      input.focus();
+    }, { capture:true });
+
+    copyBtn?.addEventListener('click', async event => {
+      if (!currentRef) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try {
+        await navigator.clipboard.writeText(currentRef);
+        setHubState(`${validPackage(currentRef) ? 'Preview Key' : 'Preview ID'} disalin.`, 'ok');
+      } catch {
+        setHubState('Browser tidak mengizinkan clipboard.', 'error');
+      }
+    }, { capture:true });
+
+    openBtn?.addEventListener('click', event => {
+      if (!currentUrl) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openTarget(currentUrl);
     }, { capture:true });
 
     observe(state, () => {
       if (!pending.has('home-preview')) return;
       const text = stateText.textContent || '';
       if (state.classList.contains('error') || negative(text)) error('home-preview', text || 'Generate Preview gagal.');
-      else if (state.classList.contains('ok')) success('home-preview', text || 'Preview berhasil dibuat.');
+      else if (state.classList.contains('ok')) success('home-preview', text || 'Preview siap.');
     });
   }
 
