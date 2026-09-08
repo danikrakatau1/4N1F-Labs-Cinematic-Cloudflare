@@ -1,0 +1,211 @@
+name: KV Backend Detach Assets V1
+
+on:
+  push:
+    branches:
+      - cleanup/kv-backend-detach-assets-v1
+    paths:
+      - '.github/workflows/kv-backend-detach-assets-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  detach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CF_ACCOUNT_ID: 69b3344647228e4e7c1c85f7a5136f23
+      CF_SCRIPT: 4n1f-kv-api
+      KV_NAMESPACE_ID: f5d2286e18e8401aa40ec9d8591bf8b6
+      PACKAGE_KEY: 4N1F_C7E21B9A6D04
+      BACKEND: https://4n1f-kv-api.faqihanif12282000.workers.dev
+      FRONTEND: https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Snapshot exact current backend and assert safe preconditions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backend-snapshot
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" -D backend-snapshot/script.headers "$BASE" -o backend-snapshot/script.multipart
+          curl -fsS -H "$AUTH" "$BASE/settings" -o backend-snapshot/settings.json
+          python - <<'PY'
+          import json, os, pathlib, re, hashlib
+          root=pathlib.Path('backend-snapshot')
+          settings=json.loads(root.joinpath('settings.json').read_text())
+          assert settings.get('success') is True, settings
+          bindings={b['name']:b for b in settings['result'].get('bindings',[])}
+          assert 'ASSETS' not in bindings, bindings
+          assert bindings.get('PACKAGES',{}).get('type')=='kv_namespace'
+          assert bindings['PACKAGES'].get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings.get('PUBLISH_TOKEN',{}).get('type')=='secret_text'
+          assert bindings.get('RETENTION_LIMIT',{}).get('text')=='500'
+          assert os.environ['FRONTEND'] in [x.strip() for x in bindings.get('ALLOWED_ORIGINS',{}).get('text','').split(',')]
+          headers=root.joinpath('script.headers').read_text(errors='replace')
+          ctype=next((x.split(':',1)[1].strip() for x in headers.splitlines() if x.lower().startswith('content-type:')), '')
+          m=re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))', ctype, re.I); assert m, ctype
+          boundary=(m.group(1) or m.group(2)).encode()
+          raw=root.joinpath('script.multipart').read_bytes()
+          found=None
+          for chunk in raw.split(b'--'+boundary):
+              if b'\r\n\r\n' not in chunk: continue
+              head, body=chunk.split(b'\r\n\r\n',1)
+              body=body.rstrip(b'\r\n-')
+              nm=re.search(br'name="([^"]+)"',head)
+              if nm and nm.group(1)==b'index.js': found=body; break
+          assert found, 'index.js module missing from deployed script'
+          root.joinpath('index.js').write_bytes(found)
+          digest=hashlib.sha256(found).hexdigest()
+          root.joinpath('index.sha256').write_text(digest+'\n')
+          text=found.decode('utf-8')
+          assert 'Route tidak ditemukan.' in text
+          assert 'env.ASSETS' not in text
+          assert 'BALI_LAB_KEY' not in text and 'BA11CA1D1A01' not in text
+          print('PRECONDITION=GREEN source_sha256='+digest)
+          PY
+
+      - name: Upload identical Worker module with assets explicitly not retained
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          cat > metadata.json <<'JSON'
+          {
+            "main_module": "index.js",
+            "compatibility_date": "2026-09-06",
+            "keep_assets": false,
+            "bindings": [
+              {"name":"ALLOWED_ORIGINS","type":"inherit"},
+              {"name":"PACKAGES","type":"inherit"},
+              {"name":"PUBLISH_TOKEN","type":"inherit"},
+              {"name":"RETENTION_LIMIT","type":"inherit"}
+            ],
+            "annotations": {
+              "workers/message": "4N1F backend API-only cleanup: detach legacy static assets"
+            }
+          }
+          JSON
+          curl -fsS -X PUT \
+            -H "$AUTH" \
+            -F 'metadata=@metadata.json;type=application/json' \
+            -F 'index.js=@backend-snapshot/index.js;type=application/javascript+module' \
+            "$BASE?bindings_inherit=strict" -o upload-result.json
+          python - <<'PY'
+          import json
+          d=json.load(open('upload-result.json')); assert d.get('success') is True, d
+          print('SCRIPT_UPLOAD=ACCEPTED')
+          PY
+
+      - name: Verify source identity and API-only settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts/${CF_SCRIPT}"
+          AUTH="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl -fsS -H "$AUTH" -D after.headers "$BASE" -o after.multipart
+          curl -fsS -H "$AUTH" "$BASE/settings" -o after-settings.json
+          python - <<'PY'
+          import json, os, re, hashlib, pathlib
+          settings=json.load(open('after-settings.json')); assert settings.get('success') is True, settings
+          bindings={b['name']:b for b in settings['result'].get('bindings',[])}
+          assert 'ASSETS' not in bindings, bindings
+          assert bindings.get('PACKAGES',{}).get('namespace_id')==os.environ['KV_NAMESPACE_ID']
+          assert bindings.get('PUBLISH_TOKEN',{}).get('type')=='secret_text'
+          assert bindings.get('RETENTION_LIMIT',{}).get('text')=='500'
+          assert os.environ['FRONTEND'] in [x.strip() for x in bindings.get('ALLOWED_ORIGINS',{}).get('text','').split(',')]
+          headers=pathlib.Path('after.headers').read_text(errors='replace')
+          ctype=next((x.split(':',1)[1].strip() for x in headers.splitlines() if x.lower().startswith('content-type:')), '')
+          m=re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))', ctype, re.I); assert m, ctype
+          raw=pathlib.Path('after.multipart').read_bytes(); boundary=(m.group(1) or m.group(2)).encode(); found=None
+          for chunk in raw.split(b'--'+boundary):
+              if b'\r\n\r\n' not in chunk: continue
+              head, body=chunk.split(b'\r\n\r\n',1); body=body.rstrip(b'\r\n-')
+              nm=re.search(br'name="([^"]+)"',head)
+              if nm and nm.group(1)==b'index.js': found=body; break
+          assert found
+          before=pathlib.Path('backend-snapshot/index.sha256').read_text().strip(); after=hashlib.sha256(found).hexdigest()
+          assert after==before, (before,after)
+          print('SOURCE_IDENTITY=GREEN sha256='+after)
+          print('BINDINGS=GREEN ASSETS_ABSENT=TRUE')
+          PY
+
+      - name: Wait for edge propagation
+        run: sleep 3
+
+      - name: Smoke direct backend API and prove legacy root asset is gone
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl -sS --retry 4 --retry-delay 1 --retry-all-errors -o health.json -w '%{http_code}' "$BACKEND/health")
+          test "$status" = 200
+          python - <<'PY'
+          import json
+          d=json.load(open('health.json')); assert d.get('success') is True and d.get('service')=='4n1f-kv-api', d
+          PY
+
+          root_status=$(curl -sS --retry 4 --retry-delay 1 --retry-all-errors -o root.body -w '%{http_code}' "$BACKEND/")
+          echo "ROOT_STATUS=$root_status"
+          head -c 500 root.body || true; echo
+          test "$root_status" = 404
+          python - <<'PY'
+          import json
+          d=json.load(open('root.body')); assert d.get('success') is False and d.get('message')=='Route tidak ditemukan.', d
+          PY
+
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors "$BACKEND/package/$PACKAGE_KEY" -o package.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('package.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors -X POST "$BACKEND/session" \
+            -H 'Content-Type: application/json' -H "Origin: $FRONTEND" \
+            --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o session.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('session.json')); p=str(d.get('preview_id','')).lower(); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors "$BACKEND/preview/$PREVIEW_ID" -o preview.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('preview.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "BACKEND_API=GREEN $PACKAGE_KEY -> $PREVIEW_ID"
+
+      - name: Smoke frontend direct preview and Service Binding editor path
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors "$FRONTEND/api/kv-package?package_key=$PACKAGE_KEY" -o front-package.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('front-package.json')); assert d.get('success') is True and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors -X POST "$FRONTEND/api/kv-session" \
+            -H 'Content-Type: application/json' --data "{\"package_key\":\"$PACKAGE_KEY\"}" -o front-session.json
+          PREVIEW_ID=$(python - <<'PY'
+          import json,re
+          d=json.load(open('front-session.json')); p=str(d.get('preview_id','')).lower(); assert d.get('success') is True and re.fullmatch(r'p_[a-f0-9]{32}',p), d; print(p)
+          PY
+          )
+          curl -fsS --retry 4 --retry-delay 1 --retry-all-errors "$FRONTEND/api/kv-preview?preview_id=$PREVIEW_ID" -o front-preview.json
+          PREVIEW_ID="$PREVIEW_ID" python - <<'PY'
+          import json,os
+          d=json.load(open('front-preview.json')); assert d.get('success') is True and d.get('preview_id')==os.environ['PREVIEW_ID'] and d.get('package_key')==os.environ['PACKAGE_KEY'], d
+          PY
+          echo "FRONTEND_SERVICE_BINDING=GREEN $PACKAGE_KEY -> $PREVIEW_ID"
+
+      - name: Upload rollback snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kv-backend-pre-detach-snapshot
+          path: backend-snapshot/
+          retention-days: 3
