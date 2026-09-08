@@ -1,0 +1,86 @@
+name: Final Architecture Lock Check
+
+on:
+  push:
+    paths:
+      - 'src/worker-entry.js'
+      - 'src/worker.js'
+      - 'editor/package-preview.html'
+      - 'status-motion-v1.js'
+      - 'wrangler.jsonc'
+      - '.github/workflows/4n1f-publisher-v1.yml'
+      - '.github/workflows/final-architecture-lock-check.yml'
+      - 'README.md'
+      - 'CLOUDFLARE-SETUP.md'
+      - 'docs/ARCHITECTURE-LOCK-V1.md'
+  pull_request:
+    paths:
+      - 'src/worker-entry.js'
+      - 'src/worker.js'
+      - 'editor/package-preview.html'
+      - 'status-motion-v1.js'
+      - 'wrangler.jsonc'
+      - '.github/workflows/4n1f-publisher-v1.yml'
+      - '.github/workflows/final-architecture-lock-check.yml'
+      - 'README.md'
+      - 'CLOUDFLARE-SETUP.md'
+      - 'docs/ARCHITECTURE-LOCK-V1.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  architecture-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify canonical Cloudflare bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"account_id": "69b3344647228e4e7c1c85f7a5136f23"' wrangler.jsonc
+          grep -Fq '"binding": "PREVIEW_PACKAGES"' wrangler.jsonc
+          grep -Fq '"binding": "KV_BACKEND"' wrangler.jsonc
+          grep -Fq '"service": "4n1f-kv-api"' wrangler.jsonc
+          grep -Fq '"binding": "ASSETS"' wrangler.jsonc
+
+      - name: Verify Preview Key versus editable-session split
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/worker-entry.js
+          grep -Fq "url.pathname === '/api/kv-package'" src/worker-entry.js
+          grep -Fq "url.pathname === '/api/kv-session'" src/worker-entry.js
+          grep -Fq "env.PREVIEW_PACKAGES.get(\`pkg:\${packageKey}\`" src/worker-entry.js
+          grep -Fq "env.KV_BACKEND.fetch('https://4n1f-kv-api.internal/session'" src/worker-entry.js
+          grep -Fq '/api/kv-package?package_key=' editor/package-preview.html
+          grep -Fq "editorLink.addEventListener('click'" editor/package-preview.html
+          grep -Fq "const previewId = await createSession(activePackageKey);" editor/package-preview.html
+
+      - name: Verify publisher remains deployment-independent
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Publish directly to canonical KV' .github/workflows/4n1f-publisher-v1.yml
+          grep -Fq 'Smoke-test production preview resolver' .github/workflows/4n1f-publisher-v1.yml
+          ! grep -Eq 'wrangler[[:space:]]+deploy|vercel[[:space:]]+--prod|npx[[:space:]]+vercel' .github/workflows/4n1f-publisher-v1.yml
+
+      - name: Verify obsolete semantic guards stay removed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .github/workflows/experimental-preview-key-check.yml
+          test ! -e .github/workflows/bali-lab-route-check.yml
+
+      - name: Build Cloudflare bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash build-cloudflare.sh
+          test -s dist/editor/package-preview.html
+          grep -Fq '/api/kv-package?package_key=' dist/editor/package-preview.html
+
+      - name: Architecture lock summary
+        run: echo '4N1F PREVIEW-ONLY + p_ EDITABLE SESSION + DEPLOYMENT-INDEPENDENT PUBLISHER + FETCH/STATE-SEAL BUILD = GREEN'
