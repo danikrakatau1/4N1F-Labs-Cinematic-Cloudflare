@@ -1,0 +1,41 @@
+name: Hub Visual Refinement Check
+
+on:
+  push:
+    branches:
+      - style/hub-human-refinement-v7
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Hub refinement stays visual-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'V7 — human-authored restraint pass' hub-portals-v6.css
+          grep -q '.hub::after{display:none!important' hub-portals-v6.css
+          grep -q '#generateBtn .sm-button-icon{display:none!important}' hub-portals-v6.css
+          grep -q '.hint{display:none!important}' hub-portals-v6.css
+          grep -q '4N1F_ preview-only · p_ editable' index.html
+          grep -q '/api/kv-package?package_key=' status-motion-v1.js
+          grep -q '/api/kv-preview?preview_id=' status-motion-v1.js
+
+      - name: Build Cloudflare bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash build-cloudflare.sh
+          grep -q 'V7 — human-authored restraint pass' dist/hub-portals-v6.css
+          grep -q 'hub-portals-v6.css' dist/index.html
+          node --check dist/status-motion-v1.js
