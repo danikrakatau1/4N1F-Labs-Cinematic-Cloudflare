@@ -76,29 +76,43 @@ jobs:
         run: |
           set -euo pipefail
           URL='https://4n1f-genome-shell-v1-staging.faqihanif12282000.workers.dev'
-          ready=0
-          for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsS "$URL/genome/?smoke=$GITHUB_SHA-$i" -o /tmp/genome.html \
-              && grep -q 'genome-shell-v1.2.css' /tmp/genome.html \
-              && grep -q 'genome-shell-v1.3-pearl.css' /tmp/genome.html \
-              && grep -q 'genome-shell-v1.3-pearl.js' /tmp/genome.html; then
-              ready=1
-              break
-            fi
-            sleep 4
-          done
-          test "$ready" = '1'
+
+          wait_200() {
+            label="$1"
+            path="$2"
+            outfile="$3"
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              code=$(curl -sS -o "$outfile" -w '%{http_code}' "$URL$path?smoke=$GITHUB_SHA-$i" || true)
+              echo "$label attempt=$i status=$code"
+              if [ "$code" = '200' ]; then return 0; fi
+              sleep 3
+            done
+            echo "FAILED endpoint: $label ($path)"
+            return 1
+          }
+
+          wait_200 'genome-html' '/genome/' /tmp/genome.html
           grep -q 'Site Genome' /tmp/genome.html
-          curl -fsS "$URL/genome/genome-shell-v1.2.css?smoke=$GITHUB_SHA" -o /tmp/v12.css
+          grep -q 'genome-shell-v1.2.css' /tmp/genome.html
+          grep -q 'genome-shell-v1.3-pearl.css' /tmp/genome.html
+          grep -q 'genome-shell-v1.3-pearl.js' /tmp/genome.html
+
+          wait_200 'orbit-css' '/genome/genome-shell-v1.2.css' /tmp/v12.css
           grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' /tmp/v12.css
-          curl -fsS "$URL/genome/genome-shell-v1.3-pearl.css?smoke=$GITHUB_SHA" -o /tmp/v13.css
+
+          wait_200 'pearl-css' '/genome/genome-shell-v1.3-pearl.css' /tmp/v13.css
           grep -q 'PEARL LIQUID CHAMBER' /tmp/v13.css
-          curl -fsS "$URL/genome/genome-shell-v1.3-pearl.js?smoke=$GITHUB_SHA" -o /tmp/v13.js
+
+          wait_200 'pearl-js' '/genome/genome-shell-v1.3-pearl.js' /tmp/v13.js
           grep -q 'pearl-v13-ready' /tmp/v13.js
-          curl -fsS "$URL/?smoke=$GITHUB_SHA" -o /tmp/home.html
+
+          wait_200 'hub-home' '/' /tmp/home.html
           grep -q 'GENOME' /tmp/home.html
+
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
+          echo "ui-only-api status=$code"
           test "$code" = '423'
           grep -q 'UI-only' /tmp/api.json
+
           echo "GENOME_STAGING_URL=$URL"
           echo "GENOME_SHELL_URL=$URL/genome/"
