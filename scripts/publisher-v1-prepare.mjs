@@ -13,7 +13,6 @@ if (!inputPath || !outputPath) {
 const source = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
 const packageKey = String(source.package_key || '').trim().toUpperCase();
 if (!/^4N1F_[A-F0-9]{12}$/.test(packageKey)) throw new Error('package_key harus 4N1F_ + 12 hexadecimal.');
-
 const expectedStem = path.basename(inputPath, path.extname(inputPath)).toUpperCase();
 if (expectedStem !== packageKey) throw new Error(`Nama file harus sama dengan package_key (${packageKey}.json).`);
 
@@ -40,36 +39,28 @@ function stagedPayload(dirValue) {
   const assetDir = path.resolve(repoRoot, String(dirValue));
   if (assetDir !== expectedDir) throw new Error(`staged_gzip_base64_dir harus tepat ${path.relative(repoRoot, expectedDir)}.`);
 
-  const sequence = [
-    'part-00.b64',
-    'part-01.b64',
-    'part-02.b64',
-    'part-03.b64',
-    'part-05-06.b64',
-    'part-07-08.b64'
-  ];
-  for (const name of sequence) {
-    if (!fs.existsSync(path.join(assetDir, name))) throw new Error(`Fragment wajib tidak ditemukan: ${name}`);
-  }
+  const sequence = ['part-00.b64','part-01.b64','part-02.b64','part-03.b64','part-05-06.b64','part-07-08.b64'];
+  const parts = sequence.map((name) => {
+    const file = path.join(assetDir, name);
+    if (!fs.existsSync(file)) throw new Error(`Fragment wajib tidak ditemukan: ${name}`);
+    const raw = fs.readFileSync(file, 'utf8').replace(/\s+/g, '');
+    const invalidMatches = [...raw.matchAll(/[^A-Za-z0-9+/=]/g)];
+    if (invalidMatches.length) {
+      console.error(`${name}: removing ${invalidMatches.length} non-base64 staging separator chars at positions ${invalidMatches.map(m => m.index).join(',')}`);
+    }
+    const text = raw.replace(/[^A-Za-z0-9+/=]/g, '');
+    return { name, text, rawLength: raw.length, invalid: invalidMatches.length };
+  });
 
-  const parts = sequence.map((name) => ({
-    name,
-    text: fs.readFileSync(path.join(assetDir, name), 'utf8').replace(/\s+/g, '')
-  }));
-
-  console.error('D78 staged fragments:');
-  for (const p of parts) {
-    const invalid = (p.text.match(/[^A-Za-z0-9+/=]/g) || []).length;
-    console.error(`${p.name}: chars=${p.text.length} mod4=${p.text.length % 4} invalid=${invalid} head=${p.text.slice(0,8)} tail=${p.text.slice(-8)}`);
-  }
+  console.error('D78 staged fragments after separator cleanup:');
+  for (const p of parts) console.error(`${p.name}: raw=${p.rawLength} clean=${p.text.length} mod4=${p.text.length % 4} head=${p.text.slice(0,8)} tail=${p.text.slice(-8)}`);
 
   let joined = '';
   const prefixDiagnostics = [];
   for (const p of parts) {
     joined += p.text;
     try {
-      const buf = Buffer.from(joined, 'base64');
-      const inflated = zlib.gunzipSync(buf);
+      const inflated = zlib.gunzipSync(Buffer.from(joined, 'base64'));
       prefixDiagnostics.push(`${p.name}: OK inflated=${inflated.length}`);
     } catch (error) {
       prefixDiagnostics.push(`${p.name}: ${error.code || error.name}: ${error.message}`);
@@ -78,11 +69,8 @@ function stagedPayload(dirValue) {
   console.error('D78 gzip prefix diagnostics: ' + prefixDiagnostics.join(' | '));
 
   let inflated;
-  try {
-    inflated = zlib.gunzipSync(Buffer.from(joined, 'base64'));
-  } catch (error) {
-    throw new Error(`D78 deterministic reconstruction gagal: ${error.code || error.name}: ${error.message}`);
-  }
+  try { inflated = zlib.gunzipSync(Buffer.from(joined, 'base64')); }
+  catch (error) { throw new Error(`D78 deterministic reconstruction gagal: ${error.code || error.name}: ${error.message}`); }
 
   const decoded = decodePayload(inflated.toString('utf8'));
   if (!decoded) throw new Error(`D78 gzip berhasil (${inflated.length} bytes) tetapi payload bukan JSON/HTML yang dikenali.`);
@@ -94,7 +82,6 @@ let htmlCode = String(source.html_code || '');
 let cssCode = String(source.css_code || '');
 let jsCode = String(source.js_code || '');
 let reconstruction = null;
-
 if (source.staged_gzip_base64_dir) {
   reconstruction = stagedPayload(source.staged_gzip_base64_dir);
   htmlCode = reconstruction.html;
@@ -103,25 +90,14 @@ if (source.staged_gzip_base64_dir) {
 }
 if (!htmlCode.trim()) throw new Error('html_code wajib diisi.');
 
-const packageHash = crypto.createHash('sha256')
-  .update(htmlCode).update('\u0000').update(cssCode).update('\u0000').update(jsCode).digest('hex');
-
+const packageHash = crypto.createHash('sha256').update(htmlCode).update('\u0000').update(cssCode).update('\u0000').update(jsCode).digest('hex');
 const payload = {
-  schema: '4n1f-kv-package-v1',
-  storage_engine: 'cloudflare-kv-direct',
-  package_key: packageKey,
+  schema: '4n1f-kv-package-v1', storage_engine: 'cloudflare-kv-direct', package_key: packageKey,
   project: String(source.project || '4N1F Labs').trim() || '4N1F Labs',
-  version: String(source.version || 'draft').trim() || 'draft',
-  package_hash: packageHash,
-  created_at: source.created_at || new Date().toISOString(),
-  pinned: source.pinned === true,
-  html_code: htmlCode,
-  css_code: cssCode,
-  js_code: jsCode
+  version: String(source.version || 'draft').trim() || 'draft', package_hash: packageHash,
+  created_at: source.created_at || new Date().toISOString(), pinned: source.pinned === true,
+  html_code: htmlCode, css_code: cssCode, js_code: jsCode
 };
 fs.writeFileSync(outputPath, JSON.stringify(payload));
-process.stdout.write(JSON.stringify({
-  package_key: packageKey,
-  package_hash: packageHash,
-  reconstruction: reconstruction ? { format: reconstruction.format, parts: reconstruction.parts, inflated_bytes: reconstruction.inflatedBytes } : null
-}));
+process.stdout.write(JSON.stringify({ package_key: packageKey, package_hash: packageHash,
+  reconstruction: reconstruction ? { format: reconstruction.format, parts: reconstruction.parts, inflated_bytes: reconstruction.inflatedBytes } : null }));
