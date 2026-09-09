@@ -1,0 +1,222 @@
+name: Genome Shell V1 Bootstrap
+
+on:
+  push:
+    branches:
+      - experiment/genome-shell-v1
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout experiment branch
+        uses: actions/checkout@v4
+        with:
+          ref: experiment/genome-shell-v1
+          fetch-depth: 0
+
+      - name: Install Genome Shell V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p genome
+
+          cat > genome/index.html <<'EOF'
+          <!doctype html>
+          <html lang="id">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+            <meta name="color-scheme" content="dark">
+            <meta name="theme-color" content="#04050c">
+            <meta name="4n1f-genome-shell" content="v1">
+            <title>4N1F Labs — Site Genome</title>
+            <link rel="stylesheet" href="./genome-shell-v1.css">
+          </head>
+          <body>
+            <div class="genome-bg" aria-hidden="true"><div class="genome-orb orb-a"></div><div class="genome-orb orb-b"></div><div class="genome-grid"></div></div>
+            <main class="genome-page">
+              <header class="genome-topbar">
+                <a class="brand" href="/" aria-label="4N1F Labs home"><i></i><span>4N1F LABS</span><small>CINEMATIC SYSTEM</small></a>
+                <nav class="tool-nav" aria-label="4N1F tools">
+                  <a href="/fetch/"><span class="tool-icon">↗</span><span>FETCH</span></a>
+                  <a class="active" href="/genome/" aria-current="page"><span class="tool-icon">DNA</span><span>GENOME</span></a>
+                  <a href="/"><span class="tool-icon">KV</span><span>PREVIEW</span></a>
+                </nav>
+                <span class="shell-tag">SHELL V1</span>
+              </header>
+
+              <section class="hero">
+                <div>
+                  <p class="kicker"><span></span> PREMIUM INTELLIGENCE WORKSPACE</p>
+                  <h1>Site Genome</h1>
+                  <p class="lede">Orkestrasi Fetch, X-Ray, Design DNA, component intelligence, responsive mapping, behavior, diff, dan Twin dalam satu workspace.</p>
+                </div>
+                <div class="hero-status"><span class="pulse"></span><div><b>GENOME CORE</b><small>Shell ready · engine wiring locked</small></div></div>
+              </section>
+
+              <section class="workspace" aria-label="Genome workspace">
+                <div class="workspace-main">
+                  <div class="target-bar">
+                    <div class="target-copy"><span>TARGET URL</span><small>Shell V1 · no request is sent</small></div>
+                    <div class="target-input"><span>https://</span><input id="targetUrl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="website-authorized.com"><button id="planBtn" type="button">Build Analysis Plan ↗</button></div>
+                  </div>
+
+                  <div class="preset-row" role="group" aria-label="Genome depth preset">
+                    <button class="preset active" data-preset="quick" type="button"><b>QUICK</b><small>Fetch + X-Ray + DNA</small></button>
+                    <button class="preset" data-preset="deep" type="button"><b>DEEP</b><small>Structure + behavior</small></button>
+                    <button class="preset" data-preset="twin" type="button"><b>TWIN</b><small>Full map + reconstruction</small></button>
+                  </div>
+
+                  <div class="module-head"><div><span>GENOME MODULES</span><small id="moduleCount">3 / 10 selected</small></div><span class="module-mode" id="presetLabel">QUICK GENOME</span></div>
+                  <div class="module-grid" id="moduleGrid">
+                    <button class="module enabled core" data-module="fetch" type="button"><span class="module-code">F01</span><div><b>Fetch Engine</b><small>Source-native acquisition layer</small></div><em>CORE</em></button>
+                    <button class="module enabled" data-module="xray" type="button"><span class="module-code">X02</span><div><b>Source X-Ray</b><small>DOM · CSS · scripts · metadata</small></div><em>READY</em></button>
+                    <button class="module enabled" data-module="dna" type="button"><span class="module-code">D03</span><div><b>Design DNA</b><small>Type · color · spacing · depth</small></div><em>READY</em></button>
+                    <button class="module" data-module="components" type="button"><span class="module-code">C04</span><div><b>Components</b><small>Semantic component families</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="responsive" type="button"><span class="module-code">R05</span><div><b>Responsive DNA</b><small>Viewport and breakpoint behavior</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="assets" type="button"><span class="module-code">A06</span><div><b>Asset Intelligence</b><small>Images · fonts · media graph</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="behavior" type="button"><span class="module-code">B07</span><div><b>Behavior Map</b><small>Interaction and motion grammar</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="routes" type="button"><span class="module-code">G08</span><div><b>Route Graph</b><small>Page hierarchy and relationships</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="diff" type="button"><span class="module-code">Δ09</span><div><b>Visual Diff</b><small>Render comparison and error map</small></div><em>STAGED</em></button>
+                    <button class="module" data-module="twin" type="button"><span class="module-code">T10</span><div><b>Twin Mode</b><small>Authorized reconstruction pipeline</small></div><em>STAGED</em></button>
+                  </div>
+                </div>
+
+                <aside class="intel-panel">
+                  <div class="intel-head"><span>ANALYSIS STACK</span><b id="depthScore">30%</b></div>
+                  <div class="depth-track"><i id="depthFill"></i></div>
+                  <div class="stack-list" id="stackList"></div>
+                  <div class="divider"></div>
+                  <div class="shell-lock"><span>LOCK</span><p>Genome Shell V1 hanya UI/orchestration scaffold. Fetch core, KV, Preview resolver, dan Live Editor tidak dimodifikasi.</p></div>
+                  <div class="plan-output" id="planOutput" aria-live="polite">Pilih preset atau modul untuk menyusun pipeline.</div>
+                </aside>
+              </section>
+
+              <footer class="genome-footer"><span><i></i> GENOME SHELL READY</span><span>NO FETCH · KV · LIVE EDITOR CORE MUTATION</span></footer>
+            </main>
+            <script src="./genome-shell-v1.js"></script>
+          </body>
+          </html>
+          EOF
+
+          cat > genome/genome-shell-v1.css <<'EOF'
+          @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+          *{box-sizing:border-box} :root{--bg:#04050c;--panel:rgba(9,12,20,.78);--line:rgba(255,255,255,.085);--text:#eef3f8;--muted:#748292;--mint:#9ce8c2;--cyan:#8bdcf4;--violet:#9b78ff;--sans:"Geist",Inter,sans-serif;--mono:"Geist Mono",ui-monospace,monospace;--ease:cubic-bezier(.16,1,.3,1)}
+          html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}body{min-height:100vh;overflow-x:hidden}.genome-bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;background:radial-gradient(90% 75% at 50% 0%,#10152a 0%,#070912 43%,#04050c 78%)}.genome-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18}.orb-a{width:560px;height:380px;left:8%;top:4%;background:#6b5bff}.orb-b{width:620px;height:420px;right:-4%;top:18%;background:#4bbce3}.genome-grid{position:absolute;inset:0;opacity:.14;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 72%)}
+          .genome-page{position:relative;z-index:1;width:min(1180px,calc(100% - 32px));margin:0 auto;padding:18px 0 34px}.genome-topbar{height:62px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;width:max-content}.brand i{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 18px rgba(156,232,194,.36)}.brand span{font:650 10px/1 var(--mono);letter-spacing:.13em}.brand small{color:#5e6b7a;font:540 8px/1 var(--mono);letter-spacing:.08em}.tool-nav{display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.22)}.tool-nav a{height:38px;padding:0 12px;display:flex;align-items:center;gap:7px;border-radius:12px;color:#788695;text-decoration:none;font:600 10px/1 var(--sans);transition:.22s var(--ease)}.tool-nav a:hover{background:rgba(255,255,255,.035);color:#dce5ec}.tool-nav a.active{background:rgba(255,255,255,.055);color:#eaf3f7;box-shadow:inset 0 1px rgba(255,255,255,.05)}.tool-icon{display:grid;place-items:center;width:24px;height:24px;border:1px solid rgba(255,255,255,.07);border-radius:8px;font:650 8px/1 var(--mono);color:#8ba1af}.active .tool-icon{color:var(--mint);border-color:rgba(156,232,194,.14)}.shell-tag{justify-self:end;padding:6px 8px;border:1px solid rgba(156,232,194,.10);border-radius:8px;color:#799488;background:rgba(156,232,194,.025);font:650 8px/1 var(--mono);letter-spacing:.1em}
+          .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:54px 4px 30px}.kicker{margin:0 0 13px;display:flex;align-items:center;gap:8px;color:#7f8d9d;font:620 9px/1 var(--mono);letter-spacing:.13em}.kicker span{width:18px;height:1px;background:linear-gradient(90deg,var(--violet),var(--cyan))}.hero h1{margin:0;font-size:clamp(48px,7vw,86px);line-height:.88;letter-spacing:-.058em;font-weight:590;background:linear-gradient(180deg,#fff,#d7dfea);-webkit-background-clip:text;background-clip:text;color:transparent}.lede{max-width:690px;margin:17px 0 0;color:#7e8b9a;font-size:13px;line-height:1.65}.hero-status{min-width:220px;display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(5,8,14,.48)}.pulse{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 14px rgba(156,232,194,.32)}.hero-status div{display:grid;gap:4px}.hero-status b{font:650 9px/1 var(--mono);letter-spacing:.08em}.hero-status small{color:#667382;font-size:9px}
+          .workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:linear-gradient(180deg,rgba(12,15,25,.82),rgba(6,8,14,.82));box-shadow:0 30px 80px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.04);overflow:hidden;backdrop-filter:blur(24px)}.workspace-main{padding:18px}.target-bar{padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.065)}.target-copy{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.target-copy span,.module-head span,.intel-head span{font:650 9px/1 var(--mono);letter-spacing:.10em;color:#aab6c1}.target-copy small{font:520 8px/1 var(--mono);color:#596675}.target-input{display:grid;grid-template-columns:auto 1fr auto;align-items:center;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(0,0,0,.20);overflow:hidden}.target-input>span{padding-left:13px;color:#586675;font:540 11px/1 var(--mono)}.target-input input{min-width:0;height:48px;border:0;outline:0;background:transparent;color:#e9eff4;font:520 11px/1 var(--mono)}.target-input input::placeholder{color:#4f5b69}.target-input button{align-self:stretch;border:0;border-left:1px solid rgba(255,255,255,.075);padding:0 15px;background:rgba(255,255,255,.035);color:#cdd7de;font:610 10px/1 var(--sans);cursor:pointer}.target-input button:hover{background:rgba(255,255,255,.06)}
+          .preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:15px 0}.preset{position:relative;text-align:left;padding:11px 12px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.018);color:#8996a3;cursor:pointer}.preset b{display:block;margin-bottom:4px;color:#bec8d0;font:650 9px/1 var(--mono);letter-spacing:.08em}.preset small{font-size:9px}.preset.active{border-color:rgba(139,220,244,.17);background:linear-gradient(135deg,rgba(139,220,244,.055),rgba(155,120,255,.035))}.preset.active b{color:#dcecf2}.preset.active::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.55}
+          .module-head{display:flex;align-items:flex-end;justify-content:space-between;padding:2px 1px 9px}.module-head>div{display:grid;gap:4px}.module-head small{color:#596675;font:500 8.5px/1 var(--mono)}.module-mode{color:#6f8290!important;font-size:8px!important}.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.module{position:relative;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px;min-height:64px;padding:9px;border:1px solid rgba(255,255,255,.065);border-radius:11px;background:rgba(255,255,255,.014);color:inherit;text-align:left;cursor:pointer;transition:.2s var(--ease)}.module:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.11);background:rgba(255,255,255,.026)}.module.enabled{border-color:rgba(139,220,244,.13);background:linear-gradient(110deg,rgba(139,220,244,.04),rgba(155,120,255,.018))}.module.core{cursor:default}.module-code{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(255,255,255,.07);border-radius:9px;color:#738391;background:rgba(0,0,0,.19);font:650 8px/1 var(--mono)}.module.enabled .module-code{color:#9dd7e9;border-color:rgba(139,220,244,.12)}.module div{min-width:0}.module b{display:block;margin-bottom:4px;color:#cbd5dc;font-size:10.5px;font-weight:610}.module small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#5e6b79;font-size:8.8px}.module em{font:620 7px/1 var(--mono);font-style:normal;letter-spacing:.07em;color:#53606d}.module.enabled em{color:#6f918d}.module.enabled::after{content:"";position:absolute;top:9px;right:9px;width:4px;height:4px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px rgba(156,232,194,.25)}
+          .intel-panel{padding:18px;border-left:1px solid rgba(255,255,255,.065);background:rgba(0,0,0,.10)}.intel-head{display:flex;align-items:center;justify-content:space-between}.intel-head b{color:#a8bac5;font:620 10px/1 var(--mono)}.depth-track{height:3px;margin:10px 0 15px;border-radius:999px;background:rgba(255,255,255,.045);overflow:hidden}.depth-track i{display:block;height:100%;width:30%;border-radius:inherit;background:linear-gradient(90deg,var(--violet),var(--cyan),var(--mint));transition:width .38s var(--ease)}.stack-list{display:grid;gap:5px;min-height:190px}.stack-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;border:1px solid rgba(255,255,255,.055);border-radius:8px;background:rgba(255,255,255,.012)}.stack-item span{color:#8795a2;font-size:9px}.stack-item code{color:#597080;font:560 7.5px/1 var(--mono)}.divider{height:1px;margin:15px 0;background:rgba(255,255,255,.06)}.shell-lock{padding:11px;border:1px solid rgba(156,232,194,.075);border-radius:10px;background:rgba(156,232,194,.018)}.shell-lock span{display:inline-block;margin-bottom:7px;color:#789688;font:650 8px/1 var(--mono);letter-spacing:.1em}.shell-lock p{margin:0;color:#62707d;font-size:9px;line-height:1.55}.plan-output{min-height:46px;margin-top:10px;padding:10px;border-radius:9px;background:rgba(0,0,0,.16);color:#61717f;font:520 8.5px/1.45 var(--mono)}.genome-footer{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;color:#53606e;font:560 8px/1 var(--mono);letter-spacing:.07em}.genome-footer span:first-child{display:flex;align-items:center;gap:7px;color:#70847a}.genome-footer i{width:5px;height:5px;border-radius:50%;background:var(--mint)}
+          @media(max-width:840px){.genome-topbar{grid-template-columns:1fr auto}.tool-nav{order:3;grid-column:1/-1;justify-self:center;margin-top:12px}.shell-tag{grid-column:2}.hero{padding-top:76px}.workspace{grid-template-columns:1fr}.intel-panel{border-left:0;border-top:1px solid rgba(255,255,255,.065)}.stack-list{min-height:0;grid-template-columns:repeat(2,1fr)}}
+          @media(max-width:620px){.genome-page{width:min(100% - 20px,1180px);padding-top:8px}.genome-topbar{height:auto;padding:8px 0 0}.brand small,.shell-tag{display:none}.tool-nav{width:100%;margin-top:12px}.tool-nav a{flex:1;justify-content:center;padding:0 7px}.hero{display:block;padding:42px 2px 22px}.hero-status{margin-top:18px;width:100%}.lede{font-size:11.5px}.workspace-main,.intel-panel{padding:12px}.target-input{grid-template-columns:auto 1fr}.target-input button{grid-column:1/-1;height:44px;border-left:0;border-top:1px solid rgba(255,255,255,.075)}.preset-row{grid-template-columns:1fr}.module-grid{grid-template-columns:1fr}.stack-list{grid-template-columns:1fr}.genome-footer{align-items:flex-start;gap:8px;flex-direction:column}.module small{white-space:normal}.hero h1{font-size:54px}}
+          @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.module,.depth-track i,.tool-nav a{transition:none!important}}
+          EOF
+
+          cat > genome/genome-shell-v1.js <<'EOF'
+          (()=>{
+            'use strict';
+            const presets={
+              quick:['fetch','xray','dna'],
+              deep:['fetch','xray','dna','components','responsive','assets','behavior','routes'],
+              twin:['fetch','xray','dna','components','responsive','assets','behavior','routes','diff','twin']
+            };
+            const labels={fetch:'Fetch Engine',xray:'Source X-Ray',dna:'Design DNA',components:'Components',responsive:'Responsive DNA',assets:'Asset Intelligence',behavior:'Behavior Map',routes:'Route Graph',diff:'Visual Diff',twin:'Twin Mode'};
+            const modules=[...document.querySelectorAll('.module')],presetButtons=[...document.querySelectorAll('.preset')],count=document.getElementById('moduleCount'),presetLabel=document.getElementById('presetLabel'),depthScore=document.getElementById('depthScore'),depthFill=document.getElementById('depthFill'),stack=document.getElementById('stackList'),plan=document.getElementById('planOutput'),target=document.getElementById('targetUrl'),planBtn=document.getElementById('planBtn');
+            let activePreset='quick';
+            const enabled=()=>modules.filter(m=>m.classList.contains('enabled')).map(m=>m.dataset.module);
+            function render(){
+              const list=enabled();
+              const pct=Math.round(list.length/modules.length*100);
+              count.textContent=`${list.length} / ${modules.length} selected`;
+              depthScore.textContent=`${pct}%`;depthFill.style.width=`${pct}%`;
+              stack.innerHTML=list.map((id,i)=>`<div class="stack-item"><span>${String(i+1).padStart(2,'0')} · ${labels[id]}</span><code>${id==='fetch'?'CORE':'MODULE'}</code></div>`).join('');
+              presetLabel.textContent=`${activePreset.toUpperCase()} GENOME`;
+            }
+            function applyPreset(name){activePreset=name;presetButtons.forEach(b=>b.classList.toggle('active',b.dataset.preset===name));modules.forEach(m=>m.classList.toggle('enabled',presets[name].includes(m.dataset.module)));plan.textContent=`${name.toUpperCase()} pipeline staged · ${presets[name].map(id=>labels[id]).join(' → ')}`;render()}
+            presetButtons.forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
+            modules.forEach(m=>m.addEventListener('click',()=>{if(m.dataset.module==='fetch')return;m.classList.toggle('enabled');activePreset='custom';presetButtons.forEach(b=>b.classList.remove('active'));plan.textContent='CUSTOM pipeline staged · shell only, no network request.';render()}));
+            planBtn.addEventListener('click',()=>{const host=String(target.value||'').trim()||'website-authorized.com';plan.textContent=`PLAN READY · ${host} · ${enabled().map(id=>labels[id]).join(' → ')} · execution disabled in Shell V1.`});
+            target.addEventListener('keydown',e=>{if(e.key==='Enter')planBtn.click()});
+            render();
+          })();
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new, label):
+              p=Path(path); text=p.read_text()
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f'[Genome Shell V1] missing patch anchor: {label}')
+              p.write_text(text.replace(old,new,1))
+
+          # Main hub: third primary gate, without touching Package Key behavior.
+          replace_once('index.html',
+          '''            <button class="hub-gate hub-gate-package active" type="button" aria-current="page" onclick="document.getElementById('sourceInput')?.focus()">''',
+          '''            <a class="hub-gate hub-gate-genome" href="/genome/">\n              <span class="hub-gate-copy"><strong>GENOME</strong><small>Fetch + X-Ray + Design DNA → premium intelligence</small></span>\n              <span class="hub-gate-icon" aria-hidden="true">DNA</span>\n            </a>\n            <button class="hub-gate hub-gate-package active" type="button" aria-current="page" onclick="document.getElementById('sourceInput')?.focus()">''',
+          'index Genome gate')
+
+          # Static pre-hydration layout supports three gates.
+          replace_once('hub-portals-v6.css','/* 4N1F Preview Hub V6 — two clear entry points. */','/* 4N1F Preview Hub V6 — three clear entry points (Genome Shell V1 experiment). */','portal comment')
+          replace_once('hub-portals-v6.css','.hub-gates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}', '.hub-gates{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}', 'portal base grid')
+          replace_once('hub-portals-v6.css','.hub-gates{grid-template-columns:1fr 1fr!important;gap:3px!important;', '.hub-gates{grid-template-columns:repeat(3,1fr)!important;gap:3px!important;', 'portal V7 grid')
+
+          # Runtime expandable-tab experiment: add Genome as a peer of Fetch.
+          p=Path('hub-portals-v6.js'); js=p.read_text()
+          if "hub-gate-genome" not in js:
+              js=js.replace(
+          '''    const fetchGate = gates.querySelector('.hub-gate-fetch');\n    const previewGate = gates.querySelector('.hub-gate-package');\n    if (!fetchGate || !previewGate) return;''',
+          '''    const fetchGate = gates.querySelector('.hub-gate-fetch');\n    let genomeGate = gates.querySelector('.hub-gate-genome');\n    const previewGate = gates.querySelector('.hub-gate-package');\n    if (!fetchGate || !previewGate) return;\n\n    if (!genomeGate) {\n      genomeGate = document.createElement('a');\n      genomeGate.className = 'hub-gate hub-gate-genome';\n      genomeGate.href = '/genome/';\n      gates.insertBefore(genomeGate, previewGate);\n    }''')
+              js=js.replace(
+          '''    fetchGate.innerHTML = '<span class="exp-tab-icon" aria-hidden="true">↗</span><span class="exp-tab-label">FETCH</span>';\n\n    previewGate.removeAttribute('onclick');''',
+          '''    fetchGate.innerHTML = '<span class="exp-tab-icon" aria-hidden="true">↗</span><span class="exp-tab-label">FETCH</span>';\n\n    genomeGate.setAttribute('aria-label', 'Genome — premium intelligence workspace shell');\n    genomeGate.setAttribute('title', 'Genome');\n    genomeGate.innerHTML = '<span class="exp-tab-icon" aria-hidden="true">DNA</span><span class="exp-tab-label">GENOME</span>';\n\n    previewGate.removeAttribute('onclick');''')
+              js=js.replace(
+          '''.hub.exp-tabs-beam .hub-gate-fetch:hover,\n.hub.exp-tabs-beam .hub-gate-fetch:focus-visible{''',
+          '''.hub.exp-tabs-beam .hub-gate-fetch:hover,\n.hub.exp-tabs-beam .hub-gate-fetch:focus-visible,\n.hub.exp-tabs-beam .hub-gate-genome:hover,\n.hub.exp-tabs-beam .hub-gate-genome:focus-visible{''')
+              js=js.replace(
+          '''.hub.exp-tabs-beam .hub-gate-fetch:hover .exp-tab-label,\n.hub.exp-tabs-beam .hub-gate-fetch:focus-visible .exp-tab-label{''',
+          '''.hub.exp-tabs-beam .hub-gate-fetch:hover .exp-tab-label,\n.hub.exp-tabs-beam .hub-gate-fetch:focus-visible .exp-tab-label,\n.hub.exp-tabs-beam .hub-gate-genome:hover .exp-tab-label,\n.hub.exp-tabs-beam .hub-gate-genome:focus-visible .exp-tab-label{''')
+              js=js.replace(
+          '''  .hub.exp-tabs-beam .hub-gate-fetch{flex:0 0 42px!important}\n  .hub.exp-tabs-beam .hub-gate-fetch:hover,.hub.exp-tabs-beam .hub-gate-fetch:focus-visible{width:42px!important}\n  .hub.exp-tabs-beam .hub-gate-fetch .exp-tab-label{display:none!important}''',
+          '''  .hub.exp-tabs-beam .hub-gate-fetch,.hub.exp-tabs-beam .hub-gate-genome{flex:0 0 42px!important}\n  .hub.exp-tabs-beam .hub-gate-fetch:hover,.hub.exp-tabs-beam .hub-gate-fetch:focus-visible,.hub.exp-tabs-beam .hub-gate-genome:hover,.hub.exp-tabs-beam .hub-gate-genome:focus-visible{width:42px!important}\n  .hub.exp-tabs-beam .hub-gate-fetch .exp-tab-label,.hub.exp-tabs-beam .hub-gate-genome .exp-tab-label{display:none!important}''')
+              if "hub-gate-genome" not in js:
+                  raise SystemExit('[Genome Shell V1] runtime Genome patch failed')
+              p.write_text(js)
+
+          # Build copies Genome shell only; Fetch build path remains unchanged.
+          replace_once('build-cloudflare.sh','mkdir -p dist/editor','mkdir -p dist/editor dist/genome','build mkdir')
+          replace_once('build-cloudflare.sh','cp -R editor/. dist/editor/','cp -R editor/. dist/editor/\ncp -R genome/. dist/genome/','build copy Genome')
+          replace_once('build-cloudflare.sh','test -f dist/editor/index.html','test -f dist/genome/index.html\ntest -f dist/genome/genome-shell-v1.css\ntest -f dist/genome/genome-shell-v1.js\ngrep -q \'name="4n1f-genome-shell" content="v1"\' dist/genome/index.html\ngrep -q \'href="/genome/"\' dist/index.html\ngrep -q \'hub-gate-genome\' dist/hub-portals-v6.js\n\ntest -f dist/editor/index.html','build Genome guards')
+          PY
+
+      - name: Build regression check
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash build-cloudflare.sh
+          node --check genome/genome-shell-v1.js
+          node --check hub-portals-v6.js
+          grep -q 'GENOME' dist/index.html
+          grep -q 'SITE GENOME\|Site Genome' dist/genome/index.html
+          echo 'GENOME SHELL V1 BUILD PASS'
+
+      - name: Commit tested shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/genome-shell-v1-bootstrap.yml
+          git config user.name '4N1F Labs Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html hub-portals-v6.css hub-portals-v6.js build-cloudflare.sh genome .github/workflows/genome-shell-v1-bootstrap.yml
+          git diff --cached --check
+          git commit -m 'Add Genome Shell V1 three-tool experiment'
+          git push origin HEAD:experiment/genome-shell-v1
