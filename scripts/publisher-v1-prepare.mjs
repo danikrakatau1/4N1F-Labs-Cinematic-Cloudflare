@@ -46,10 +46,12 @@ function stagedPayload(dirValue) {
     const raw = fs.readFileSync(file, 'utf8').replace(/\s+/g, '');
     const invalidMatches = [...raw.matchAll(/[^A-Za-z0-9+/=]/g)];
     if (invalidMatches.length) {
-      console.error(`${name}: removing ${invalidMatches.length} non-base64 staging separator chars at positions ${invalidMatches.map(m => m.index).join(',')}`);
+      const first = invalidMatches[0].index;
+      const last = invalidMatches[invalidMatches.length - 1].index;
+      console.error(`${name}: invalid=${invalidMatches.length} positions=${invalidMatches.map(m => m.index).join(',')} context=${JSON.stringify(raw.slice(Math.max(0, first - 24), Math.min(raw.length, last + 25)))}`);
     }
     const text = raw.replace(/[^A-Za-z0-9+/=]/g, '');
-    return { name, text, rawLength: raw.length, invalid: invalidMatches.length };
+    return { name, text, rawLength: raw.length };
   });
 
   console.error('D78 staged fragments after separator cleanup:');
@@ -89,7 +91,6 @@ if (source.staged_gzip_base64_dir) {
   jsCode = reconstruction.js;
 }
 if (!htmlCode.trim()) throw new Error('html_code wajib diisi.');
-
 const packageHash = crypto.createHash('sha256').update(htmlCode).update('\u0000').update(cssCode).update('\u0000').update(jsCode).digest('hex');
 const payload = {
   schema: '4n1f-kv-package-v1', storage_engine: 'cloudflare-kv-direct', package_key: packageKey,
