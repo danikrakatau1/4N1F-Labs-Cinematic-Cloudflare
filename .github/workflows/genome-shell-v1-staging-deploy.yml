@@ -29,7 +29,7 @@ jobs:
       - name: Build experiment bundle
         run: bash build-cloudflare.sh
 
-      - name: Inject Genome visual layers V1.2 + V1.3B + V1.4
+      - name: Inject Genome visual layers V1.2 + V1.3B + V1.4 + V1.5
         shell: bash
         run: |
           set -euo pipefail
@@ -39,8 +39,10 @@ jobs:
           test -f dist/genome/genome-shell-v1.3-pearl.js
           test -f dist/genome/genome-shell-v1.4-instrument.css
           test -f dist/genome/genome-shell-v1.4-instrument.js
-          sed -i 's#</head>#  <link rel="stylesheet" href="/genome/genome-shell-v1.2.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.3-pearl.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.4-instrument.css">\n</head>#' dist/genome/index.html
-          sed -i 's#</body>#  <script src="/genome/genome-shell-v1.2.js" defer></script>\n  <script src="/genome/genome-shell-v1.3-pearl.js" defer></script>\n  <script src="/genome/genome-shell-v1.4-instrument.js" defer></script>\n</body>#' dist/genome/index.html
+          test -f dist/genome/genome-shell-v1.5-industrial.css
+          test -f dist/genome/genome-shell-v1.5-industrial.js
+          sed -i 's#</head>#  <link rel="stylesheet" href="/genome/genome-shell-v1.2.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.3-pearl.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.4-instrument.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.5-industrial.css">\n</head>#' dist/genome/index.html
+          sed -i 's#</body>#  <script src="/genome/genome-shell-v1.2.js" defer></script>\n  <script src="/genome/genome-shell-v1.3-pearl.js" defer></script>\n  <script src="/genome/genome-shell-v1.4-instrument.js" defer></script>\n  <script src="/genome/genome-shell-v1.5-industrial.js" defer></script>\n</body>#' dist/genome/index.html
 
       - name: Verify Genome Shell bundle
         shell: bash
@@ -55,6 +57,8 @@ jobs:
           test -f dist/genome/genome-shell-v1.3-pearl.js
           test -f dist/genome/genome-shell-v1.4-instrument.css
           test -f dist/genome/genome-shell-v1.4-instrument.js
+          test -f dist/genome/genome-shell-v1.5-industrial.css
+          test -f dist/genome/genome-shell-v1.5-industrial.js
           grep -q 'GENOME' dist/index.html
           grep -q 'Site Genome' dist/genome/index.html
           grep -q 'FETCH' dist/genome/index.html
@@ -62,14 +66,13 @@ jobs:
           grep -q 'Genome Shell V1 hanya UI/orchestration scaffold' dist/genome/index.html
           grep -q '4N1F GENOME SHELL V1 — LIQUID GLASS PASS' dist/genome/index.html
           grep -q 'href="/openai-type.css"' dist/genome/index.html
-          grep -q 'genome-shell-v1.2.css' dist/genome/index.html
-          grep -q 'genome-shell-v1.3-pearl.css' dist/genome/index.html
-          grep -q 'genome-shell-v1.4-instrument.css' dist/genome/index.html
-          grep -q 'genome-shell-v1.4-instrument.js' dist/genome/index.html
+          grep -q 'genome-shell-v1.5-industrial.css' dist/genome/index.html
+          grep -q 'genome-shell-v1.5-industrial.js' dist/genome/index.html
           grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' dist/genome/genome-shell-v1.2.css
           grep -q 'PEARL LIQUID CHAMBER' dist/genome/genome-shell-v1.3-pearl.css
           grep -q 'INSTRUMENT PANEL SYSTEM' dist/genome/genome-shell-v1.4-instrument.css
-          grep -q 'instrument-v14-ready' dist/genome/genome-shell-v1.4-instrument.js
+          grep -q 'INDUSTRIAL ANTI-AI-SLOP PASS' dist/genome/genome-shell-v1.5-industrial.css
+          grep -q 'industrial-v15-ready' dist/genome/genome-shell-v1.5-industrial.js
 
       - name: Deploy isolated staging Worker
         env:
@@ -97,16 +100,15 @@ jobs:
             return 1
           }
 
-          wait_marker 'genome-html' '/genome/' /tmp/genome.html 'genome-shell-v1.4-instrument.js'
+          wait_marker 'genome-html' '/genome/' /tmp/genome.html 'genome-shell-v1.5-industrial.js'
           grep -q 'Site Genome' /tmp/genome.html
-          grep -q 'genome-shell-v1.2.css' /tmp/genome.html
-          grep -q 'genome-shell-v1.3-pearl.css' /tmp/genome.html
-          grep -q 'genome-shell-v1.4-instrument.css' /tmp/genome.html
+          grep -q 'genome-shell-v1.5-industrial.css' /tmp/genome.html
 
           wait_marker 'orbit-css' '/genome/genome-shell-v1.2.css' /tmp/v12.css 'ORBIT LIGHT + CUSTOM CHAMBER'
           wait_marker 'pearl-css' '/genome/genome-shell-v1.3-pearl.css' /tmp/v13.css 'PEARL LIQUID CHAMBER'
           wait_marker 'instrument-css' '/genome/genome-shell-v1.4-instrument.css' /tmp/v14.css 'INSTRUMENT PANEL SYSTEM'
-          wait_marker 'instrument-js' '/genome/genome-shell-v1.4-instrument.js' /tmp/v14.js 'instrument-v14-ready'
+          wait_marker 'industrial-css' '/genome/genome-shell-v1.5-industrial.css' /tmp/v15.css 'INDUSTRIAL ANTI-AI-SLOP PASS'
+          wait_marker 'industrial-js' '/genome/genome-shell-v1.5-industrial.js' /tmp/v15.js 'industrial-v15-ready'
           wait_marker 'hub-home' '/' /tmp/home.html 'GENOME'
 
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
