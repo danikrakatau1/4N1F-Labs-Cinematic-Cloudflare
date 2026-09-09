@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#04050c">
+  <meta name="4n1f-genome-shell" content="v1">
+  <title>4N1F Labs — Site Genome</title>
+  <link rel="stylesheet" href="./genome-shell-v1.css">
+</head>
+<body>
+  <div class="genome-bg" aria-hidden="true"><div class="genome-orb orb-a"></div><div class="genome-orb orb-b"></div><div class="genome-grid"></div></div>
+  <main class="genome-page">
+    <header class="genome-topbar">
+      <a class="brand" href="/" aria-label="4N1F Labs home"><i></i><span>4N1F LABS</span><small>CINEMATIC SYSTEM</small></a>
+      <nav class="tool-nav" aria-label="4N1F tools">
+        <a href="/fetch/"><span class="tool-icon">↗</span><span>FETCH</span></a>
+        <a class="active" href="/genome/" aria-current="page"><span class="tool-icon">DNA</span><span>GENOME</span></a>
+        <a href="/"><span class="tool-icon">KV</span><span>PREVIEW</span></a>
+      </nav>
+      <span class="shell-tag">SHELL V1</span>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="kicker"><span></span> PREMIUM INTELLIGENCE WORKSPACE</p>
+        <h1>Site Genome</h1>
+        <p class="lede">Orkestrasi Fetch, X-Ray, Design DNA, component intelligence, responsive mapping, behavior, diff, dan Twin dalam satu workspace.</p>
+      </div>
+      <div class="hero-status"><span class="pulse"></span><div><b>GENOME CORE</b><small>Shell ready · engine wiring locked</small></div></div>
+    </section>
+
+    <section class="workspace" aria-label="Genome workspace">
+      <div class="workspace-main">
+        <div class="target-bar">
+          <div class="target-copy"><span>TARGET URL</span><small>Shell V1 · no request is sent</small></div>
+          <div class="target-input"><span>https://</span><input id="targetUrl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="website-authorized.com"><button id="planBtn" type="button">Build Analysis Plan ↗</button></div>
+        </div>
+
+        <div class="preset-row" role="group" aria-label="Genome depth preset">
+          <button class="preset active" data-preset="quick" type="button"><b>QUICK</b><small>Fetch + X-Ray + DNA</small></button>
+          <button class="preset" data-preset="deep" type="button"><b>DEEP</b><small>Structure + behavior</small></button>
+          <button class="preset" data-preset="twin" type="button"><b>TWIN</b><small>Full map + reconstruction</small></button>
+        </div>
+
+        <div class="module-head"><div><span>GENOME MODULES</span><small id="moduleCount">3 / 10 selected</small></div><span class="module-mode" id="presetLabel">QUICK GENOME</span></div>
+        <div class="module-grid" id="moduleGrid">
+          <button class="module enabled core" data-module="fetch" type="button"><span class="module-code">F01</span><div><b>Fetch Engine</b><small>Source-native acquisition layer</small></div><em>CORE</em></button>
+          <button class="module enabled" data-module="xray" type="button"><span class="module-code">X02</span><div><b>Source X-Ray</b><small>DOM · CSS · scripts · metadata</small></div><em>READY</em></button>
+          <button class="module enabled" data-module="dna" type="button"><span class="module-code">D03</span><div><b>Design DNA</b><small>Type · color · spacing · depth</small></div><em>READY</em></button>
+          <button class="module" data-module="components" type="button"><span class="module-code">C04</span><div><b>Components</b><small>Semantic component families</small></div><em>STAGED</em></button>
+          <button class="module" data-module="responsive" type="button"><span class="module-code">R05</span><div><b>Responsive DNA</b><small>Viewport and breakpoint behavior</small></div><em>STAGED</em></button>
+          <button class="module" data-module="assets" type="button"><span class="module-code">A06</span><div><b>Asset Intelligence</b><small>Images · fonts · media graph</small></div><em>STAGED</em></button>
+          <button class="module" data-module="behavior" type="button"><span class="module-code">B07</span><div><b>Behavior Map</b><small>Interaction and motion grammar</small></div><em>STAGED</em></button>
+          <button class="module" data-module="routes" type="button"><span class="module-code">G08</span><div><b>Route Graph</b><small>Page hierarchy and relationships</small></div><em>STAGED</em></button>
+          <button class="module" data-module="diff" type="button"><span class="module-code">Δ09</span><div><b>Visual Diff</b><small>Render comparison and error map</small></div><em>STAGED</em></button>
+          <button class="module" data-module="twin" type="button"><span class="module-code">T10</span><div><b>Twin Mode</b><small>Authorized reconstruction pipeline</small></div><em>STAGED</em></button>
+        </div>
+      </div>
+
+      <aside class="intel-panel">
+        <div class="intel-head"><span>ANALYSIS STACK</span><b id="depthScore">30%</b></div>
+        <div class="depth-track"><i id="depthFill"></i></div>
+        <div class="stack-list" id="stackList"></div>
+        <div class="divider"></div>
+        <div class="shell-lock"><span>LOCK</span><p>Genome Shell V1 hanya UI/orchestration scaffold. Fetch core, KV, Preview resolver, dan Live Editor tidak dimodifikasi.</p></div>
+        <div class="plan-output" id="planOutput" aria-live="polite">Pilih preset atau modul untuk menyusun pipeline.</div>
+      </aside>
+    </section>
+
+    <footer class="genome-footer"><span><i></i> GENOME SHELL READY</span><span>NO FETCH · KV · LIVE EDITOR CORE MUTATION</span></footer>
+  </main>
+  <script src="./genome-shell-v1.js"></script>
+</body>
+</html>

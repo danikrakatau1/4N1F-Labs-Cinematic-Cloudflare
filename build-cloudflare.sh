@@ -2,7 +2,7 @@
 set -euo pipefail
 
 rm -rf dist
-mkdir -p dist/editor
+mkdir -p dist/editor dist/genome
 
 cp index.html dist/index.html
 cp preview.html dist/preview.html
@@ -17,6 +17,7 @@ cp hub-portals-v6.js dist/hub-portals-v6.js
 cp status-motion-v1.css dist/status-motion-v1.css
 cp status-motion-v1.js dist/status-motion-v1.js
 cp -R editor/. dist/editor/
+cp -R genome/. dist/genome/
 
 # Pristine Fetch V2.26 package rebuilt directly from the original healthy ZIP.
 # One continuous base64 stream; no historical correction-fragment reconstruction.
@@ -138,6 +139,13 @@ test -f dist/fetch/editor/editor.js
 test -f dist/fetch/editor/invitation.html
 test -f dist/fetch/editor/clean-preview.html
 test -f dist/fetch/editor/clean-preview.js
+test -f dist/genome/index.html
+test -f dist/genome/genome-shell-v1.css
+test -f dist/genome/genome-shell-v1.js
+grep -q 'name="4n1f-genome-shell" content="v1"' dist/genome/index.html
+grep -q 'href="/genome/"' dist/index.html
+grep -q 'hub-gate-genome' dist/hub-portals-v6.js
+
 test -f dist/editor/index.html
 test -f dist/editor/editor.js
 test -f dist/editor/addons/v1.3.2-kv-route-loader.js

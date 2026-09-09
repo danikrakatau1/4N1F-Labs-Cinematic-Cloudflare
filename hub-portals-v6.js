@@ -121,7 +121,9 @@
 }
 
 .hub.exp-tabs-beam .hub-gate-fetch:hover,
-.hub.exp-tabs-beam .hub-gate-fetch:focus-visible{
+.hub.exp-tabs-beam .hub-gate-fetch:focus-visible,
+.hub.exp-tabs-beam .hub-gate-genome:hover,
+.hub.exp-tabs-beam .hub-gate-genome:focus-visible{
   width:92px!important;
   color:#dce9f1!important;
   background:rgba(255,255,255,.035)!important;
@@ -167,7 +169,9 @@
 
 .hub.exp-tabs-beam .hub-gate-package .exp-tab-label,
 .hub.exp-tabs-beam .hub-gate-fetch:hover .exp-tab-label,
-.hub.exp-tabs-beam .hub-gate-fetch:focus-visible .exp-tab-label{
+.hub.exp-tabs-beam .hub-gate-fetch:focus-visible .exp-tab-label,
+.hub.exp-tabs-beam .hub-gate-genome:hover .exp-tab-label,
+.hub.exp-tabs-beam .hub-gate-genome:focus-visible .exp-tab-label{
   max-width:150px;
   opacity:1;
   transform:translateX(0);
@@ -288,9 +292,9 @@ body:has(.hub.exp-tabs-beam #generateBtn[aria-busy="true"]) .hub.exp-tabs-beam .
 @media(max-width:620px){
   .hub.exp-tabs-beam .hub-body{padding:13px!important}
   .hub.exp-tabs-beam .hub-gates{width:100%!important;margin-bottom:13px!important}
-  .hub.exp-tabs-beam .hub-gate-fetch{flex:0 0 42px!important}
-  .hub.exp-tabs-beam .hub-gate-fetch:hover,.hub.exp-tabs-beam .hub-gate-fetch:focus-visible{width:42px!important}
-  .hub.exp-tabs-beam .hub-gate-fetch .exp-tab-label{display:none!important}
+  .hub.exp-tabs-beam .hub-gate-fetch,.hub.exp-tabs-beam .hub-gate-genome{flex:0 0 42px!important}
+  .hub.exp-tabs-beam .hub-gate-fetch:hover,.hub.exp-tabs-beam .hub-gate-fetch:focus-visible,.hub.exp-tabs-beam .hub-gate-genome:hover,.hub.exp-tabs-beam .hub-gate-genome:focus-visible{width:42px!important}
+  .hub.exp-tabs-beam .hub-gate-fetch .exp-tab-label,.hub.exp-tabs-beam .hub-gate-genome .exp-tab-label{display:none!important}
   .hub.exp-tabs-beam .hub-gate-package{width:auto!important;flex:1 1 auto!important;min-width:0!important}
   .hub.exp-tabs-beam[data-exp-open="false"] .hub-gate-package{width:auto!important}
   .hub.exp-tabs-beam .hub-gate-package .exp-tab-label{font-size:10px!important}
@@ -358,12 +362,24 @@ body:has(.hub.exp-tabs-beam #generateBtn[aria-busy="true"]) .hub.exp-tabs-beam .
     hub.dataset.expOpen = 'true';
 
     const fetchGate = gates.querySelector('.hub-gate-fetch');
+    let genomeGate = gates.querySelector('.hub-gate-genome');
     const previewGate = gates.querySelector('.hub-gate-package');
     if (!fetchGate || !previewGate) return;
+
+    if (!genomeGate) {
+      genomeGate = document.createElement('a');
+      genomeGate.className = 'hub-gate hub-gate-genome';
+      genomeGate.href = '/genome/';
+      gates.insertBefore(genomeGate, previewGate);
+    }
 
     fetchGate.setAttribute('aria-label', 'Fetch — URL ke Source Graph V3 ke Native Editor V2.26');
     fetchGate.setAttribute('title', 'Fetch');
     fetchGate.innerHTML = '<span class="exp-tab-icon" aria-hidden="true">↗</span><span class="exp-tab-label">FETCH</span>';
+
+    genomeGate.setAttribute('aria-label', 'Genome — premium intelligence workspace shell');
+    genomeGate.setAttribute('title', 'Genome');
+    genomeGate.innerHTML = '<span class="exp-tab-icon" aria-hidden="true">DNA</span><span class="exp-tab-label">GENOME</span>';
 
     previewGate.removeAttribute('onclick');
     previewGate.setAttribute('aria-label', 'Preview Key / Editor Session — 4N1F preview-only, p_ editable');
