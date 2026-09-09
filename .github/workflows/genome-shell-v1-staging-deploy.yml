@@ -1,0 +1,60 @@
+name: Genome Shell V1 Staging Deploy
+
+on:
+  push:
+    branches:
+      - experiment/genome-shell-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genome-shell-v1-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout experiment branch
+        uses: actions/checkout@v4
+
+      - name: Build experiment bundle
+        run: bash build-cloudflare.sh
+
+      - name: Verify Genome Shell V1 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/genome/index.html
+          test -f dist/genome/genome-shell-v1.css
+          test -f dist/genome/genome-shell-v1.js
+          grep -q 'GENOME' dist/index.html
+          grep -q 'Site Genome' dist/genome/index.html
+          grep -q 'FETCH' dist/genome/index.html
+          grep -q 'PREVIEW' dist/genome/index.html
+          grep -q 'Genome Shell V1 hanya UI/orchestration scaffold' dist/genome/index.html
+
+      - name: Deploy isolated staging Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx --yes wrangler@latest deploy --config wrangler.genome-staging.jsonc
+
+      - name: Staging smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://4n1f-genome-shell-v1-staging.faqihanif12282000.workers.dev'
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "$URL/genome/" -o /tmp/genome.html; then break; fi
+            sleep 5
+          done
+          grep -q 'Site Genome' /tmp/genome.html
+          curl -fsS "$URL/" -o /tmp/home.html
+          grep -q 'GENOME' /tmp/home.html
+          code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
+          test "$code" = '423'
+          grep -q 'UI-only' /tmp/api.json
+          echo "GENOME_STAGING_URL=$URL"
+          echo "GENOME_SHELL_URL=$URL/genome/"
