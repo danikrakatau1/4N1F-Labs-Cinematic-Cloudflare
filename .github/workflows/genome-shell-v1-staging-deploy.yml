@@ -29,6 +29,15 @@ jobs:
       - name: Build experiment bundle
         run: bash build-cloudflare.sh
 
+      - name: Inject Genome Shell V1.2 visual layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/genome/genome-shell-v1.2.css
+          test -f dist/genome/genome-shell-v1.2.js
+          sed -i 's#</head>#  <link rel="stylesheet" href="/genome/genome-shell-v1.2.css">\n</head>#' dist/genome/index.html
+          sed -i 's#</body>#  <script src="/genome/genome-shell-v1.2.js" defer></script>\n</body>#' dist/genome/index.html
+
       - name: Verify Genome Shell V1 bundle
         shell: bash
         run: |
@@ -36,6 +45,8 @@ jobs:
           test -f dist/genome/index.html
           test -f dist/genome/genome-shell-v1.css
           test -f dist/genome/genome-shell-v1.js
+          test -f dist/genome/genome-shell-v1.2.css
+          test -f dist/genome/genome-shell-v1.2.js
           grep -q 'GENOME' dist/index.html
           grep -q 'Site Genome' dist/genome/index.html
           grep -q 'FETCH' dist/genome/index.html
@@ -43,6 +54,10 @@ jobs:
           grep -q 'Genome Shell V1 hanya UI/orchestration scaffold' dist/genome/index.html
           grep -q '4N1F GENOME SHELL V1 — LIQUID GLASS PASS' dist/genome/index.html
           grep -q 'href="/openai-type.css"' dist/genome/index.html
+          grep -q 'genome-shell-v1.2.css' dist/genome/index.html
+          grep -q 'genome-shell-v1.2.js' dist/genome/index.html
+          grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' dist/genome/genome-shell-v1.2.css
+          grep -q 'genome-energy-ring' dist/genome/genome-shell-v1.2.js
 
       - name: Deploy isolated staging Worker
         env:
@@ -56,7 +71,7 @@ jobs:
           URL='https://4n1f-genome-shell-v1-staging.faqihanif12282000.workers.dev'
           ready=0
           for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsS "$URL/genome/?smoke=$GITHUB_SHA-$i" -o /tmp/genome.html && grep -q 'LIQUID GLASS PASS' /tmp/genome.html && grep -q 'openai-type.css' /tmp/genome.html; then
+            if curl -fsS "$URL/genome/?smoke=$GITHUB_SHA-$i" -o /tmp/genome.html && grep -q 'genome-shell-v1.2.css' /tmp/genome.html && grep -q 'genome-shell-v1.2.js' /tmp/genome.html; then
               ready=1
               break
             fi
@@ -64,6 +79,10 @@ jobs:
           done
           test "$ready" = '1'
           grep -q 'Site Genome' /tmp/genome.html
+          curl -fsS "$URL/genome/genome-shell-v1.2.css?smoke=$GITHUB_SHA" -o /tmp/v12.css
+          grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' /tmp/v12.css
+          curl -fsS "$URL/genome/genome-shell-v1.2.js?smoke=$GITHUB_SHA" -o /tmp/v12.js
+          grep -q 'genome-energy-ring' /tmp/v12.js
           curl -fsS "$URL/?smoke=$GITHUB_SHA" -o /tmp/home.html
           grep -q 'GENOME' /tmp/home.html
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
