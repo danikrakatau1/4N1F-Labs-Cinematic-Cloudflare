@@ -1,0 +1,143 @@
+/* 4N1F GENOME SHELL V1.5 — INDUSTRIAL ANTI-AI-SLOP PASS
+   Staging-only visual layer. Less cards, stronger typography, shared rails,
+   more functional instrumentation, calmer glow. No Fetch/KV/Preview/Editor logic changes. */
+:root{
+  --i15-cyan:91,218,255;
+  --i15-mint:139,238,209;
+  --i15-violet:146,132,255;
+  --i15-amber:244,186,110;
+  --i15-line:173,196,219;
+  --i15-text:238,244,250;
+  --i15-muted:162,176,191;
+  --i15-dim:111,126,142;
+  --i15-ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ---------- TYPOGRAPHY / READABILITY ---------- */
+.hero h1{font-weight:650!important;letter-spacing:-.052em!important;color:rgb(var(--i15-text))!important}
+.lede{font-size:13px!important;line-height:1.6!important;color:rgba(var(--i15-text),.70)!important;max-width:780px!important}
+.kicker,.target-copy span,.module-head span,.intel-head span,.genome-footer,.module em,.stack-item code{color:rgba(var(--i15-text),.68)!important}
+.module b{font-size:12.2px!important;font-weight:650!important;letter-spacing:-.018em!important;color:rgba(var(--i15-text),.94)!important}
+.module small{font-size:9.9px!important;line-height:1.45!important;color:rgba(var(--i15-muted),.78)!important}
+.module-code{font-size:8.6px!important;font-weight:700!important;color:rgba(var(--i15-text),.78)!important}
+.module em{font-size:7.9px!important;font-weight:700!important;letter-spacing:.08em!important}
+.stack-item span{font-size:9.7px!important;color:rgba(var(--i15-muted),.82)!important}
+.stack-item code{font-size:7.7px!important;letter-spacing:.07em!important}
+.target-input input{font-size:12px!important;color:rgba(var(--i15-text),.84)!important}
+.target-input input::placeholder{color:rgba(var(--i15-muted),.50)!important}
+.preset b{font-size:10.2px!important;color:rgba(var(--i15-text),.88)!important}
+.preset small{font-size:9.4px!important;color:rgba(var(--i15-muted),.76)!important}
+.shell-lock p,.plan-output{color:rgba(var(--i15-muted),.76)!important;line-height:1.5!important}
+
+/* ---------- MASTER STRUCTURE: SHARED INDUSTRIAL GRID ---------- */
+.module-grid{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:0!important;
+  border-top:1px solid rgba(var(--i15-line),.10)!important;
+  border-left:1px solid rgba(var(--i15-line),.08)!important;
+  background:
+    linear-gradient(90deg,transparent calc(50% - .5px),rgba(var(--i15-line),.065) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px)),
+    rgba(5,10,17,.08)!important;
+}
+.module-grid::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,transparent 0 86px,rgba(var(--i15-line),.05) 86px 87px);opacity:.55}
+
+.module.instrument-cell{
+  min-height:86px!important;
+  margin:0!important;
+  padding:15px 16px 13px!important;
+  border:0!important;
+  border-right:1px solid rgba(var(--i15-line),.08)!important;
+  border-bottom:1px solid rgba(var(--i15-line),.08)!important;
+  border-radius:0!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.006) 34%,rgba(0,0,0,.025)),
+    rgba(7,13,21,.32)!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  transition:background .24s ease,box-shadow .24s ease,transform .22s var(--i15-ease)!important;
+}
+.module.instrument-cell::before{
+  content:""!important;position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:2px!important;inset:auto!important;
+  background:linear-gradient(180deg,rgba(var(--instrument-accent,var(--i15-cyan)),.64),rgba(var(--instrument-accent,var(--i15-cyan)),.06))!important;
+  opacity:.18!important;animation:none!important;
+}
+.module.instrument-cell::after{display:none!important}
+.module.instrument-cell:hover{
+  transform:none!important;
+  background:
+    linear-gradient(90deg,rgba(var(--instrument-accent,var(--i15-cyan)),.045),transparent 36%),
+    linear-gradient(180deg,rgba(255,255,255,.026),rgba(255,255,255,.007)),
+    rgba(8,15,24,.42)!important;
+  box-shadow:inset 3px 0 0 rgba(var(--instrument-accent,var(--i15-cyan)),.22)!important;
+}
+.module.instrument-cell.enabled{box-shadow:inset 3px 0 0 rgba(var(--instrument-accent,var(--i15-cyan)),.34)!important;background:linear-gradient(90deg,rgba(var(--instrument-accent,var(--i15-cyan)),.045),transparent 34%),rgba(8,15,24,.36)!important}
+.module.instrument-cell.enabled::before{opacity:.85!important}
+.module.instrument-cell .chamber-rail,.module.instrument-cell .chamber-corner{display:none!important}
+.module.instrument-cell .chamber-node{left:12px!important;bottom:9px!important;top:auto!important;width:3px!important;height:3px!important;opacity:.45!important}
+.module.instrument-cell.enabled .chamber-node{opacity:.95!important}
+.module.instrument-cell .module-code{
+  min-width:34px!important;height:34px!important;border-radius:3px!important;
+  border:1px solid rgba(var(--i15-line),.10)!important;background:rgba(0,0,0,.12)!important;
+  box-shadow:none!important;
+}
+
+/* ---------- FUNCTIONAL VISUALS: BIGGER, EMBEDDED, LESS DECORATIVE ---------- */
+.instrument-visual{right:14px!important;bottom:10px!important;width:112px!important;height:36px!important;opacity:.42!important;filter:saturate(.82)!important}
+.module.instrument-cell:hover .instrument-visual,.module.instrument-cell.enabled .instrument-visual{opacity:.78!important;filter:saturate(1)!important}
+.module[data-module="xray"] .instrument-visual{left:50%!important;right:14px!important;width:auto!important;height:38px!important;border-radius:2px!important}
+.module[data-module="dna"] .instrument-visual{width:126px!important;grid-template-columns:1.6fr 1fr .8fr!important}
+.module[data-module="components"] .instrument-visual{width:124px!important}
+.module[data-module="responsive"] .instrument-visual{width:124px!important}
+.module[data-module="behavior"] .instrument-visual{width:130px!important}
+.module[data-module="routes"] .instrument-visual{width:128px!important}
+.module[data-module="diff"] .instrument-visual{width:126px!important;border-radius:2px!important}
+.module[data-module="twin"] .instrument-visual{width:112px!important}
+
+/* ---------- ANALYSIS STACK: TRUE TELEMETRY TIMELINE ---------- */
+.intel-panel{padding-left:18px!important}
+.intel-panel::after{left:22px!important;top:72px!important;bottom:180px!important;background:linear-gradient(180deg,rgba(var(--i15-cyan),.28),rgba(var(--i15-violet),.10),transparent)!important}
+.stack-item.telemetry-slot{
+  margin-left:18px!important;
+  min-height:54px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(var(--i15-line),.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:12px 8px 12px 10px!important;
+}
+.stack-item.telemetry-slot::before{left:-18px!important;width:6px!important;height:6px!important;background:rgba(var(--i15-dim),.72)!important}
+.stack-item.telemetry-slot.telemetry-active::before{background:rgb(var(--i15-cyan))!important}
+.stack-item.telemetry-slot:hover{background:linear-gradient(90deg,rgba(var(--i15-cyan),.035),transparent)!important}
+.stack-item.telemetry-slot .stack-scan{opacity:.18!important}
+.shell-lock,.plan-output{border-radius:4px!important;background:rgba(255,255,255,.012)!important;border-color:rgba(var(--i15-line),.07)!important;box-shadow:none!important}
+
+/* ---------- PRESETS / COMMAND BAR: KEEP PEARL, SHARPEN GEOMETRY ---------- */
+.preset{border-radius:7px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.09)!important}
+.target-input{border-radius:7px!important}
+.target-input button{font-size:10.3px!important;letter-spacing:-.01em!important}
+.hero-status{border-radius:7px!important}
+.tool-nav{border-radius:12px!important}.tool-nav a{border-radius:8px!important}
+
+/* ---------- REDUCE GLOW / DECORATIVE NOISE ---------- */
+.module.instrument-cell,.stack-item.telemetry-slot{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.module.instrument-cell .pearl-reservoir,.module.instrument-cell .pearl-specular,.module.instrument-cell .pearl-lip,.module.instrument-cell .pearl-orbit-reflection,.stack-item .pearl-reservoir,.stack-item .pearl-specular,.stack-item .pearl-lip,.stack-item .pearl-orbit-reflection{display:none!important}
+.genome-grid{opacity:.028!important}
+
+@media(max-width:840px){
+  .module-grid{grid-template-columns:1fr!important;background:none!important}
+  .module.instrument-cell{border-right:0!important}
+  .instrument-visual{opacity:.34!important}
+  .intel-panel{padding-left:0!important}
+  .intel-panel::after{display:none!important}
+  .stack-item.telemetry-slot{margin-left:0!important;padding-left:8px!important}
+  .stack-item.telemetry-slot::before{display:none!important}
+}
+@media(max-width:620px){
+  .module.instrument-cell{min-height:80px!important;padding:13px!important}
+  .instrument-visual{width:94px!important;transform:scale(.9);transform-origin:right bottom}
+  .lede{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){.module.instrument-cell,.stack-item.telemetry-slot{transition:none!important}}
