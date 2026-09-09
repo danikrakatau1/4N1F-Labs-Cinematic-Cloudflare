@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "4n1f-genome-shell-v1-staging",
+  "account_id": "69b3344647228e4e7c1c85f7a5136f23",
+  "main": "src/genome-staging-worker.js",
+  "compatibility_date": "2026-09-09",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  }
+}
