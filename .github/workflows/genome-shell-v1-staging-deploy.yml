@@ -82,41 +82,32 @@ jobs:
           set -euo pipefail
           URL='https://4n1f-genome-shell-v1-staging.faqihanif12282000.workers.dev'
 
-          wait_200() {
+          wait_marker() {
             label="$1"
             path="$2"
             outfile="$3"
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-              code=$(curl -sS -o "$outfile" -w '%{http_code}' "$URL$path?smoke=$GITHUB_SHA-$i" || true)
+            marker="$4"
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              code=$(curl -sS -H 'Cache-Control: no-cache' -o "$outfile" -w '%{http_code}' "$URL$path?smoke=$GITHUB_SHA-$i" || true)
               echo "$label attempt=$i status=$code"
-              if [ "$code" = '200' ]; then return 0; fi
+              if [ "$code" = '200' ] && grep -q "$marker" "$outfile"; then return 0; fi
               sleep 3
             done
-            echo "FAILED endpoint: $label ($path)"
+            echo "FAILED endpoint/marker: $label ($path) marker=$marker"
             return 1
           }
 
-          wait_200 'genome-html' '/genome/' /tmp/genome.html
+          wait_marker 'genome-html' '/genome/' /tmp/genome.html 'genome-shell-v1.4-instrument.js'
           grep -q 'Site Genome' /tmp/genome.html
           grep -q 'genome-shell-v1.2.css' /tmp/genome.html
           grep -q 'genome-shell-v1.3-pearl.css' /tmp/genome.html
           grep -q 'genome-shell-v1.4-instrument.css' /tmp/genome.html
-          grep -q 'genome-shell-v1.4-instrument.js' /tmp/genome.html
 
-          wait_200 'orbit-css' '/genome/genome-shell-v1.2.css' /tmp/v12.css
-          grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' /tmp/v12.css
-
-          wait_200 'pearl-css' '/genome/genome-shell-v1.3-pearl.css' /tmp/v13.css
-          grep -q 'PEARL LIQUID CHAMBER' /tmp/v13.css
-
-          wait_200 'instrument-css' '/genome/genome-shell-v1.4-instrument.css' /tmp/v14.css
-          grep -q 'INSTRUMENT PANEL SYSTEM' /tmp/v14.css
-
-          wait_200 'instrument-js' '/genome/genome-shell-v1.4-instrument.js' /tmp/v14.js
-          grep -q 'instrument-v14-ready' /tmp/v14.js
-
-          wait_200 'hub-home' '/' /tmp/home.html
-          grep -q 'GENOME' /tmp/home.html
+          wait_marker 'orbit-css' '/genome/genome-shell-v1.2.css' /tmp/v12.css 'ORBIT LIGHT + CUSTOM CHAMBER'
+          wait_marker 'pearl-css' '/genome/genome-shell-v1.3-pearl.css' /tmp/v13.css 'PEARL LIQUID CHAMBER'
+          wait_marker 'instrument-css' '/genome/genome-shell-v1.4-instrument.css' /tmp/v14.css 'INSTRUMENT PANEL SYSTEM'
+          wait_marker 'instrument-js' '/genome/genome-shell-v1.4-instrument.js' /tmp/v14.js 'instrument-v14-ready'
+          wait_marker 'hub-home' '/' /tmp/home.html 'GENOME'
 
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
           echo "ui-only-api status=$code"
