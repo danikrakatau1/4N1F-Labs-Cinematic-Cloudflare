@@ -53,6 +53,14 @@ jobs:
           [[ "$FILE" =~ ^publisher/queue/4N1F_[A-Fa-f0-9]{12}\.json$ ]] || { echo "Path package tidak valid: $FILE" >&2; exit 1; }
           echo "PACKAGE_FILE=$FILE" >> "$GITHUB_ENV"
 
+      - name: Inspect D78 pristine Fetch generator
+        if: env.PACKAGE_FILE == 'publisher/queue/4N1F_D78A3066B413.json'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash build-cloudflare.sh >/tmp/d78-build.log
+          node scripts/d78-engine-inspect.mjs
+
       - name: Normalize and validate package
         shell: bash
         run: |
