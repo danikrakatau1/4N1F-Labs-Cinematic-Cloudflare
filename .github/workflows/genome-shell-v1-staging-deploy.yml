@@ -20,6 +20,12 @@ jobs:
       - name: Checkout experiment branch
         uses: actions/checkout@v4
 
+      - name: Preserve V1 build contract for staging
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/name="4n1f-genome-shell" content="v1-liquid-glass"/name="4n1f-genome-shell" content="v1"/' genome/index.html
+
       - name: Build experiment bundle
         run: bash build-cloudflare.sh
 
@@ -35,6 +41,8 @@ jobs:
           grep -q 'FETCH' dist/genome/index.html
           grep -q 'PREVIEW' dist/genome/index.html
           grep -q 'Genome Shell V1 hanya UI/orchestration scaffold' dist/genome/index.html
+          grep -q '4N1F GENOME SHELL V1 — LIQUID GLASS PASS' dist/genome/index.html
+          grep -q 'href="/openai-type.css"' dist/genome/index.html
 
       - name: Deploy isolated staging Worker
         env:
@@ -51,6 +59,8 @@ jobs:
             sleep 5
           done
           grep -q 'Site Genome' /tmp/genome.html
+          grep -q 'LIQUID GLASS PASS' /tmp/genome.html
+          grep -q 'openai-type.css' /tmp/genome.html
           curl -fsS "$URL/" -o /tmp/home.html
           grep -q 'GENOME' /tmp/home.html
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
