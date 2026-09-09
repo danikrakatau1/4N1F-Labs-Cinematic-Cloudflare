@@ -54,14 +54,17 @@ jobs:
         run: |
           set -euo pipefail
           URL='https://4n1f-genome-shell-v1-staging.faqihanif12282000.workers.dev'
-          for i in 1 2 3 4 5 6; do
-            if curl -fsS "$URL/genome/" -o /tmp/genome.html; then break; fi
-            sleep 5
+          ready=0
+          for i in 1 2 3 4 5 6 7 8; do
+            if curl -fsS "$URL/genome/?smoke=$GITHUB_SHA-$i" -o /tmp/genome.html && grep -q 'LIQUID GLASS PASS' /tmp/genome.html && grep -q 'openai-type.css' /tmp/genome.html; then
+              ready=1
+              break
+            fi
+            sleep 4
           done
+          test "$ready" = '1'
           grep -q 'Site Genome' /tmp/genome.html
-          grep -q 'LIQUID GLASS PASS' /tmp/genome.html
-          grep -q 'openai-type.css' /tmp/genome.html
-          curl -fsS "$URL/" -o /tmp/home.html
+          curl -fsS "$URL/?smoke=$GITHUB_SHA" -o /tmp/home.html
           grep -q 'GENOME' /tmp/home.html
           code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
           test "$code" = '423'
