@@ -3,11 +3,17 @@
 
   const root=document.documentElement;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const selectors=[
-    '.workspace','.hero-status','.tool-nav','.target-input',
-    '.preset','.module','.stack-item','.shell-lock','.plan-output'
+
+  /* V1.3B SELECTIVE PEARL
+     Keep V1.2 as the structural baseline. Pearl physics only lives on hero controls,
+     not on the dense module grid / analysis rail. */
+  const heroSelectors=[
+    '.hero-status',
+    '.tool-nav',
+    '.target-input',
+    '.preset'
   ];
-  const surfaces=[...document.querySelectorAll(selectors.join(','))];
+  const heroSurfaces=[...document.querySelectorAll(heroSelectors.join(','))];
 
   const addLayer=(el,cls)=>{
     if(el.querySelector(`:scope > .${cls}`)) return;
@@ -17,8 +23,8 @@
     el.insertBefore(span,el.firstChild);
   };
 
-  surfaces.forEach((el,index)=>{
-    el.classList.add('pearl-chamber');
+  heroSurfaces.forEach((el,index)=>{
+    el.classList.add('pearl-chamber','pearl-selective');
     el.style.setProperty('--pearl-delay',`${-(index%7)*1.37}s`);
     addLayer(el,'pearl-reservoir');
     addLayer(el,'pearl-specular');
@@ -42,6 +48,15 @@
     }
   });
 
+  /* Dense content stays V1.2 chamber language. Explicit cleanup also makes this
+     safe across hot reload / cached DOM states. */
+  document.querySelectorAll('.workspace,.module,.stack-item,.shell-lock,.plan-output').forEach(el=>{
+    el.classList.remove('pearl-chamber','pearl-hot','pearl-selective');
+    el.querySelectorAll(':scope > .pearl-reservoir,:scope > .pearl-specular,:scope > .pearl-lip,:scope > .pearl-orbit-reflection,:scope > .pearl-press-wave').forEach(node=>node.remove());
+    el.style.removeProperty('--pearl-x');
+    el.style.removeProperty('--pearl-y');
+  });
+
   if(!reduced){
     let frame=0,lastX=innerWidth*.5,lastY=innerHeight*.18;
     const updateGlobal=(x,y)=>{
@@ -58,7 +73,7 @@
     addEventListener('pointermove',e=>updateGlobal(e.clientX,e.clientY),{passive:true});
   }
 
-  const pressTargets=[...document.querySelectorAll('.module,.preset,.target-input button,.tool-nav a')];
+  const pressTargets=[...document.querySelectorAll('.preset,.target-input button,.tool-nav a')];
   pressTargets.forEach(el=>{
     el.addEventListener('pointerdown',event=>{
       if(reduced) return;
@@ -75,11 +90,9 @@
     },{passive:true});
   });
 
-  /* Give each panel family a tiny timing offset so reflections feel like one
-     moving light source crossing physical material rather than cloned cards. */
   document.querySelectorAll('.pearl-orbit-reflection').forEach((el,index)=>{
-    const duration=10.8+(index%5)*1.15;
-    const delay=-(index%8)*1.43;
+    const duration=11.6+(index%4)*1.35;
+    const delay=-(index%6)*1.55;
     el.style.animationDuration=`${duration.toFixed(2)}s`;
     el.style.animationDelay=`${delay.toFixed(2)}s`;
   });
@@ -88,5 +101,5 @@
     root.dataset.pearlPaused=document.hidden?'1':'0';
   });
 
-  root.classList.add('pearl-v13-ready');
+  root.classList.add('pearl-v13-ready','pearl-v13b-selective-ready');
 })();
