@@ -1,0 +1,148 @@
+/* 4N1F GENOME SHELL V1.4 — INSTRUMENT PANEL SYSTEM
+   Staging-only visual layer. Purpose: make each Genome module feel like a distinct instrument,
+   preserve selective pearl hero controls, keep orbit lighting, and reduce generic dashboard repetition. */
+:root{
+  --i14-cyan:81,216,255;
+  --i14-mint:127,247,212;
+  --i14-violet:142,125,255;
+  --i14-pink:211,141,255;
+  --i14-amber:255,191,122;
+  --i14-blue:101,167,255;
+  --i14-ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ---------- GLOBAL HIERARCHY ---------- */
+.module-grid{gap:10px!important}
+.module.instrument-cell{
+  min-height:74px!important;
+  border-radius:15px!important;
+  clip-path:none!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.010) 36%,rgba(0,0,0,.04)),
+    linear-gradient(140deg,rgba(14,22,34,.66),rgba(6,12,20,.72))!important;
+  border:1px solid rgba(184,218,244,.095)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 9px 22px rgba(0,0,0,.13)!important;
+  overflow:hidden!important;
+  isolation:isolate;
+  transition:transform .22s var(--i14-ease),border-color .26s ease,box-shadow .28s ease,background .28s ease!important;
+}
+.module.instrument-cell::before{
+  content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;
+  background:
+    radial-gradient(100% 90% at var(--px,50%) var(--py,12%),rgba(255,255,255,.055),transparent 42%),
+    linear-gradient(112deg,transparent 0 37%,rgba(var(--instrument-accent,var(--i14-cyan)),.035) 48%,transparent 59%)!important;
+  background-size:auto,220% 100%!important;
+  animation:i14SurfaceDrift 13s ease-in-out infinite!important;
+  opacity:.64!important;
+}
+.module.instrument-cell::after{display:none!important}
+.module.instrument-cell:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(var(--instrument-accent,var(--i14-cyan)),.20)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.095),0 16px 30px rgba(0,0,0,.18),0 0 24px rgba(var(--instrument-accent,var(--i14-cyan)),.035)!important;
+}
+.module.instrument-cell.enabled{
+  border-color:rgba(var(--instrument-accent,var(--i14-cyan)),.16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.14),0 0 18px rgba(var(--instrument-accent,var(--i14-cyan)),.025)!important;
+}
+.module.instrument-cell>*{position:relative;z-index:3}
+.module.instrument-cell .chamber-rail{opacity:.28!important}
+.module.instrument-cell.enabled .chamber-rail{opacity:.62!important}
+.module.instrument-cell .chamber-node{width:3px!important;height:3px!important;left:8px!important;box-shadow:none!important}
+.module.instrument-cell.enabled .chamber-node{box-shadow:0 0 8px rgba(var(--instrument-accent,var(--i14-mint)),.55)!important}
+.module.instrument-cell .chamber-corner{opacity:.34!important}
+
+/* ---------- EMBEDDED INSTRUMENT ZONE ---------- */
+.instrument-visual{
+  position:absolute!important;right:10px;bottom:8px;width:94px;height:29px;z-index:2!important;
+  pointer-events:none;opacity:.52;transition:opacity .22s ease,transform .24s var(--i14-ease);
+}
+.module.instrument-cell:hover .instrument-visual,.module.instrument-cell.enabled .instrument-visual{opacity:.86}
+.instrument-visual::before,.instrument-visual::after{content:"";position:absolute;pointer-events:none}
+
+/* FETCH — throughput bars */
+.module[data-module="fetch"]{--instrument-accent:var(--i14-blue)}
+.module[data-module="fetch"] .instrument-visual{display:flex;align-items:flex-end;justify-content:flex-end;gap:3px}
+.module[data-module="fetch"] .instrument-visual i{width:4px;border-radius:4px 4px 1px 1px;background:linear-gradient(180deg,rgba(var(--i14-cyan),.88),rgba(var(--i14-blue),.15));box-shadow:0 0 6px rgba(var(--i14-cyan),.10);transform-origin:bottom;animation:i14FetchPulse 1.7s ease-in-out infinite alternate}
+.module[data-module="fetch"] .instrument-visual i:nth-child(1){height:8px}.module[data-module="fetch"] .instrument-visual i:nth-child(2){height:17px;animation-delay:-.5s}.module[data-module="fetch"] .instrument-visual i:nth-child(3){height:12px;animation-delay:-.9s}.module[data-module="fetch"] .instrument-visual i:nth-child(4){height:23px;animation-delay:-1.2s}.module[data-module="fetch"] .instrument-visual i:nth-child(5){height:15px;animation-delay:-.3s}.module[data-module="fetch"] .instrument-visual i:nth-child(6){height:20px;animation-delay:-.7s}
+
+/* X-RAY — scanner */
+.module[data-module="xray"]{--instrument-accent:var(--i14-violet)}
+.module[data-module="xray"] .instrument-visual{border:1px solid rgba(var(--i14-violet),.16);border-radius:8px;background:linear-gradient(180deg,rgba(var(--i14-violet),.025),transparent)}
+.module[data-module="xray"] .instrument-visual::before{left:7px;right:7px;height:1px;top:8px;background:linear-gradient(90deg,transparent,rgba(var(--i14-cyan),.85),transparent);box-shadow:0 0 8px rgba(var(--i14-cyan),.35);animation:i14XrayScan 2.8s ease-in-out infinite}
+.module[data-module="xray"] .instrument-visual::after{inset:6px;background:repeating-linear-gradient(90deg,rgba(var(--i14-violet),.13) 0 1px,transparent 1px 9px);opacity:.6}
+
+/* DNA — token bars */
+.module[data-module="dna"]{--instrument-accent:var(--i14-pink)}
+.module[data-module="dna"] .instrument-visual{display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:4px;align-content:center}
+.module[data-module="dna"] .instrument-visual i{height:5px;border-radius:99px;background:linear-gradient(90deg,rgba(var(--i14-violet),.30),rgba(var(--i14-pink),.85));animation:i14TokenBreath 3s ease-in-out infinite}
+.module[data-module="dna"] .instrument-visual i:nth-child(2){background:linear-gradient(90deg,rgba(var(--i14-cyan),.30),rgba(var(--i14-mint),.82));animation-delay:-1s}.module[data-module="dna"] .instrument-visual i:nth-child(3){background:linear-gradient(90deg,rgba(var(--i14-amber),.28),rgba(var(--i14-pink),.72));animation-delay:-1.8s}
+
+/* COMPONENTS — component cluster */
+.module[data-module="components"]{--instrument-accent:var(--i14-mint)}
+.module[data-module="components"] .instrument-visual i{position:absolute;width:19px;height:10px;border:1px solid rgba(var(--i14-mint),.30);border-radius:5px;background:rgba(var(--i14-mint),.025)}
+.module[data-module="components"] .instrument-visual i:nth-child(1){left:8px;top:5px}.module[data-module="components"] .instrument-visual i:nth-child(2){left:31px;top:12px}.module[data-module="components"] .instrument-visual i:nth-child(3){left:57px;top:4px}.module[data-module="components"] .instrument-visual::after{left:18px;right:18px;top:15px;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--i14-mint),.28),transparent)}
+
+/* RESPONSIVE — viewport triptych */
+.module[data-module="responsive"]{--instrument-accent:var(--i14-cyan)}
+.module[data-module="responsive"] .instrument-visual{display:flex;align-items:flex-end;justify-content:flex-end;gap:5px}
+.module[data-module="responsive"] .instrument-visual i{border:1px solid rgba(var(--i14-cyan),.26);border-radius:4px;background:rgba(var(--i14-cyan),.025);box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.module[data-module="responsive"] .instrument-visual i:nth-child(1){width:30px;height:20px}.module[data-module="responsive"] .instrument-visual i:nth-child(2){width:20px;height:23px}.module[data-module="responsive"] .instrument-visual i:nth-child(3){width:11px;height:19px}
+
+/* ASSETS — asset strip */
+.module[data-module="assets"]{--instrument-accent:var(--i14-amber)}
+.module[data-module="assets"] .instrument-visual{display:flex;align-items:center;justify-content:flex-end;gap:4px}
+.module[data-module="assets"] .instrument-visual i{width:17px;height:17px;border-radius:5px;background:linear-gradient(145deg,rgba(var(--i14-amber),.15),rgba(var(--i14-pink),.025));border:1px solid rgba(var(--i14-amber),.18)}
+.module[data-module="assets"] .instrument-visual i:nth-child(2){height:22px}.module[data-module="assets"] .instrument-visual i:nth-child(3){height:14px}
+
+/* BEHAVIOR — waveform */
+.module[data-module="behavior"]{--instrument-accent:var(--i14-mint)}
+.module[data-module="behavior"] .instrument-visual::before{left:4px;right:4px;top:14px;height:1px;background:rgba(var(--i14-mint),.10)}
+.module[data-module="behavior"] .instrument-visual::after{left:5px;top:5px;width:84px;height:19px;background:linear-gradient(90deg,transparent 0 4%,rgba(var(--i14-mint),.8) 4% 6%,transparent 6% 15%,rgba(var(--i14-cyan),.55) 15% 19%,transparent 19% 29%,rgba(var(--i14-mint),.75) 29% 31%,transparent 31% 42%,rgba(var(--i14-cyan),.45) 42% 47%,transparent 47% 61%,rgba(var(--i14-mint),.82) 61% 64%,transparent 64% 100%);clip-path:polygon(0 55%,8% 52%,15% 75%,22% 28%,32% 57%,43% 42%,54% 66%,65% 20%,75% 59%,86% 45%,100% 52%,100% 56%,86% 50%,75% 64%,65% 26%,54% 71%,43% 47%,32% 62%,22% 33%,15% 80%,8% 57%,0 60%);filter:drop-shadow(0 0 5px rgba(var(--i14-mint),.25));animation:i14Wave 2.6s ease-in-out infinite}
+
+/* ROUTES — node graph */
+.module[data-module="routes"]{--instrument-accent:var(--i14-blue)}
+.module[data-module="routes"] .instrument-visual{background:linear-gradient(27deg,transparent 48%,rgba(var(--i14-blue),.20) 49% 51%,transparent 52%),linear-gradient(-28deg,transparent 48%,rgba(var(--i14-cyan),.16) 49% 51%,transparent 52%)}
+.module[data-module="routes"] .instrument-visual i{position:absolute;width:5px;height:5px;border-radius:50%;background:rgb(var(--i14-cyan));box-shadow:0 0 8px rgba(var(--i14-cyan),.35)}
+.module[data-module="routes"] .instrument-visual i:nth-child(1){left:8px;top:16px}.module[data-module="routes"] .instrument-visual i:nth-child(2){left:43px;top:5px}.module[data-module="routes"] .instrument-visual i:nth-child(3){left:78px;top:18px;animation:i14NodeRoute 2.8s ease-in-out infinite}
+
+/* DIFF — before/after slit */
+.module[data-module="diff"]{--instrument-accent:var(--i14-pink)}
+.module[data-module="diff"] .instrument-visual{border-radius:7px;overflow:hidden;border:1px solid rgba(var(--i14-pink),.13);background:linear-gradient(90deg,rgba(var(--i14-violet),.10) 0 50%,rgba(var(--i14-cyan),.07) 50%)}
+.module[data-module="diff"] .instrument-visual::before{top:0;bottom:0;left:49%;width:1px;background:rgba(255,255,255,.48);box-shadow:0 0 7px rgba(var(--i14-pink),.28);animation:i14DiffSlit 3.8s ease-in-out infinite}
+.module[data-module="diff"] .instrument-visual::after{left:7px;right:7px;top:8px;height:1px;background:repeating-linear-gradient(90deg,rgba(var(--i14-pink),.18) 0 7px,transparent 7px 13px)}
+
+/* TWIN — dual ring */
+.module[data-module="twin"]{--instrument-accent:var(--i14-pink)}
+.module[data-module="twin"] .instrument-visual::before{width:24px;height:24px;right:27px;top:2px;border-radius:50%;border:1px solid rgba(var(--i14-pink),.38);border-top-color:rgba(var(--i14-cyan),.95);animation:i14TwinSpin 4.8s linear infinite}
+.module[data-module="twin"] .instrument-visual::after{width:15px;height:15px;right:31px;top:6px;border-radius:50%;border:1px solid rgba(var(--i14-mint),.36);border-left-color:rgba(var(--i14-violet),.95);animation:i14TwinSpin 3.3s linear infinite reverse}
+
+/* ---------- ANALYSIS STACK → TELEMETRY RAIL ---------- */
+.intel-panel{position:relative!important}
+.intel-panel::after{content:"";position:absolute;left:16px;top:74px;bottom:190px;width:1px;background:linear-gradient(180deg,rgba(var(--i14-cyan),.20),rgba(var(--i14-violet),.10),transparent);box-shadow:0 0 10px rgba(var(--i14-cyan),.06);pointer-events:none}
+.stack-item.telemetry-slot{margin-left:8px!important;border-radius:11px!important;clip-path:none!important;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008))!important;border-color:rgba(186,217,239,.085)!important;box-shadow:inset 0 1px rgba(255,255,255,.045)!important}
+.stack-item.telemetry-slot::before{content:"";position:absolute;left:-14px;top:50%;width:5px;height:5px;margin-top:-2px;border-radius:50%;background:rgba(131,153,172,.55);box-shadow:0 0 0 3px rgba(255,255,255,.015)}
+.stack-item.telemetry-slot.telemetry-active::before{background:rgb(var(--i14-cyan));box-shadow:0 0 10px rgba(var(--i14-cyan),.58),0 0 0 3px rgba(var(--i14-cyan),.03)}
+.stack-item.telemetry-slot .stack-scan{opacity:.36!important}
+.depth-track::after{width:10px!important;height:10px!important;margin-top:-5px!important;filter:blur(.25px)!important;box-shadow:0 0 12px rgba(var(--i14-cyan),.30)!important}
+
+/* lock/info are deliberately calm */
+.shell-lock,.plan-output{background:linear-gradient(180deg,rgba(255,255,255,.020),rgba(255,255,255,.006))!important;border-color:rgba(186,217,239,.07)!important;box-shadow:inset 0 1px rgba(255,255,255,.035)!important;clip-path:none!important}
+
+/* ---------- PEARL CONTROLS STAY HERO-ONLY ---------- */
+.hero-status.pearl-chamber,.tool-nav.pearl-chamber,.target-input.pearl-chamber,.preset.pearl-chamber{filter:saturate(.96)}
+.preset.pearl-chamber{border-radius:14px!important;clip-path:none!important}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes i14SurfaceDrift{0%,100%{background-position:0 0,0 0}50%{background-position:0 0,100% 0}}
+@keyframes i14FetchPulse{from{transform:scaleY(.62);opacity:.45}to{transform:scaleY(1.06);opacity:.9}}
+@keyframes i14XrayScan{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(12px);opacity:1}}
+@keyframes i14TokenBreath{0%,100%{transform:scaleX(.78);opacity:.45}50%{transform:scaleX(1);opacity:.95}}
+@keyframes i14Wave{0%,100%{transform:translateY(0) scaleY(.88)}50%{transform:translateY(-1px) scaleY(1.08)}}
+@keyframes i14NodeRoute{0%,100%{opacity:.35;transform:scale(.7)}50%{opacity:1;transform:scale(1.25)}}
+@keyframes i14DiffSlit{0%,100%{left:34%}50%{left:66%}}
+@keyframes i14TwinSpin{to{transform:rotate(360deg)}}
+
+@media(max-width:840px){.instrument-visual{width:78px;opacity:.40}.intel-panel::after{display:none}}
+@media(max-width:620px){.instrument-visual{display:none!important}.module.instrument-cell{min-height:68px!important}}
+@media(prefers-reduced-motion:reduce){.module.instrument-cell::before,.instrument-visual *, .instrument-visual::before,.instrument-visual::after{animation:none!important}.module.instrument-cell{transition:none!important}}
