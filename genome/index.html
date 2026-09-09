@@ -5,9 +5,211 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#04050c">
-  <meta name="4n1f-genome-shell" content="v1">
+  <meta name="4n1f-genome-shell" content="v1-liquid-glass">
   <title>4N1F Labs — Site Genome</title>
+  <link rel="stylesheet" href="/openai-type.css">
   <link rel="stylesheet" href="./genome-shell-v1.css">
+  <style>
+    /* 4N1F GENOME SHELL V1 — LIQUID GLASS PASS
+       Visual-only. No Fetch/KV/Preview/Live Editor execution is enabled here. */
+    :root{
+      --liq-cyan:126,220,255;
+      --liq-mint:157,241,207;
+      --liq-violet:157,125,255;
+      --liq-white:244,249,255;
+      --liq-x:50%;
+      --liq-y:18%;
+      --liq-ease:cubic-bezier(.16,1,.3,1);
+      --sans:var(--openai-sans,"OpenAI Sans",Inter,"Geist",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif);
+    }
+
+    html,body,button,input{font-family:var(--sans)!important}
+    .brand span,.brand small,.shell-tag,.kicker,.target-copy span,.target-copy small,.module-head span,.module-head small,.intel-head span,.intel-head b,.module-code,.module em,.stack-item code,.plan-output,.genome-footer{font-family:var(--openai-mono,"Geist Mono",ui-monospace,monospace)!important}
+    .hero h1{font-family:var(--sans)!important;font-weight:600!important;letter-spacing:-.058em!important}
+    .lede,.module b,.module small,.preset small,.hero-status small,.shell-lock p,.stack-item span{font-family:var(--sans)!important}
+
+    .genome-bg{background:
+      radial-gradient(70% 58% at 18% 5%,rgba(var(--liq-violet),.18),transparent 62%),
+      radial-gradient(72% 64% at 90% 30%,rgba(var(--liq-cyan),.15),transparent 64%),
+      radial-gradient(50% 42% at 52% 78%,rgba(var(--liq-mint),.08),transparent 70%),
+      linear-gradient(180deg,#080b18 0%,#050711 46%,#03040a 100%)!important;
+    }
+    .genome-bg::before,.genome-bg::after{content:"";position:absolute;inset:-20%;pointer-events:none;will-change:transform,filter,opacity}
+    .genome-bg::before{
+      background:
+        radial-gradient(36% 30% at 32% 38%,rgba(var(--liq-violet),.18),transparent 72%),
+        radial-gradient(35% 30% at 70% 44%,rgba(var(--liq-cyan),.16),transparent 72%),
+        radial-gradient(28% 24% at 55% 70%,rgba(var(--liq-mint),.10),transparent 74%);
+      filter:blur(44px) saturate(135%);
+      opacity:.72;
+      animation:genomeLiquidDrift 16s ease-in-out infinite alternate;
+    }
+    .genome-bg::after{
+      background:
+        conic-gradient(from 210deg at 45% 42%,transparent 0 18%,rgba(255,255,255,.035) 24%,transparent 31% 55%,rgba(var(--liq-cyan),.05) 62%,transparent 70%),
+        radial-gradient(40% 20% at 50% 0%,rgba(255,255,255,.10),transparent 72%);
+      filter:blur(24px);
+      opacity:.52;
+      mix-blend-mode:screen;
+      animation:genomeCausticDrift 22s linear infinite;
+    }
+    .genome-grid{opacity:.055!important;mask-image:linear-gradient(to bottom,#000,transparent 66%)!important}
+    .genome-orb{filter:blur(105px)!important;opacity:.22!important}
+
+    .workspace,
+    .hero-status,
+    .tool-nav,
+    .shell-tag,
+    .target-input,
+    .preset,
+    .module,
+    .stack-item,
+    .shell-lock,
+    .plan-output{
+      position:relative;
+      isolation:isolate;
+      overflow:hidden;
+      transform:translateZ(0);
+      -webkit-backdrop-filter:blur(28px) saturate(145%);
+      backdrop-filter:blur(28px) saturate(145%);
+    }
+
+    .workspace{
+      border:1px solid rgba(255,255,255,.145)!important;
+      border-radius:28px!important;
+      background:
+        radial-gradient(120% 100% at var(--liq-x) var(--liq-y),rgba(255,255,255,.085),transparent 34%),
+        linear-gradient(150deg,rgba(36,42,61,.34),rgba(13,17,27,.44) 46%,rgba(5,8,14,.52) 100%)!important;
+      box-shadow:
+        0 42px 120px rgba(0,0,0,.48),
+        0 10px 34px rgba(0,0,0,.25),
+        0 0 64px rgba(var(--liq-violet),.035),
+        inset 0 1px 0 rgba(255,255,255,.18),
+        inset 0 -1px 0 rgba(0,0,0,.34)!important;
+      -webkit-backdrop-filter:blur(44px) saturate(165%) contrast(1.04)!important;
+      backdrop-filter:blur(44px) saturate(165%) contrast(1.04)!important;
+    }
+    .workspace::before{
+      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+      background:
+        radial-gradient(46% 48% at var(--liq-x) var(--liq-y),rgba(var(--liq-white),.14),transparent 62%),
+        radial-gradient(32% 54% at 2% 8%,rgba(var(--liq-violet),.11),transparent 74%),
+        radial-gradient(38% 58% at 98% 88%,rgba(var(--liq-cyan),.09),transparent 74%),
+        linear-gradient(180deg,rgba(255,255,255,.055),transparent 15%);
+      mix-blend-mode:screen;
+      opacity:.82;
+      transition:opacity .35s ease;
+    }
+    .workspace::after{
+      content:"";position:absolute;inset:1px;z-index:4;pointer-events:none;border-radius:27px;
+      background:linear-gradient(112deg,transparent 3%,rgba(255,255,255,.08) 22%,transparent 36% 66%,rgba(var(--liq-cyan),.065) 82%,transparent 96%);
+      opacity:.48;
+      mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+      padding:1px;
+      -webkit-mask-composite:xor;mask-composite:exclude;
+    }
+    .workspace-main,.intel-panel{background:transparent!important}
+    .intel-panel{border-left-color:rgba(255,255,255,.085)!important}
+
+    .hero-status,.tool-nav,.shell-tag,.target-input,.preset,.module,.stack-item,.shell-lock,.plan-output{
+      border-color:rgba(255,255,255,.105)!important;
+      background:
+        radial-gradient(120% 110% at var(--px,50%) var(--py,10%),rgba(255,255,255,.085),transparent 34%),
+        linear-gradient(160deg,rgba(255,255,255,.062),rgba(255,255,255,.020) 48%,rgba(0,0,0,.09))!important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.105),
+        inset 0 -1px 0 rgba(0,0,0,.16),
+        0 10px 28px rgba(0,0,0,.10)!important;
+      transition:transform .28s var(--liq-ease),border-color .28s ease,background .28s ease,box-shadow .32s var(--liq-ease)!important;
+    }
+    .hero-status::before,.tool-nav::before,.target-input::before,.preset::before,.module::before,.stack-item::before,.shell-lock::before,.plan-output::before{
+      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+      background:
+        radial-gradient(70% 90% at var(--px,50%) var(--py,10%),rgba(var(--liq-white),.14),transparent 52%),
+        radial-gradient(36% 70% at 4% 10%,rgba(var(--liq-violet),.075),transparent 76%),
+        radial-gradient(36% 70% at 96% 90%,rgba(var(--liq-cyan),.065),transparent 76%);
+      opacity:.64;
+      transition:opacity .26s ease;
+    }
+    .hero-status::after,.target-input::after,.preset::after,.module::after,.stack-item::after,.shell-lock::after{
+      content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+      background:linear-gradient(120deg,rgba(255,255,255,.055),transparent 22% 70%,rgba(var(--liq-cyan),.025));
+      opacity:.75;
+    }
+
+    .tool-nav{border-radius:22px!important;padding:5px!important;background:linear-gradient(180deg,rgba(31,36,49,.38),rgba(8,11,18,.40))!important}
+    .tool-nav a{position:relative;z-index:2;border-radius:16px!important}
+    .tool-nav a.active{
+      background:linear-gradient(180deg,rgba(255,255,255,.115),rgba(255,255,255,.055))!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 8px 20px rgba(0,0,0,.12)!important;
+    }
+    .shell-tag{border-radius:12px!important}
+
+    .hero-status{border-radius:18px!important;padding:14px 15px!important}
+    .hero-status:hover,.preset:hover,.module:hover,.stack-item:hover{
+      border-color:rgba(255,255,255,.17)!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 14px 32px rgba(0,0,0,.14),0 0 30px rgba(var(--liq-cyan),.028)!important;
+    }
+    .hero-status:hover::before,.preset:hover::before,.module:hover::before,.stack-item:hover::before{opacity:.95}
+
+    .target-input{border-radius:17px!important;min-height:54px;background:linear-gradient(180deg,rgba(11,15,24,.44),rgba(4,7,12,.48))!important}
+    .target-input input{font-family:var(--openai-mono,"Geist Mono",ui-monospace,monospace)!important;font-size:11px!important}
+    .target-input button{position:relative;z-index:2;border-left-color:rgba(255,255,255,.09)!important;background:rgba(255,255,255,.035)!important;font-family:var(--sans)!important;font-weight:600!important}
+    .target-input button:hover{background:rgba(255,255,255,.075)!important}
+
+    .preset{border-radius:15px!important;min-height:58px!important;padding:12px 13px!important}
+    .preset.active{
+      border-color:rgba(var(--liq-cyan),.28)!important;
+      background:
+        radial-gradient(110% 120% at var(--px,50%) var(--py,10%),rgba(255,255,255,.11),transparent 38%),
+        linear-gradient(135deg,rgba(var(--liq-cyan),.085),rgba(var(--liq-violet),.055))!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 10px 28px rgba(0,0,0,.12),0 0 24px rgba(var(--liq-cyan),.035)!important;
+    }
+    .preset.active::after{left:14px!important;right:14px!important;background:linear-gradient(90deg,transparent,rgba(var(--liq-cyan),.86),rgba(var(--liq-mint),.80),transparent)!important}
+
+    .module-grid{gap:9px!important}
+    .module{min-height:68px!important;border-radius:17px!important;padding:11px!important}
+    .module.enabled{
+      border-color:rgba(var(--liq-cyan),.19)!important;
+      background:
+        radial-gradient(115% 110% at var(--px,50%) var(--py,10%),rgba(255,255,255,.105),transparent 36%),
+        linear-gradient(125deg,rgba(var(--liq-cyan),.060),rgba(var(--liq-violet),.028) 52%,rgba(255,255,255,.018))!important;
+    }
+    .module.enabled::after{
+      width:5px!important;height:5px!important;top:11px!important;right:11px!important;
+      background:rgb(var(--liq-mint))!important;
+      box-shadow:0 0 12px rgba(var(--liq-mint),.56)!important;
+    }
+    .module-code{border-color:rgba(255,255,255,.10)!important;border-radius:11px!important;background:rgba(0,0,0,.16)!important;box-shadow:inset 0 1px rgba(255,255,255,.045)}
+    .module b{font-size:10.8px!important;font-weight:600!important;letter-spacing:-.012em}
+    .module small{font-size:8.9px!important;color:#6e7b88!important}
+
+    .stack-item{border-radius:13px!important;padding:10px 11px!important}
+    .depth-track{height:4px!important;background:rgba(255,255,255,.055)!important;box-shadow:inset 0 1px rgba(0,0,0,.22)}
+    .depth-track i{box-shadow:0 0 16px rgba(var(--liq-cyan),.20)}
+    .shell-lock{border-radius:15px!important;padding:13px!important}
+    .plan-output{border-radius:13px!important;padding:12px!important}
+
+    @keyframes genomeLiquidDrift{
+      0%{transform:translate3d(-2%,-1%,0) scale(1.02) rotate(-1deg)}
+      100%{transform:translate3d(3%,2%,0) scale(1.08) rotate(2deg)}
+    }
+    @keyframes genomeCausticDrift{
+      0%{transform:translate3d(-2%,0,0) rotate(0deg) scale(1.04)}
+      50%{transform:translate3d(2%,-1%,0) rotate(2deg) scale(1.08)}
+      100%{transform:translate3d(-2%,0,0) rotate(0deg) scale(1.04)}
+    }
+
+    @media(max-width:840px){.intel-panel{border-left:0!important;border-top:1px solid rgba(255,255,255,.085)!important}.workspace{border-radius:24px!important}.workspace::after{border-radius:23px!important}}
+    @media(max-width:620px){
+      .workspace{border-radius:21px!important;-webkit-backdrop-filter:blur(34px) saturate(150%)!important;backdrop-filter:blur(34px) saturate(150%)!important}
+      .workspace::after{border-radius:20px!important}
+      .tool-nav{border-radius:19px!important}
+      .module,.preset,.target-input,.hero-status{border-radius:15px!important}
+    }
+    @media(prefers-reduced-motion:reduce){.genome-bg::before,.genome-bg::after{animation:none!important}.workspace,.module,.preset,.stack-item{transition:none!important}}
+  </style>
 </head>
 <body>
   <div class="genome-bg" aria-hidden="true"><div class="genome-orb orb-a"></div><div class="genome-orb orb-b"></div><div class="genome-grid"></div></div>
@@ -72,5 +274,29 @@
     <footer class="genome-footer"><span><i></i> GENOME SHELL READY</span><span>NO FETCH · KV · LIVE EDITOR CORE MUTATION</span></footer>
   </main>
   <script src="./genome-shell-v1.js"></script>
+  <script>
+    (()=>{
+      'use strict';
+      const root=document.documentElement;
+      const workspace=document.querySelector('.workspace');
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(!reduced&&workspace){
+        workspace.addEventListener('pointermove',event=>{
+          const r=workspace.getBoundingClientRect();
+          root.style.setProperty('--liq-x',`${((event.clientX-r.left)/r.width*100).toFixed(2)}%`);
+          root.style.setProperty('--liq-y',`${((event.clientY-r.top)/r.height*100).toFixed(2)}%`);
+        },{passive:true});
+      }
+      const glass=[...document.querySelectorAll('.hero-status,.tool-nav,.target-input,.preset,.module,.stack-item,.shell-lock,.plan-output')];
+      if(!reduced) glass.forEach(el=>{
+        el.addEventListener('pointermove',event=>{
+          const r=el.getBoundingClientRect();
+          el.style.setProperty('--px',`${((event.clientX-r.left)/r.width*100).toFixed(1)}%`);
+          el.style.setProperty('--py',`${((event.clientY-r.top)/r.height*100).toFixed(1)}%`);
+        },{passive:true});
+        el.addEventListener('pointerleave',()=>{el.style.setProperty('--px','50%');el.style.setProperty('--py','10%')},{passive:true});
+      });
+    })();
+  </script>
 </body>
 </html>
