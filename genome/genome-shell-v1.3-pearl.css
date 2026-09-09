@@ -1,0 +1,241 @@
+/* 4N1F GENOME SHELL V1.3 — PEARL LIQUID CHAMBER
+   Material study derived from the supplied StardustButton physics:
+   upper internal reflection + pressurized reservoir + specular cap + lower refractive lip.
+   STAGING VISUAL ONLY. No Fetch/KV/Preview/Editor execution changes. */
+:root{
+  --pearl-blue:129,216,255;
+  --pearl-cyan:81,216,255;
+  --pearl-mint:127,247,212;
+  --pearl-violet:142,125,255;
+  --pearl-pink:211,141,255;
+  --pearl-amber:255,191,122;
+  --pearl-white:230,243,255;
+  --pearl-ease:cubic-bezier(.16,1,.3,1);
+  --pearl-x:50%;
+  --pearl-y:18%;
+}
+
+/* ---------- MATERIAL FOUNDATION ---------- */
+.pearl-chamber{
+  --pearl-accent:var(--pearl-blue);
+  --pearl-accent-2:var(--pearl-violet);
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(115% 105% at var(--pearl-x) calc(var(--pearl-y) - 18%),rgba(var(--pearl-white),.075),transparent 38%),
+    linear-gradient(165deg,rgba(25,34,48,.42),rgba(8,15,25,.58) 50%,rgba(3,8,14,.70))!important;
+  border-color:rgba(202,230,249,.13)!important;
+  box-shadow:
+    inset 0 .28rem .72rem rgba(255,255,255,.105),
+    inset 0 -.08rem .22rem rgba(0,0,0,.74),
+    inset 0 -.34rem .74rem rgba(var(--pearl-accent),.080),
+    0 16px 36px rgba(0,0,0,.20)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(142%) contrast(1.02)!important;
+  backdrop-filter:blur(18px) saturate(142%) contrast(1.02)!important;
+  transition:border-color .28s ease,box-shadow .34s var(--pearl-ease),transform .28s var(--pearl-ease),background .34s ease!important;
+}
+
+.pearl-chamber > :not(.pearl-reservoir):not(.pearl-specular):not(.pearl-lip):not(.pearl-orbit-reflection):not(.pearl-press-wave){position:relative;z-index:3}
+.pearl-chamber input,.pearl-chamber button{z-index:4!important}
+
+/* The internal reservoir = the StardustButton's large submerged before layer. */
+.pearl-reservoir{
+  position:absolute;z-index:0;pointer-events:none;
+  left:-16%;right:-16%;top:-112%;height:160%;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 50% 86%,rgba(var(--pearl-accent),.20),rgba(var(--pearl-accent-2),.075) 38%,transparent 69%),
+    rgba(var(--pearl-accent),.018);
+  filter:blur(4px) saturate(135%);
+  opacity:.62;
+  transform:translate3d(0,0,0) scale(1.02);
+  transition:transform .48s var(--pearl-ease),opacity .34s ease,filter .34s ease;
+}
+
+/* Specular cap = a controlled reflection trapped in the upper material. */
+.pearl-specular{
+  position:absolute;z-index:1;pointer-events:none;
+  left:6%;right:6%;top:7%;height:45%;
+  border-radius:18px 18px 42% 42%;
+  background:
+    radial-gradient(80% 85% at var(--pearl-x) 0%,rgba(255,255,255,.145),transparent 56%),
+    linear-gradient(180deg,rgba(var(--pearl-accent),.115) 0%,rgba(255,255,255,.040) 32%,rgba(0,0,0,0) 78%);
+  box-shadow:inset 0 10px 9px -11px rgba(var(--pearl-white),.86);
+  opacity:.58;
+  transform:translate3d(0,0,0);
+  transition:opacity .30s ease,transform .38s var(--pearl-ease);
+  mix-blend-mode:screen;
+}
+
+/* Lower refractive lip gives the surface physical thickness instead of generic blur. */
+.pearl-lip{
+  position:absolute;z-index:1;pointer-events:none;
+  left:2%;right:2%;bottom:-1px;height:31%;
+  border-radius:0 0 18px 18px;
+  background:linear-gradient(180deg,transparent 0%,rgba(var(--pearl-accent),.018) 42%,rgba(var(--pearl-accent),.080) 100%);
+  box-shadow:
+    inset 0 -9px 15px -13px rgba(var(--pearl-white),.86),
+    inset 0 -1px 0 rgba(var(--pearl-accent),.18);
+  opacity:.72;
+}
+
+/* A moving reflection is synchronized visually with the orbit system. */
+.pearl-orbit-reflection{
+  position:absolute;z-index:2;pointer-events:none;
+  top:-55%;bottom:-55%;left:-48%;width:34%;
+  transform:rotate(16deg) translate3d(-120%,0,0);
+  background:linear-gradient(90deg,transparent,rgba(var(--pearl-violet),.04),rgba(var(--pearl-accent),.18),rgba(255,255,255,.12),rgba(var(--pearl-mint),.08),transparent);
+  filter:blur(9px);
+  opacity:.34;
+  mix-blend-mode:screen;
+  animation:pearlOrbitReflection 11.8s ease-in-out infinite;
+}
+
+.pearl-chamber.pearl-hot{
+  border-color:rgba(var(--pearl-accent),.23)!important;
+  box-shadow:
+    inset 0 .28rem .62rem rgba(255,255,255,.135),
+    inset 0 -.08rem .24rem rgba(0,0,0,.76),
+    inset 0 -.38rem .82rem rgba(var(--pearl-accent),.14),
+    0 18px 40px rgba(0,0,0,.23),
+    0 0 28px rgba(var(--pearl-accent),.045)!important;
+}
+.pearl-chamber.pearl-hot .pearl-reservoir{transform:translate3d(0,-4%,0) scale(1.055);opacity:.82;filter:blur(3px) saturate(150%)}
+.pearl-chamber.pearl-hot .pearl-specular{opacity:.78;transform:translate3d(0,4%,0)}
+
+/* ---------- MASTER PEARL SHELL ---------- */
+.workspace.pearl-chamber{
+  --pearl-accent:var(--pearl-cyan);
+  --pearl-accent-2:var(--pearl-violet);
+  background:
+    radial-gradient(100% 90% at var(--pearl-x) calc(var(--pearl-y) - 13%),rgba(var(--pearl-white),.095),transparent 35%),
+    radial-gradient(70% 85% at 8% 10%,rgba(var(--pearl-violet),.075),transparent 66%),
+    radial-gradient(68% 90% at 96% 92%,rgba(var(--pearl-cyan),.065),transparent 68%),
+    linear-gradient(155deg,rgba(29,39,56,.44),rgba(10,17,29,.61) 50%,rgba(3,8,14,.74))!important;
+  border-color:rgba(205,232,250,.17)!important;
+  box-shadow:
+    inset 0 .42rem 1.05rem rgba(255,255,255,.115),
+    inset 0 -.12rem .32rem rgba(0,0,0,.82),
+    inset 0 -.55rem 1.1rem rgba(var(--pearl-cyan),.075),
+    0 44px 118px rgba(0,0,0,.43),
+    0 0 80px rgba(var(--pearl-violet),.035)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(150%) contrast(1.03)!important;
+  backdrop-filter:blur(30px) saturate(150%) contrast(1.03)!important;
+}
+.workspace.pearl-chamber>.pearl-reservoir{top:-98%;height:132%;opacity:.52;filter:blur(14px)}
+.workspace.pearl-chamber>.pearl-specular{left:2%;right:2%;top:1.3%;height:26%;border-radius:26px 26px 50% 50%;opacity:.48}
+.workspace.pearl-chamber>.pearl-lip{left:1%;right:1%;height:22%;border-radius:0 0 26px 26px;opacity:.58}
+.workspace.pearl-chamber>.pearl-orbit-reflection{width:23%;opacity:.26;filter:blur(16px);animation-duration:15.5s}
+
+/* ---------- COMMAND CONSOLE ---------- */
+.target-input.pearl-chamber{
+  --pearl-accent:var(--pearl-blue);
+  --pearl-accent-2:var(--pearl-violet);
+  box-shadow:
+    inset 0 .24rem .62rem rgba(255,255,255,.095),
+    inset 0 -.08rem .20rem rgba(0,0,0,.82),
+    inset 0 -.32rem .70rem rgba(var(--pearl-blue),.085),
+    0 12px 26px rgba(0,0,0,.16)!important;
+}
+.target-input.pearl-chamber:focus-within{border-color:rgba(var(--pearl-blue),.30)!important;box-shadow:inset 0 .25rem .66rem rgba(255,255,255,.12),inset 0 -.36rem .76rem rgba(var(--pearl-blue),.13),0 0 0 1px rgba(var(--pearl-blue),.05),0 0 34px rgba(var(--pearl-blue),.055)!important}
+.target-input.pearl-chamber .pearl-reservoir{top:-126%;opacity:.55}
+.target-input.pearl-chamber .pearl-specular{height:50%;top:5%;border-radius:14px 14px 45% 45%}
+.target-input.pearl-chamber button{background:linear-gradient(180deg,rgba(24,31,43,.82),rgba(6,12,21,.88))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -6px 15px rgba(var(--pearl-blue),.035)!important}
+
+/* ---------- MODE PEARLS ---------- */
+.preset.pearl-chamber{transform:translateZ(0)}
+.preset.pearl-chamber[data-preset="quick"]{--pearl-accent:142,125,255;--pearl-accent-2:101,167,255}
+.preset.pearl-chamber[data-preset="deep"]{--pearl-accent:81,216,255;--pearl-accent-2:127,247,212}
+.preset.pearl-chamber[data-preset="twin"]{--pearl-accent:211,141,255;--pearl-accent-2:127,247,212}
+.preset.pearl-chamber .pearl-reservoir{top:-120%;height:170%;opacity:.46}
+.preset.pearl-chamber.active .pearl-reservoir{opacity:.86;transform:translate3d(0,-5%,0) scale(1.08)}
+.preset.pearl-chamber.active .pearl-specular{opacity:.82}
+.preset.pearl-chamber.active{border-color:rgba(var(--pearl-accent),.30)!important;box-shadow:inset 0 .28rem .68rem rgba(255,255,255,.14),inset 0 -.08rem .22rem rgba(0,0,0,.76),inset 0 -.38rem .78rem rgba(var(--pearl-accent),.14),0 12px 28px rgba(0,0,0,.18),0 0 30px rgba(var(--pearl-accent),.055)!important}
+
+/* ---------- INSTRUMENT CELLS ---------- */
+.module.pearl-chamber{--pearl-accent:129,216,255;--pearl-accent-2:142,125,255}
+.module.pearl-chamber[data-module="fetch"]{--pearl-accent:101,167,255;--pearl-accent-2:81,216,255}
+.module.pearl-chamber[data-module="xray"]{--pearl-accent:142,125,255;--pearl-accent-2:129,216,255}
+.module.pearl-chamber[data-module="dna"]{--pearl-accent:211,141,255;--pearl-accent-2:142,125,255}
+.module.pearl-chamber[data-module="components"]{--pearl-accent:127,247,212;--pearl-accent-2:81,216,255}
+.module.pearl-chamber[data-module="responsive"]{--pearl-accent:81,216,255;--pearl-accent-2:101,167,255}
+.module.pearl-chamber[data-module="assets"]{--pearl-accent:255,191,122;--pearl-accent-2:211,141,255}
+.module.pearl-chamber[data-module="behavior"]{--pearl-accent:127,247,212;--pearl-accent-2:142,125,255}
+.module.pearl-chamber[data-module="routes"]{--pearl-accent:101,167,255;--pearl-accent-2:127,247,212}
+.module.pearl-chamber[data-module="diff"]{--pearl-accent:211,141,255;--pearl-accent-2:81,216,255}
+.module.pearl-chamber[data-module="twin"]{--pearl-accent:211,141,255;--pearl-accent-2:127,247,212}
+.module.pearl-chamber .pearl-reservoir{top:-125%;height:175%;opacity:.38}
+.module.pearl-chamber .pearl-specular{left:5%;right:5%;top:6%;height:46%;border-radius:14px 14px 42% 42%;opacity:.42}
+.module.pearl-chamber .pearl-lip{height:35%;opacity:.62}
+.module.pearl-chamber.enabled .pearl-reservoir{opacity:.70;transform:translate3d(0,-3%,0) scale(1.05)}
+.module.pearl-chamber.enabled .pearl-specular{opacity:.66}
+.module.pearl-chamber.enabled{border-color:rgba(var(--pearl-accent),.19)!important;box-shadow:inset 0 .26rem .66rem rgba(255,255,255,.12),inset 0 -.08rem .20rem rgba(0,0,0,.76),inset 0 -.36rem .78rem rgba(var(--pearl-accent),.105),0 12px 28px rgba(0,0,0,.16)!important}
+.module.pearl-chamber:hover{transform:translateY(-2px) scale(1.0025)!important}
+
+/* Embedded code chips become tiny optical lenses. */
+.module.pearl-chamber .module-code{
+  border-color:rgba(var(--pearl-accent),.13)!important;
+  background:
+    radial-gradient(85% 72% at 50% 8%,rgba(255,255,255,.12),transparent 58%),
+    linear-gradient(180deg,rgba(18,27,39,.88),rgba(5,11,18,.94))!important;
+  box-shadow:
+    inset 0 4px 8px -7px rgba(255,255,255,.76),
+    inset 0 -5px 10px -8px rgba(var(--pearl-accent),.60),
+    0 5px 12px rgba(0,0,0,.18)!important;
+}
+.module.pearl-chamber.enabled .module-code{color:rgba(var(--pearl-accent),.90)!important;box-shadow:inset 0 4px 8px -7px rgba(255,255,255,.86),inset 0 -6px 12px -8px rgba(var(--pearl-accent),.78),0 0 16px rgba(var(--pearl-accent),.055)!important}
+
+/* ---------- ANALYSIS RAIL / INFORMATION CELLS ---------- */
+.stack-item.pearl-chamber{--pearl-accent:81,216,255;--pearl-accent-2:127,247,212;box-shadow:inset 0 .18rem .48rem rgba(255,255,255,.075),inset 0 -.05rem .16rem rgba(0,0,0,.75),inset 0 -.26rem .58rem rgba(var(--pearl-cyan),.055),0 8px 18px rgba(0,0,0,.12)!important}
+.stack-item.pearl-chamber .pearl-reservoir{top:-145%;height:190%;opacity:.30}
+.stack-item.pearl-chamber .pearl-specular{top:6%;height:45%;opacity:.34}
+.stack-item.pearl-chamber .pearl-lip{height:38%;opacity:.48}
+.shell-lock.pearl-chamber{--pearl-accent:127,247,212;--pearl-accent-2:81,216,255}
+.plan-output.pearl-chamber{--pearl-accent:142,125,255;--pearl-accent-2:81,216,255}
+.hero-status.pearl-chamber{--pearl-accent:127,247,212;--pearl-accent-2:81,216,255}
+
+/* ---------- TOP RAIL: restrained pearl, not a giant pill ---------- */
+.tool-nav.pearl-chamber{--pearl-accent:142,125,255;--pearl-accent-2:81,216,255;-webkit-backdrop-filter:blur(16px) saturate(138%)!important;backdrop-filter:blur(16px) saturate(138%)!important}
+.tool-nav.pearl-chamber>.pearl-reservoir{top:-150%;height:190%;opacity:.32}
+.tool-nav.pearl-chamber>.pearl-specular{top:4%;height:40%;opacity:.35}
+.tool-nav.pearl-chamber>.pearl-lip{height:32%;opacity:.38}
+.tool-nav.pearl-chamber a.active{background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(var(--pearl-blue),.035))!important;box-shadow:inset 0 4px 9px -9px rgba(255,255,255,.9),inset 0 -7px 13px -11px rgba(var(--pearl-blue),.75),0 6px 16px rgba(0,0,0,.12)!important}
+
+/* ---------- PRESS RESPONSE ---------- */
+.pearl-press-wave{
+  position:absolute;z-index:8;pointer-events:none;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.70) 0 5%,rgba(var(--pearl-accent),.30) 24%,rgba(var(--pearl-accent-2),.10) 48%,transparent 70%);
+  box-shadow:0 0 24px rgba(var(--pearl-accent),.18);
+  animation:pearlPressWave .58s var(--pearl-ease) forwards;
+}
+
+/* ---------- PAUSE / REDUCED MOTION ---------- */
+html[data-pearl-paused="1"] .pearl-orbit-reflection{animation-play-state:paused!important}
+
+@keyframes pearlOrbitReflection{
+  0%,16%{transform:rotate(16deg) translate3d(-170%,0,0);opacity:0}
+  26%{opacity:.26}
+  50%{opacity:.44}
+  72%{opacity:.20}
+  82%,100%{transform:rotate(16deg) translate3d(520%,0,0);opacity:0}
+}
+@keyframes pearlPressWave{
+  0%{opacity:.86;transform:scale(.4)}
+  55%{opacity:.38}
+  100%{opacity:0;transform:scale(13)}
+}
+
+@media(max-width:840px){
+  .workspace.pearl-chamber{-webkit-backdrop-filter:blur(24px) saturate(145%)!important;backdrop-filter:blur(24px) saturate(145%)!important}
+}
+@media(max-width:620px){
+  .pearl-chamber{-webkit-backdrop-filter:blur(14px) saturate(135%)!important;backdrop-filter:blur(14px) saturate(135%)!important}
+  .workspace.pearl-chamber{-webkit-backdrop-filter:blur(20px) saturate(140%)!important;backdrop-filter:blur(20px) saturate(140%)!important}
+  .pearl-orbit-reflection{filter:blur(7px);opacity:.24}
+}
+@media(prefers-reduced-motion:reduce){
+  .pearl-orbit-reflection{animation:none!important;opacity:.12!important;transform:rotate(16deg) translate3d(180%,0,0)!important}
+  .pearl-reservoir,.pearl-specular,.pearl-chamber{transition:none!important}
+  .pearl-press-wave{display:none!important}
+}
