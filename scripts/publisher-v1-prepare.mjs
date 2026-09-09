@@ -58,17 +58,16 @@ function stagedPayload(dirValue) {
   for (const p of parts) console.error(`${p.name}: raw=${p.rawLength} clean=${p.text.length} mod4=${p.text.length % 4} head=${p.text.slice(0,8)} tail=${p.text.slice(-8)}`);
 
   let joined = '';
-  const prefixDiagnostics = [];
   for (const p of parts) {
     joined += p.text;
     try {
-      const inflated = zlib.gunzipSync(Buffer.from(joined, 'base64'));
-      prefixDiagnostics.push(`${p.name}: OK inflated=${inflated.length}`);
+      const partial = zlib.gunzipSync(Buffer.from(joined, 'base64'), { finishFlush: zlib.constants.Z_SYNC_FLUSH });
+      const preview = partial.toString('utf8', 0, Math.min(partial.length, 900));
+      console.error(`D78 partial through ${p.name}: inflated=${partial.length} head=${JSON.stringify(preview)}`);
     } catch (error) {
-      prefixDiagnostics.push(`${p.name}: ${error.code || error.name}: ${error.message}`);
+      console.error(`D78 partial through ${p.name}: ${error.code || error.name}: ${error.message}`);
     }
   }
-  console.error('D78 gzip prefix diagnostics: ' + prefixDiagnostics.join(' | '));
 
   let inflated;
   try { inflated = zlib.gunzipSync(Buffer.from(joined, 'base64')); }
