@@ -53,13 +53,15 @@ jobs:
           [[ "$FILE" =~ ^publisher/queue/4N1F_[A-Fa-f0-9]{12}\.json$ ]] || { echo "Path package tidak valid: $FILE" >&2; exit 1; }
           echo "PACKAGE_FILE=$FILE" >> "$GITHUB_ENV"
 
-      - name: Inspect D78 pristine Fetch generator
+      - name: Regenerate D78 with pristine Fetch V2.26
         if: env.PACKAGE_FILE == 'publisher/queue/4N1F_D78A3066B413.json'
         shell: bash
         run: |
           set -euo pipefail
           bash build-cloudflare.sh >/tmp/d78-build.log
-          node scripts/d78-engine-inspect.mjs
+          node scripts/d78-browser-regenerate.mjs /tmp/d78-source-native.html
+          test -s /tmp/d78-source-native.html
+          echo "D78 regenerated chars: $(wc -c </tmp/d78-source-native.html)"
 
       - name: Normalize and validate package
         shell: bash
@@ -105,6 +107,7 @@ jobs:
                 if(row.package_key!==process.env.PACKAGE_KEY) process.exit(2);
                 if(row.package_hash!==process.env.PACKAGE_HASH) process.exit(3);
                 if(!String(row.html_code||"").trim()) process.exit(4);
+                if(/Preparing source-native package/i.test(String(row.html_code||""))) process.exit(5);
               '; then
                 ok=1
                 break
@@ -129,5 +132,6 @@ jobs:
             if(!row.success) throw new Error(row.message||"resolver returned success=false");
             if(row.package_key!==process.env.PACKAGE_KEY) throw new Error("package_key mismatch");
             if(row.package_hash!==process.env.PACKAGE_HASH) throw new Error("package_hash mismatch");
+            if(/Preparing source-native package/i.test(String(row.html_code||""))) throw new Error("placeholder still live");
           '
           echo "LIVE PREVIEW RESOLVER OK: $PACKAGE_KEY"
