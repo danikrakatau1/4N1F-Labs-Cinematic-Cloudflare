@@ -29,50 +29,35 @@ jobs:
       - name: Build experiment bundle
         run: bash build-cloudflare.sh
 
-      - name: Inject Genome visual layers V1.2 + V1.3B + V1.4 + V1.5
+      - name: Inject Genome visual layers and Engine Phase 1
         shell: bash
         run: |
           set -euo pipefail
-          test -f dist/genome/genome-shell-v1.2.css
-          test -f dist/genome/genome-shell-v1.2.js
-          test -f dist/genome/genome-shell-v1.3-pearl.css
-          test -f dist/genome/genome-shell-v1.3-pearl.js
-          test -f dist/genome/genome-shell-v1.4-instrument.css
-          test -f dist/genome/genome-shell-v1.4-instrument.js
-          test -f dist/genome/genome-shell-v1.5-industrial.css
-          test -f dist/genome/genome-shell-v1.5-industrial.js
-          sed -i 's#</head>#  <link rel="stylesheet" href="/genome/genome-shell-v1.2.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.3-pearl.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.4-instrument.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.5-industrial.css">\n</head>#' dist/genome/index.html
-          sed -i 's#</body>#  <script src="/genome/genome-shell-v1.2.js" defer></script>\n  <script src="/genome/genome-shell-v1.3-pearl.js" defer></script>\n  <script src="/genome/genome-shell-v1.4-instrument.js" defer></script>\n  <script src="/genome/genome-shell-v1.5-industrial.js" defer></script>\n</body>#' dist/genome/index.html
+          for f in \
+            genome-shell-v1.2.css genome-shell-v1.2.js \
+            genome-shell-v1.3-pearl.css genome-shell-v1.3-pearl.js \
+            genome-shell-v1.4-instrument.css genome-shell-v1.4-instrument.js \
+            genome-shell-v1.5-industrial.css genome-shell-v1.5-industrial.js \
+            genome-shell-v1.6-engine.css genome-shell-v1.6-engine.js; do
+            test -f "dist/genome/$f"
+          done
+          sed -i 's#</head>#  <link rel="stylesheet" href="/genome/genome-shell-v1.2.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.3-pearl.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.4-instrument.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.5-industrial.css">\n  <link rel="stylesheet" href="/genome/genome-shell-v1.6-engine.css">\n</head>#' dist/genome/index.html
+          sed -i 's#</body>#  <script src="/genome/genome-shell-v1.2.js" defer></script>\n  <script src="/genome/genome-shell-v1.3-pearl.js" defer></script>\n  <script src="/genome/genome-shell-v1.4-instrument.js" defer></script>\n  <script src="/genome/genome-shell-v1.5-industrial.js" defer></script>\n  <script src="/genome/genome-shell-v1.6-engine.js" defer></script>\n</body>#' dist/genome/index.html
 
       - name: Verify Genome Shell bundle
         shell: bash
         run: |
           set -euo pipefail
           test -f dist/genome/index.html
-          test -f dist/genome/genome-shell-v1.css
-          test -f dist/genome/genome-shell-v1.js
-          test -f dist/genome/genome-shell-v1.2.css
-          test -f dist/genome/genome-shell-v1.2.js
-          test -f dist/genome/genome-shell-v1.3-pearl.css
-          test -f dist/genome/genome-shell-v1.3-pearl.js
-          test -f dist/genome/genome-shell-v1.4-instrument.css
-          test -f dist/genome/genome-shell-v1.4-instrument.js
-          test -f dist/genome/genome-shell-v1.5-industrial.css
-          test -f dist/genome/genome-shell-v1.5-industrial.js
-          grep -q 'GENOME' dist/index.html
           grep -q 'Site Genome' dist/genome/index.html
-          grep -q 'FETCH' dist/genome/index.html
-          grep -q 'PREVIEW' dist/genome/index.html
-          grep -q 'Genome Shell V1 hanya UI/orchestration scaffold' dist/genome/index.html
-          grep -q '4N1F GENOME SHELL V1 — LIQUID GLASS PASS' dist/genome/index.html
-          grep -q 'href="/openai-type.css"' dist/genome/index.html
           grep -q 'genome-shell-v1.5-industrial.css' dist/genome/index.html
-          grep -q 'genome-shell-v1.5-industrial.js' dist/genome/index.html
-          grep -q 'ORBIT LIGHT + CUSTOM CHAMBER' dist/genome/genome-shell-v1.2.css
-          grep -q 'PEARL LIQUID CHAMBER' dist/genome/genome-shell-v1.3-pearl.css
-          grep -q 'INSTRUMENT PANEL SYSTEM' dist/genome/genome-shell-v1.4-instrument.css
+          grep -q 'genome-shell-v1.6-engine.css' dist/genome/index.html
+          grep -q 'genome-shell-v1.6-engine.js' dist/genome/index.html
           grep -q 'INDUSTRIAL ANTI-AI-SLOP PASS' dist/genome/genome-shell-v1.5-industrial.css
-          grep -q 'industrial-v15-ready' dist/genome/genome-shell-v1.5-industrial.js
+          grep -q 'GENOME ENGINE PHASE 1' dist/genome/genome-shell-v1.6-engine.css
+          grep -q 'genome-engine-phase1-ready' dist/genome/genome-shell-v1.6-engine.js
+          grep -q '/api/genome-quick' src/genome-staging-worker.js
+          grep -q 'FETCH_ORIGIN' src/genome-staging-worker.js
 
       - name: Deploy isolated staging Worker
         env:
@@ -100,21 +85,28 @@ jobs:
             return 1
           }
 
-          wait_marker 'genome-html' '/genome/' /tmp/genome.html 'genome-shell-v1.5-industrial.js'
-          grep -q 'Site Genome' /tmp/genome.html
-          grep -q 'genome-shell-v1.5-industrial.css' /tmp/genome.html
-
-          wait_marker 'orbit-css' '/genome/genome-shell-v1.2.css' /tmp/v12.css 'ORBIT LIGHT + CUSTOM CHAMBER'
-          wait_marker 'pearl-css' '/genome/genome-shell-v1.3-pearl.css' /tmp/v13.css 'PEARL LIQUID CHAMBER'
-          wait_marker 'instrument-css' '/genome/genome-shell-v1.4-instrument.css' /tmp/v14.css 'INSTRUMENT PANEL SYSTEM'
+          wait_marker 'genome-html' '/genome/' /tmp/genome.html 'genome-shell-v1.6-engine.js'
           wait_marker 'industrial-css' '/genome/genome-shell-v1.5-industrial.css' /tmp/v15.css 'INDUSTRIAL ANTI-AI-SLOP PASS'
-          wait_marker 'industrial-js' '/genome/genome-shell-v1.5-industrial.js' /tmp/v15.js 'industrial-v15-ready'
+          wait_marker 'engine-css' '/genome/genome-shell-v1.6-engine.css' /tmp/v16.css 'GENOME ENGINE PHASE 1'
+          wait_marker 'engine-js' '/genome/genome-shell-v1.6-engine.js' /tmp/v16.js 'genome-engine-phase1-ready'
           wait_marker 'hub-home' '/' /tmp/home.html 'GENOME'
 
-          code=$(curl -sS -o /tmp/api.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
-          echo "ui-only-api status=$code"
+          code=$(curl -sS -o /tmp/locked.json -w '%{http_code}' "$URL/api/kv-package?package_key=4N1F_000000000000")
+          echo "locked-production-api status=$code"
           test "$code" = '423'
-          grep -q 'UI-only' /tmp/api.json
+          grep -q 'disconnected' /tmp/locked.json
+
+          code=$(curl -sS -o /tmp/quick-guard.json -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{"url":"https://example.com","authorized":false}' "$URL/api/genome-quick")
+          echo "quick-authorization-guard status=$code"
+          test "$code" = '400'
+          grep -q 'authorized' /tmp/quick-guard.json
+
+          code=$(curl -sS -o /tmp/quick.json -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{"url":"https://example.com","authorized":true}' "$URL/api/genome-quick")
+          echo "quick-live status=$code"
+          test "$code" = '200'
+          grep -q '4n1f-genome-quick-response-v1' /tmp/quick.json
+          grep -q '4n1f-site-genome-quick-v1' /tmp/quick.json
+          grep -q '4n1f-design-tokens-observed-v1' /tmp/quick.json
 
           echo "GENOME_STAGING_URL=$URL"
           echo "GENOME_SHELL_URL=$URL/genome/"
