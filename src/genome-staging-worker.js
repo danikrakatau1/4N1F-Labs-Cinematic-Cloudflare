@@ -1,4 +1,5 @@
-const FETCH_ORIGIN = 'https://4n1f-labs-cinematic-cloudflare.faqihanif12282000.workers.dev';
+import fetchCore from './worker.js';
+
 const MAX_HTML = 3_500_000;
 
 function json(data, status = 200) {
@@ -83,32 +84,28 @@ function analyzeHtml(html, finalUrl, bytes, contentType) {
 
   const colors = topValues(
     html,
-    /(?:#([0-9a-f]{3,8})\b|(?:rgb|rgba|hsl|hsla)\(([^)]*)\))/gi,
+    /#([0-9a-f]{3,8})\b/gi,
     value => value ? `#${value.toUpperCase()}` : '',
     14
   );
-
   const rgbColors = topValues(
     html,
     /\b((?:rgb|rgba|hsl|hsla)\([^)]*\))/gi,
     value => cleanText(value, 80),
     10
   );
-
   const fontFamilies = topValues(
     html,
     /font-family\s*:\s*([^;}"']+)/gi,
     value => cleanText(value, 120).replace(/\s*!important$/i, ''),
     12
   );
-
   const radii = topValues(
     html,
     /border-radius\s*:\s*([^;}]+)/gi,
     value => cleanText(value, 60).replace(/\s*!important$/i, ''),
     10
   );
-
   const spacing = topValues(
     html,
     /(?:margin|padding|gap)(?:-[a-z]+)?\s*:\s*([^;}]+)/gi,
@@ -173,11 +170,12 @@ async function genomeQuick(request) {
   const started = Date.now();
   try {
     const fetchStarted = Date.now();
-    const response = await fetch(`${FETCH_ORIGIN}/api/fetch-source`, {
+    const sourceRequest = new Request('https://genome-fetch-adapter.internal/api/fetch-source', {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({ url: parsed.href })
     });
+    const response = await fetchCore.fetch(sourceRequest, {});
     const fetched = await response.json().catch(() => null);
     if (!response.ok || !fetched?.ok) {
       return json({
@@ -199,6 +197,7 @@ async function genomeQuick(request) {
       success: true,
       schema: '4n1f-genome-quick-response-v1',
       engine: 'Genome Engine Phase 1',
+      fetch_adapter: 'locked-worker-fetch-source',
       pipeline: ['Fetch Engine', 'Source X-Ray', 'Design DNA'],
       read_only: true,
       persisted: false,
