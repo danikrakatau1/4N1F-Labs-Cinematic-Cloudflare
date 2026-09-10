@@ -1,0 +1,33 @@
+/* 4N1F GENOME ENGINE PHASE 1 — QUICK MODE
+   Read-only staging orchestration: Fetch -> X-Ray -> Design DNA. */
+:root{--g16-cyan:81,216,255;--g16-mint:127,247,212;--g16-violet:142,125,255;--g16-red:255,112,128}
+.genome-engine-consent{display:flex;align-items:center;gap:8px;margin-top:9px;color:#9fb0bf;font:600 11px/1.35 var(--sans);letter-spacing:.01em;user-select:none}
+.genome-engine-consent input{width:14px;height:14px;accent-color:rgb(var(--g16-cyan))}
+.genome-engine-consent strong{color:#dce8f1;font-weight:650}
+.engine-running #planBtn{cursor:wait;opacity:.78}
+.engine-running .module[data-module="fetch"],.engine-running .module[data-module="xray"],.engine-running .module[data-module="dna"]{border-color:rgba(var(--g16-cyan),.22)!important}
+.module.engine-stage-running em{color:rgb(var(--g16-cyan))!important}
+.module.engine-stage-done em{color:rgb(var(--g16-mint))!important}
+.module.engine-stage-error em{color:rgb(var(--g16-red))!important}
+.module.engine-stage-running{box-shadow:inset 3px 0 0 rgba(var(--g16-cyan),.55)!important}
+.module.engine-stage-done{box-shadow:inset 3px 0 0 rgba(var(--g16-mint),.34)!important}
+.stack-item.engine-live{border-left-color:rgba(var(--g16-cyan),.42)!important;color:#dcecf6!important}
+.stack-item.engine-done{border-left-color:rgba(var(--g16-mint),.38)!important}
+.stack-item.engine-error{border-left-color:rgba(var(--g16-red),.50)!important}
+.engine-result{margin-top:14px;border-top:1px solid rgba(196,220,238,.10);padding-top:14px}
+.engine-result[hidden]{display:none!important}
+.engine-result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.engine-result-head span{font:700 10px/1.2 var(--openai-mono,"Geist Mono",ui-monospace,monospace);letter-spacing:.12em;color:#93aabd}
+.engine-result-head b{font:700 11px/1.2 var(--openai-mono,"Geist Mono",ui-monospace,monospace);color:#bff8e7}
+.engine-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.engine-metric{min-width:0;padding:10px 11px;border-left:1px solid rgba(196,220,238,.12);background:linear-gradient(90deg,rgba(255,255,255,.018),transparent)}
+.engine-metric span{display:block;margin-bottom:5px;color:#738796;font:700 9px/1.2 var(--openai-mono,"Geist Mono",ui-monospace,monospace);letter-spacing:.08em;text-transform:uppercase}
+.engine-metric strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#e2edf4;font:650 12px/1.35 var(--sans);white-space:nowrap}
+.engine-token-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.engine-token{max-width:100%;padding:4px 7px;border:1px solid rgba(190,218,238,.10);border-radius:4px;color:#a9becd;background:rgba(255,255,255,.018);font:650 9px/1.2 var(--openai-mono,"Geist Mono",ui-monospace,monospace);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.engine-actions{display:flex;gap:7px;margin-top:12px}
+.engine-actions button{border:1px solid rgba(196,220,238,.13);background:rgba(255,255,255,.025);color:#cbd9e3;padding:7px 9px;border-radius:5px;font:650 9px/1 var(--openai-mono,"Geist Mono",ui-monospace,monospace);cursor:pointer}
+.engine-actions button:hover{border-color:rgba(var(--g16-cyan),.28);color:#eefaff}
+.engine-error-box{padding:10px 11px;border-left:2px solid rgba(var(--g16-red),.55);background:rgba(var(--g16-red),.035);color:#efc6cc;font:600 11px/1.5 var(--sans)}
+.engine-stage-note{color:#8294a3!important}
+@media(max-width:620px){.engine-result-grid{grid-template-columns:1fr}.genome-engine-consent{font-size:10px}.engine-actions{flex-wrap:wrap}}
