@@ -57,7 +57,8 @@ jobs:
           grep -q 'GENOME ENGINE PHASE 1' dist/genome/genome-shell-v1.6-engine.css
           grep -q 'genome-engine-phase1-ready' dist/genome/genome-shell-v1.6-engine.js
           grep -q '/api/genome-quick' src/genome-staging-worker.js
-          grep -q 'FETCH_ORIGIN' src/genome-staging-worker.js
+          grep -q "import fetchCore from './worker.js'" src/genome-staging-worker.js
+          grep -q 'locked-worker-fetch-source' src/genome-staging-worker.js
 
       - name: Deploy isolated staging Worker
         env:
@@ -107,6 +108,7 @@ jobs:
           grep -q '4n1f-genome-quick-response-v1' /tmp/quick.json
           grep -q '4n1f-site-genome-quick-v1' /tmp/quick.json
           grep -q '4n1f-design-tokens-observed-v1' /tmp/quick.json
+          grep -q 'locked-worker-fetch-source' /tmp/quick.json
 
           echo "GENOME_STAGING_URL=$URL"
           echo "GENOME_SHELL_URL=$URL/genome/"
