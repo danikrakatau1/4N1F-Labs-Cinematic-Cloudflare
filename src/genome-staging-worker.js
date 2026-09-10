@@ -1,5 +1,3 @@
-import fetchCore from './worker.js';
-
 const MAX_HTML = 3_500_000;
 
 function json(data, status = 200) {
@@ -8,7 +6,7 @@ function json(data, status = 200) {
     headers: {
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff',
-      'x-4n1f-staging': 'genome-engine-phase1'
+      'x-4n1f-staging': 'genome-engine-phase2'
     }
   });
 }
@@ -66,7 +64,34 @@ function extractTechnology(html) {
   return uniq(hits, 12);
 }
 
-function analyzeHtml(html, finalUrl, bytes, contentType) {
+function collectAssets(html, baseUrl) {
+  const urls = [];
+  for (const match of html.matchAll(/(?:src|href)=["']([^"'#]+)["']/gi)) {
+    try {
+      const u = new URL(match[1], baseUrl);
+      if (['http:', 'https:'].includes(u.protocol)) urls.push(u.href);
+    } catch {}
+  }
+  const unique = uniq(urls, 120);
+  const byType = { images: 0, scripts: 0, stylesheets: 0, fonts: 0, media: 0, other: 0 };
+  for (const href of unique) {
+    const p = new URL(href).pathname.toLowerCase();
+    if (/\.(png|jpe?g|webp|gif|svg|avif|ico)$/.test(p)) byType.images++;
+    else if (/\.js(?:$|\?)/.test(href)) byType.scripts++;
+    else if (/\.css(?:$|\?)/.test(href)) byType.stylesheets++;
+    else if (/\.(woff2?|ttf|otf)$/.test(p)) byType.fonts++;
+    else if (/\.(mp4|webm|mp3|wav|ogg|m4a)$/.test(p)) byType.media++;
+    else byType.other++;
+  }
+  return {
+    total_unique: unique.length,
+    by_type: byType,
+    hosts: uniq(unique.map(v => { try { return new URL(v).hostname; } catch { return ''; } }), 24),
+    sample_urls: unique.slice(0, 32)
+  };
+}
+
+function analyzeCore(html, finalUrl, bytes, contentType) {
   const meta = extractMeta(html);
   const tags = {
     elements: countMatches(html, /<[a-z][a-z0-9:-]*(?:\s|>)/gi),
@@ -82,52 +107,12 @@ function analyzeHtml(html, finalUrl, bytes, contentType) {
     inline_styles: countMatches(html, /<style(?:\s|>)/gi)
   };
 
-  const colors = topValues(
-    html,
-    /#([0-9a-f]{3,8})\b/gi,
-    value => value ? `#${value.toUpperCase()}` : '',
-    14
-  );
-  const rgbColors = topValues(
-    html,
-    /\b((?:rgb|rgba|hsl|hsla)\([^)]*\))/gi,
-    value => cleanText(value, 80),
-    10
-  );
-  const fontFamilies = topValues(
-    html,
-    /font-family\s*:\s*([^;}"']+)/gi,
-    value => cleanText(value, 120).replace(/\s*!important$/i, ''),
-    12
-  );
-  const radii = topValues(
-    html,
-    /border-radius\s*:\s*([^;}]+)/gi,
-    value => cleanText(value, 60).replace(/\s*!important$/i, ''),
-    10
-  );
-  const spacing = topValues(
-    html,
-    /(?:margin|padding|gap)(?:-[a-z]+)?\s*:\s*([^;}]+)/gi,
-    value => cleanText(value, 80).replace(/\s*!important$/i, ''),
-    12
-  );
-
-  const assetHosts = [];
-  for (const match of html.matchAll(/(?:src|href)=["'](https?:\/\/[^"']+)["']/gi)) {
-    try { assetHosts.push(new URL(match[1]).hostname); } catch {}
-  }
-
-  const design = {
-    colors: [...colors, ...rgbColors].slice(0, 16),
-    font_families: fontFamilies,
-    spacing,
-    radii,
-    box_shadows: countMatches(html, /box-shadow\s*:/gi),
-    gradients: countMatches(html, /(?:linear|radial|conic)-gradient\s*\(/gi),
-    css_variables: countMatches(html, /--[a-z0-9-_]+\s*:/gi),
-    media_queries: countMatches(html, /@media\b/gi)
-  };
+  const colors = topValues(html, /#([0-9a-f]{3,8})\b/gi, value => `#${value.toUpperCase()}`, 16);
+  const rgbColors = topValues(html, /\b((?:rgb|rgba|hsl|hsla)\([^)]*\))/gi, value => cleanText(value, 80), 10);
+  const fontFamilies = topValues(html, /font-family\s*:\s*([^;}"']+)/gi, value => cleanText(value, 120).replace(/\s*!important$/i, ''), 12);
+  const radii = topValues(html, /border-radius\s*:\s*([^;}]+)/gi, value => cleanText(value, 60).replace(/\s*!important$/i, ''), 10);
+  const spacing = topValues(html, /(?:margin|padding|gap)(?:-[a-z]+)?\s*:\s*([^;}]+)/gi, value => cleanText(value, 80).replace(/\s*!important$/i, ''), 12);
+  const assets = collectAssets(html, finalUrl);
 
   return {
     site_genome: {
@@ -139,85 +124,167 @@ function analyzeHtml(html, finalUrl, bytes, contentType) {
       metadata: meta,
       structure: tags,
       technology: extractTechnology(html),
-      asset_hosts: uniq(assetHosts, 16),
+      asset_hosts: assets.hosts,
       generated_at: new Date().toISOString()
     },
     design_tokens: {
       schema: '4n1f-design-tokens-observed-v1',
       source: 'static-source-observation',
       target: finalUrl,
-      observed: design,
+      observed: {
+        colors: [...colors, ...rgbColors].slice(0, 18),
+        font_families: fontFamilies,
+        spacing,
+        radii,
+        box_shadows: countMatches(html, /box-shadow\s*:/gi),
+        gradients: countMatches(html, /(?:linear|radial|conic)-gradient\s*\(/gi),
+        css_variables: countMatches(html, /--[a-z0-9-_]+\s*:/gi),
+        media_queries: countMatches(html, /@media\b/gi)
+      },
       note: 'Observed values are extracted from fetched public HTML/CSS text and are not computed-style guarantees.'
-    }
+    },
+    assets
   };
 }
 
-async function genomeQuick(request) {
+function analyzeDeep(html, finalUrl, core) {
+  const semanticTags = ['header','nav','main','section','article','aside','footer','form','dialog','details'];
+  const semantic = {};
+  for (const tag of semanticTags) semantic[tag] = countMatches(html, new RegExp(`<${tag}(?:\\s|>)`, 'gi'));
+
+  const classes = topValues(html, /class=["']([^"']+)["']/gi, value => cleanText(value, 160), 24);
+  const mediaQueries = uniq([...html.matchAll(/@media\s*([^\{]+)/gi)].map(m => cleanText(m[1], 120)), 20);
+  const responsive = {
+    viewport_meta: /<meta[^>]+name=["']viewport["']/i.test(html),
+    media_query_count: countMatches(html, /@media\b/gi),
+    media_query_samples: mediaQueries,
+    srcset_count: countMatches(html, /\bsrcset\s*=/gi),
+    picture_count: countMatches(html, /<picture(?:\s|>)/gi),
+    source_count: countMatches(html, /<source(?:\s|>)/gi)
+  };
+
+  const behavior = {
+    inline_event_handlers: countMatches(html, /\son(?:click|input|change|submit|load|mouseover|mouseenter|keydown|keyup)\s*=/gi),
+    details_elements: countMatches(html, /<details(?:\s|>)/gi),
+    dialog_elements: countMatches(html, /<dialog(?:\s|>)/gi),
+    aria_controls: countMatches(html, /aria-controls\s*=/gi),
+    data_attributes: countMatches(html, /\sdata-[a-z0-9_-]+\s*=/gi),
+    transition_mentions: countMatches(html, /\btransition(?:-property|-duration|-timing-function)?\s*:/gi),
+    animation_mentions: countMatches(html, /\banimation(?:-name|-duration|-timing-function)?\s*:/gi),
+    keyframes: countMatches(html, /@keyframes\b/gi)
+  };
+
+  const components = {
+    semantic_counts: semantic,
+    custom_elements: uniq([...html.matchAll(/<([a-z][a-z0-9]*-[a-z0-9-]+)(?:\s|>)/gi)].map(m => m[1].toLowerCase()), 24),
+    repeated_class_signatures: classes
+  };
+
+  return {
+    schema: '4n1f-genome-deep-observation-v1',
+    source: 'static-source-observation',
+    target: finalUrl,
+    components,
+    responsive,
+    assets: core.assets,
+    behavior,
+    limitations: [
+      'Deep Phase 2 is read-only static-source analysis.',
+      'Runtime DOM, computed styles, authenticated states, browser-only behavior, and visual rendering are not claimed.'
+    ]
+  };
+}
+
+async function loadSource(rawTarget) {
+  const req = new Request('https://genome.local/api/fetch-source', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ url: rawTarget })
+  });
+  const workerModule = await import('./worker.js');
+  const response = await workerModule.default.fetch(req, { ASSETS: { fetch: () => new Response('') } });
+  const fetched = await response.json().catch(() => null);
+  if (!response.ok || !fetched?.ok) {
+    const error = new Error(fetched?.error || `Fetch Engine gagal (${response.status}).`);
+    error.status = response.status;
+    throw error;
+  }
+  return fetched;
+}
+
+function normalizeTarget(target) {
+  const cleaned = cleanText(target, 2048).replace(/^https?:\/\/https?:\/\//i, 'https://');
+  if (!cleaned) throw new Error('Target URL wajib diisi.');
+  const parsed = new URL(/^https?:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`);
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Hanya URL http/https yang didukung.');
+  return parsed.href;
+}
+
+async function runGenome(request, mode) {
   if (request.method !== 'POST') return json({ success: false, message: 'Method not allowed.' }, 405);
   const body = await request.json().catch(() => null);
-  const target = cleanText(body?.url, 2048);
-  if (!target) return json({ success: false, message: 'Target URL wajib diisi.' }, 400);
   if (body?.authorized !== true) return json({ success: false, message: 'Konfirmasi public/authorized target diperlukan.' }, 400);
 
-  let parsed;
-  try {
-    parsed = new URL(/^https?:\/\//i.test(target) ? target : `https://${target}`);
-  } catch {
-    return json({ success: false, message: 'Target URL tidak valid.' }, 400);
-  }
-  if (!['http:', 'https:'].includes(parsed.protocol)) return json({ success: false, message: 'Hanya URL http/https yang didukung.' }, 400);
+  let target;
+  try { target = normalizeTarget(body?.url); }
+  catch (error) { return json({ success: false, message: error.message || 'Target URL tidak valid.' }, 400); }
 
   const started = Date.now();
   try {
     const fetchStarted = Date.now();
-    const sourceRequest = new Request('https://genome-fetch-adapter.internal/api/fetch-source', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ url: parsed.href })
-    });
-    const response = await fetchCore.fetch(sourceRequest, {});
-    const fetched = await response.json().catch(() => null);
-    if (!response.ok || !fetched?.ok) {
-      return json({
-        success: false,
-        stage: 'fetch',
-        message: fetched?.error || `Fetch Engine gagal (${response.status}).`
-      }, response.status >= 400 && response.status < 600 ? response.status : 502);
-    }
-
+    const fetched = await loadSource(target);
     const html = String(fetched.html || '');
-    if (!html || html.length > MAX_HTML + 1024) return json({ success: false, stage: 'fetch', message: 'Source tidak tersedia atau melewati batas Quick Genome.' }, 422);
+    if (!html || html.length > MAX_HTML + 1024) return json({ success: false, stage: 'fetch', message: 'Source tidak tersedia atau melewati batas Genome.' }, 422);
     const fetchMs = Date.now() - fetchStarted;
 
     const analysisStarted = Date.now();
-    const result = analyzeHtml(html, fetched.url || parsed.href, Number(fetched.bytes || 0), fetched.contentType || 'unknown');
+    const core = analyzeCore(html, fetched.url || target, Number(fetched.bytes || 0), fetched.contentType || 'unknown');
+    const deep = mode === 'deep' ? analyzeDeep(html, fetched.url || target, core) : null;
     const analysisMs = Date.now() - analysisStarted;
+
+    if (mode === 'deep') {
+      core.site_genome.mode = 'deep';
+      core.site_genome.schema = '4n1f-site-genome-deep-v1';
+      return json({
+        success: true,
+        schema: '4n1f-genome-deep-response-v1',
+        engine: 'Genome Engine Phase 2',
+        pipeline: ['Fetch Engine','Source X-Ray','Design DNA','Components','Responsive DNA','Asset Intelligence','Behavior Map'],
+        read_only: true,
+        persisted: false,
+        timings_ms: { fetch: fetchMs, analyze: analysisMs, total: Date.now() - started },
+        site_genome: core.site_genome,
+        design_tokens: core.design_tokens,
+        deep
+      });
+    }
 
     return json({
       success: true,
       schema: '4n1f-genome-quick-response-v1',
       engine: 'Genome Engine Phase 1',
-      fetch_adapter: 'locked-worker-fetch-source',
       pipeline: ['Fetch Engine', 'Source X-Ray', 'Design DNA'],
       read_only: true,
       persisted: false,
       timings_ms: { fetch: fetchMs, analyze: analysisMs, total: Date.now() - started },
-      ...result
+      site_genome: core.site_genome,
+      design_tokens: core.design_tokens
     });
   } catch (error) {
-    return json({ success: false, stage: 'adapter', message: error?.message || 'Genome Quick adapter gagal.' }, 502);
+    return json({ success: false, stage: 'fetch', message: error?.message || 'Genome adapter gagal.' }, error?.status >= 400 ? error.status : 502);
   }
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname === '/api/genome-quick') return genomeQuick(request);
+    if (url.pathname === '/api/genome-quick') return runGenome(request, 'quick');
+    if (url.pathname === '/api/genome-deep') return runGenome(request, 'deep');
     if (url.pathname.startsWith('/api/')) {
       return json({
         success: false,
         staging: true,
-        message: 'Genome staging only exposes the read-only /api/genome-quick adapter. Production KV/Preview/Editor APIs remain disconnected.'
+        message: 'Genome staging exposes only read-only Genome adapters. Production KV/Preview/Editor APIs remain disconnected.'
       }, 423);
     }
     return env.ASSETS.fetch(request);
